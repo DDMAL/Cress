@@ -9,7 +9,7 @@ module.exports = {
   mode: 'production',
   entry: {
     landing: './deployment/scripts/landing.ts',
-    // dashboard: './deployment/scripts/dashboard.ts',
+    dashboard: './deployment/scripts/dashboard.ts',
   },
   output: {
     path: path.resolve(__dirname, 'deployment', 'server', 'Cress-gh'),

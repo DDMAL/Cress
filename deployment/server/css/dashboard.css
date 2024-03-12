@@ -189,7 +189,7 @@
 
 .fs-title {
   font-size: calc(15px + 1vw);
-  color: #756AB6;
+  color: #8675A9;
   font-weight: 500;
 }
 
@@ -208,13 +208,13 @@
 }
 
 .nav-path-section:hover {
-  text-decoration: solid underline #756AB6 2px;
+  text-decoration: solid underline #8675A9 2px;
 }
 
 .nav-path-section.dragenter {
   background-color: #c3e5ff;
   border-radius: 5px;
-  border: 2px dashed #756AB6;
+  border: 2px dashed #8675A9;
   margin: 0px;
 }
 
@@ -228,9 +228,9 @@
   font-weight: 900;
   letter-spacing: 3px;
   padding: 6px 8px;
-  border: 2px solid #E0AED0;
+  border: 2px solid #C3AED6;
   border-radius: 5px;
-  color: #E0AED0;
+  color: #C3AED6;
   opacity: 40%;
   margin-right: 5px;
 }
@@ -284,19 +284,19 @@
 
 .folder-entry {
   color: white;
-  background-color: #756AB6;
+  background-color: #C3AED6;
 
   &:hover {
-    border-color: #64bcff;
+      border-color: #8675A9;
   }
 
   &.selected {
-    border-color: #5e5e5e;
+    background-color: #8675A9;
   }
 }
 
 .folder-entry.dragenter {
-  border: 2px dashed #64bcff;
+  border: 2px dashed #8675A9;
 }
 
 .file-entry {
@@ -305,7 +305,7 @@
   background-color: transparent;
 
   &:hover {
-    border-color: #E0AED0;
+    border-color: #EFBBCF;
   }
 
   &.selected {
@@ -348,7 +348,7 @@ input.filename-input, select.file-input, textarea.file-input {
   align-items: center;
   height: 100%;
   width: 6vw;
-  background-color: #E0AED0;
+  background-color: #C3AED6;
   color: white;
   z-index: 1;
   overflow: hidden;
@@ -773,13 +773,13 @@ input.filename-input, select.file-input, textarea.file-input {
   margin: 8px 0;
   box-sizing: border-box;
   font-size: 16px;
-  border: 2px solid #756AB6;
+  border: 2px solid #8675A9;
   border-radius: 5px;
-  color: #756AB6
+  color: #8675A9
 }
 
 #cancel_dashboard {
-  color: #756AB6;
+  color: #8675A9;
   border: none;
   border-radius: 8px;
   padding: 5px;
@@ -788,7 +788,7 @@ input.filename-input, select.file-input, textarea.file-input {
 }
 
 #confirm_dashboard {
-  background-color: #756AB6;
+  background-color: #8675A9;
   color: white;
   border: none;
   border-radius: 8px;

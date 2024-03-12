@@ -26,7 +26,7 @@ width: 80%;
     display: flex;
     justify-content: center;
     align-items: center;
-    color: #756AB6;
+    color: #8675A9;
 }
 .navbar-content-container {
     display: flex;
@@ -51,7 +51,7 @@ width: 80%;
     border-radius: 3px;
 }
 .navbar-link:hover {
-    background-color: #756AB6;
+    background-color: #8675A9;
     color: white;
 }
 #home-link {
@@ -73,7 +73,7 @@ width: 80%;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    color: #756AB6;
+    color: #8675A9;
     overflow: scroll;
     align-items: center;
 }
@@ -82,5 +82,5 @@ width: 80%;
 /* Section: Footer */
 .footer-section {
     height: 50vh;
-    background-color: #756AB6;
+    background-color: #8675A9;
 }

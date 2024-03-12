@@ -42,10 +42,10 @@
 }
 @keyframes typewriter {
     0% {
-        border-right: 0.4vw solid #756AB6;
+        border-right: 0.4vw solid #8675A9;
     }
     49% {
-        border-right: 0.4vw solid #756AB6;
+        border-right: 0.4vw solid #8675A9;
     }
     50% {
         border-right: none;
@@ -124,7 +124,7 @@ body {
     border-right: none;
     opacity: 0;
     transform: translateY(-15px);
-    background: -webkit-linear-gradient(#756AB6, #E0AED0 70%);
+    background: -webkit-linear-gradient(#8675A9, #EFBBCF 70%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -144,7 +144,7 @@ body {
     animation: settleDown 0.7s ease-in-out 1s forwards;
 }
 #landing-page-secondary-heading {
-    color: #E0AED0;
+    color: #EFBBCF;
     opacity: 0;
     font-size: 3vw;
     margin-top: -2vw;
@@ -155,7 +155,7 @@ body {
     color: white;
     padding: 1vw;
     border: 2px solid transparent;
-    background: linear-gradient(45deg, #AC87C5, #E0AED0);
+    background: linear-gradient(45deg, #C3AED6, #EFBBCF);
     border-radius: 3px;
     display: flex;
     justify-content: center;
@@ -167,15 +167,15 @@ body {
 }
 #access-files-btn-header:hover {
     background: white;
-    border: 2px solid #AC87C5;
-    background: -webkit-linear-gradient(#AC87C5, #E0AED0);
+    border: 2px solid #C3AED6;
+    background: -webkit-linear-gradient(#C3AED6, #EFBBCF);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 /* Subsection: About Cress */
 #about-cress-subsection {
-    background-color: #AC87C5;
+    background-color: #C3AED6;
     color: white;
 }
 #about-cress-title {
@@ -200,7 +200,7 @@ body {
     box-shadow: 0px 0px 40px 3px #9d9d9d75;
 }
 #contributors-list-title {
-    color: #AC87C5;
+    color: #C3AED6;
     align-items: center;
 }
 #contributors-list {
@@ -247,7 +247,7 @@ body {
     box-shadow: 0px 0px 40px 3px #9d9d9d75;
 }
 #sponsors-and-partners-title {
-    color: #AC87C5;
+    color: #C3AED6;
     align-items: center;
 }
 #logo-map {
@@ -320,7 +320,7 @@ body {
 #access-files-btn-footer {
     color: white;
     padding: 1vw;
-    background: linear-gradient(45deg, #E0AED0, #AC87C5);
+    background: linear-gradient(45deg, #EFBBCF, #C3AED6);
     border-radius: 3px;
     display: flex;
     justify-content: center;
