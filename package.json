@@ -1,0 +1,37 @@
+{
+  "name": "Cress",
+  "version": "1.0.0",
+  "description": "A web-based app to map squiggles to MEI snippets",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server deployment/server/ -p 9000",
+    "build": "rm -rf deployment/server/Cress-gh && webpack --config webpack.config.js && cp -R assets src/workers deployment/server/Cress-gh"
+  },
+  "repository": "https://github.com/DDMAL/Cress.git",
+  "author": {
+    "name": "DDMAL",
+    "url": "https://ddmal.music.mcgill.ca"
+  },
+  "contributors": [
+    {
+      "name": "Yinan Zhou",
+      "url": "https://github.com/yinanazhou"
+    }
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "http-server": "^14.1.1",
+    "pouchdb": "^8.0.1",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/pouchdb": "^6.4.2",
+    "eslint": "^8.57.0",
+    "hard-source-webpack-plugin": "^0.13.1",
+    "pouchdb-core": "^8.0.1",
+    "ts-loader": "8.4.0",
+    "typescript": "^5.4.2",
+    "webpack": "4.47.0",
+    "webpack-cli": "4.9.2"
+  }
+}
