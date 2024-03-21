@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { IFolder, FileSystemTools } from '.';
 import { fetchUploads } from '../Storage';
 
+const samples = ['SQUAREnotation-NEUMElevel'];
 interface FileSystemProps {
   getRoot: () => Promise<IFolder>;
   setFileSystem: (root: IFolder) => boolean;
@@ -54,45 +55,25 @@ export const FileSystemManager = (): FileSystemProps => {
     }
   } 
 
-  async function getFileNames(folderPath: string): Promise<string[]> {
-    const response = await fetch(folderPath);
-    const text = await response.text();
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(text, 'text/xml');
-    
-    const files = Array.from(xml.querySelectorAll('a'));
-    const fileNames: string[] = [];
-
-    files.forEach(file => {
-        const fileName = file.textContent || '';
-        fileNames.push(fileName);
-    });
-
-    return fileNames;
-  }
-
   // This next function is solely for loading samples into the root as a default for Cress
   function loadSamples(root: IFolder) {
     // Make sample entries
-    getFileNames('samples/').then(samples => {
-        const sampleEntries = samples.map(name => {
-        const entry = FileSystemTools.createFile(name, uuidv4());
-        FileSystemTools.addMetadata(entry, {document: 'sample', immutable: true });
-        return entry;
-      });
+    const sampleEntries = samples.map(name => {
+      const entry = FileSystemTools.createFile(name, uuidv4());
+      FileSystemTools.addMetadata(entry, {document: 'sample', immutable: true });
+      return entry;
+    });
 
-      // Make samples folder and add to root
-      const samplesFolder = FileSystemTools.createFolder('Samples');
-      // Add sample entries to samples folder
-      sampleEntries.forEach((sample) => {
-        FileSystemTools.addEntry(sample, samplesFolder);
-      });
-      FileSystemTools.addEntry(samplesFolder, root);
-      FileSystemTools.addMetadata(samplesFolder, { immutable: true });
+    // Make samples folder and add to root
+    const samplesFolder = FileSystemTools.createFolder('Samples');
+    // Add sample entries to samples folder
+    sampleEntries.forEach((sample) => {
+      FileSystemTools.addEntry(sample, samplesFolder);
+    });
+    FileSystemTools.addEntry(samplesFolder, root);
+    FileSystemTools.addMetadata(samplesFolder, { immutable: true });
 
-      return root;
-    })
-    
+    return root;    
   }
 
   function newTrash(root: IFolder) {
