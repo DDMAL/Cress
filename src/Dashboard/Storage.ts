@@ -1,5 +1,6 @@
 import PouchDB from 'pouchdb';
 import { AllDocs, Doc, uploadsInfo } from '../Types';
+import csv from 'csvtojson';
 
 export const db = new PouchDB('Cress-User-Storage');
 
@@ -22,6 +23,12 @@ export async function fetchUploads(): Promise<uploadsInfo> {
     console.log('Couldn\'t fetch uploaded documents', err.message);
     return [];
   }
+}
+
+export function createJson(id: string, title: string, file: File): Promise<string> {
+  return new Promise(async (resolve) => {
+    
+  });
 }
 
 /**

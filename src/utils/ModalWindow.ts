@@ -23,17 +23,12 @@ enum ModalWindowState {
 
 /**
  * Modal class is used to create and control state/content 
- * of modal windows in Neon.
+ * of modal windows in cress.
  */
 export class ModalWindow implements ModalWindowInterface {
   private modalWindowView: ModalWindowView; // current modal type
   private modalWindowState: ModalWindowState; // open or closed?
 
-
-  /**
-   * Set neonView instance context for this modal window instance.
-   * @param neonView neonView context for Modal instance
-   */
   constructor () {
     this.modalWindowState = ModalWindowState.CLOSED;
     this.setupEventListeners();
@@ -43,18 +38,18 @@ export class ModalWindow implements ModalWindowInterface {
    * Set event listeners that apply to all modal windows
    */
   private setupEventListeners() {
-    document.getElementById('neon-modal-window-header-close').addEventListener('click', this.hideModalWindow.bind(this));
-    document.getElementById('neon-modal-window').addEventListener('keydown', this.keydownListener.bind(this));
-    document.getElementById('neon-modal-window-container').addEventListener('click', this.focusModalWindow.bind(this));
+    document.getElementById('cress-modal-window-header-close').addEventListener('click', this.hideModalWindow.bind(this));
+    document.getElementById('cress-modal-window').addEventListener('keydown', this.keydownListener.bind(this));
+    document.getElementById('cress-modal-window-container').addEventListener('click', this.focusModalWindow.bind(this));
   }
 
   /**
    * Remove event listeners associated with this modal window
    */
   private removeEventListeners() {
-    document.getElementById('neon-modal-window-header-close').removeEventListener('click', this.hideModalWindow.bind(this));
-    document.getElementById('neon-modal-window').removeEventListener('keydown', this.keydownListener.bind(this));
-    document.getElementById('neon-modal-window-container').removeEventListener('click', this.focusModalWindow.bind(this));
+    document.getElementById('cress-modal-window-header-close').removeEventListener('click', this.hideModalWindow.bind(this));
+    document.getElementById('cress-modal-window').removeEventListener('keydown', this.keydownListener.bind(this));
+    document.getElementById('cress-modal-window-container').removeEventListener('click', this.focusModalWindow.bind(this));
   }
 
 
@@ -82,7 +77,7 @@ export class ModalWindow implements ModalWindowInterface {
    */
   openModalWindow(): void {
     // make sure no other modal content is being displayed
-    Array.from(document.getElementsByClassName('neon-modal-window-content')).forEach((elem) => {
+    Array.from(document.getElementsByClassName('cress-modal-window-content')).forEach((elem) => {
       elem.classList.remove('visible');
     });
     switch(this.modalWindowView) {
@@ -93,7 +88,7 @@ export class ModalWindow implements ModalWindowInterface {
         
       case ModalWindowView.HOTKEYS:
         // set up and diplay hotkey modal content
-        document.getElementById('neon-modal-window-content-hotkeys').classList.add('visible');
+        document.getElementById('cress-modal-window-content-hotkeys').classList.add('visible');
 
       case ModalWindowView.DOCUMENT_UPLOAD:
         // add function to pairing button
@@ -107,7 +102,7 @@ export class ModalWindow implements ModalWindowInterface {
       case ModalWindowView.RENAME:
 
       default:
-        document.getElementById('neon-modal-window-container').style.display = 'flex';
+        document.getElementById('cress-modal-window-container').style.display = 'flex';
         this.focusModalWindow();
         break;
     }
@@ -120,7 +115,7 @@ export class ModalWindow implements ModalWindowInterface {
 
 
   /**
-   * Hide the Neon modal window
+   * Hide the cress modal window
    */
   hideModalWindow(): void {
     switch(this.modalWindowView) {
@@ -133,13 +128,13 @@ export class ModalWindow implements ModalWindowInterface {
       case ModalWindowView.MOVE_TO:
       case ModalWindowView.NEW_FOLDER:
       case ModalWindowView.RENAME:
-        document.getElementById('neon-modal-window-content-container').innerHTML = '';
+        document.getElementById('cress-modal-window-content-container').innerHTML = '';
         break;
 
       default:
         break;
     } 
-    document.getElementById('neon-modal-window-container').style.display = 'none';
+    document.getElementById('cress-modal-window-container').style.display = 'none';
     // reset scroll behavior of body
     document.body.style.overflowX = 'hidden';
     document.body.style.overflowY = 'scroll';
@@ -152,8 +147,8 @@ export class ModalWindow implements ModalWindowInterface {
    * Set content of modal window
    */
   private setModalWindowContent(content?: string): void {
-    const container = document.getElementById('neon-modal-window-content-container');
-    const title = document.getElementById('neon-modal-window-header-title');
+    const container = document.getElementById('cress-modal-window-content-container');
+    const title = document.getElementById('cress-modal-window-header-title');
 
     switch (this.modalWindowView) {
       case ModalWindowView.EDIT_TEXT:
@@ -167,7 +162,7 @@ export class ModalWindow implements ModalWindowInterface {
         const orig = span.textContent.replace(removeSymbol, '').trim();
 
         // set value of input field to current syllable text
-        (<HTMLInputElement> (document.getElementById('neon-modal-window-edit-text-input'))).value = orig;
+        (<HTMLInputElement> (document.getElementById('cress-modal-window-edit-text-input'))).value = orig;
         break;
 
       case ModalWindowView.HOTKEYS:
@@ -178,7 +173,7 @@ export class ModalWindow implements ModalWindowInterface {
       case ModalWindowView.ERROR_LOG:
         container.innerHTML = 
           `<div style="margin-bottom: 30px;white-space: pre-line;">${content}</div>
-          <div class="neon-modal-window-btn">
+          <div class="cress-modal-window-btn">
             <a href="data:text/plain;charset=utf-8,${encodeURI(content)}" download="error.log">
               Export
             </a>
@@ -216,23 +211,23 @@ export class ModalWindow implements ModalWindowInterface {
    */
   private openEditSylTextModalWindow = function(): void {
     // make sure no other modal content is being displayed
-    Array.from(document.getElementsByClassName('neon-modal-window-content')).forEach( (elem) => {
+    Array.from(document.getElementsByClassName('cress-modal-window-content')).forEach( (elem) => {
       elem.classList.remove('visible');
     });
 
     // set up Edit Syllable Text modal window
-    document.getElementById('neon-modal-window-content-edit-text').classList.add('visible');
+    document.getElementById('cress-modal-window-content-edit-text').classList.add('visible');
     
     // Reset "Cancel" button event listener
-    document.getElementById('neon-modal-window-edit-text-cancel').removeEventListener('click', this.hideModalWindow);
-    document.getElementById('neon-modal-window-edit-text-cancel').addEventListener('click', this.hideModalWindow.bind(this));
+    document.getElementById('cress-modal-window-edit-text-cancel').removeEventListener('click', this.hideModalWindow);
+    document.getElementById('cress-modal-window-edit-text-cancel').addEventListener('click', this.hideModalWindow.bind(this));
 
     // Reset "Save" button event listener
-    document.getElementById('neon-modal-window-edit-text-save').removeEventListener('click', this.updateSylText.bind(this));
-    document.getElementById('neon-modal-window-edit-text-save').addEventListener('click', this.updateSylText.bind(this));
+    document.getElementById('cress-modal-window-edit-text-save').removeEventListener('click', this.updateSylText.bind(this));
+    document.getElementById('cress-modal-window-edit-text-save').addEventListener('click', this.updateSylText.bind(this));
 
     // display modal window
-    document.getElementById('neon-modal-window-container').style.display = 'flex';
+    document.getElementById('cress-modal-window-container').style.display = 'flex';
     this.focusModalWindow();
   };
 
@@ -257,14 +252,14 @@ export class ModalWindow implements ModalWindowInterface {
   /*
   private openHotkeyModalWindow = function() {   
     // make sure no other modal content is being displayed
-    Array.from(document.getElementsByClassName('neon-modal-window-content')).forEach((elem) => {
+    Array.from(document.getElementsByClassName('cress-modal-window-content')).forEach((elem) => {
       elem.classList.remove('visible');
     });
 
     // set up and diplay hotkey modal content
-    document.getElementById('neon-modal-window-content-hotkeys').classList.add('visible');
+    document.getElementById('cress-modal-window-content-hotkeys').classList.add('visible');
 
-    document.getElementById('neon-modal-window-container').style.display = 'flex';
+    document.getElementById('cress-modal-window-container').style.display = 'flex';
     this.focusModalWindow();
   };
   */
@@ -274,7 +269,7 @@ export class ModalWindow implements ModalWindowInterface {
    * Define event listeners for modal window based on modalView type
    */
   private keydownListener = function(e) {
-    e.stopImmediatePropagation(); // prevent Neon hotkey events from firing when user is typing
+    e.stopImmediatePropagation(); // prevent cress hotkey events from firing when user is typing
 
     switch(this.modalWindowView) {
       case ModalWindowView.EDIT_TEXT:
@@ -292,14 +287,14 @@ export class ModalWindow implements ModalWindowInterface {
   private focusModalWindow = function() {
     switch(this.modalWindowView) {
       case ModalWindowView.EDIT_TEXT:
-        (<HTMLInputElement> document.getElementById('neon-modal-window-edit-text-input')).select();
+        (<HTMLInputElement> document.getElementById('cress-modal-window-edit-text-input')).select();
         break;
       case ModalWindowView.DOCUMENT_UPLOAD:
       case ModalWindowView.NEW_FOLDER:
       case ModalWindowView.RENAME:
         break;
       default:
-        document.getElementById('neon-modal-window').focus();
+        document.getElementById('cress-modal-window').focus();
     }
   };
 

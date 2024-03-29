@@ -449,7 +449,7 @@ input.filename-input, select.file-input, textarea.file-input {
 #initial_upload_area:hover,
 .over {
   cursor: pointer;
-  background-color: #dffcff;
+  background-color: #c3aed63d;
   transition: 0.1s;
 }
 
@@ -466,7 +466,7 @@ input.filename-input, select.file-input, textarea.file-input {
 }
 
 .action_button:hover {
-  background-color: #7bb1b7;
+  background-color: #C3AED6;
   color: white;
 }
 
@@ -489,17 +489,12 @@ input.filename-input, select.file-input, textarea.file-input {
 }
 
 #initial_upload_message {
-  color: #7bb1b7;
+  color: #C3AED6;
 }
 
 #uploading_container {
   width: 100%;
   height: 60%;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  align-content: center;
 }
 
 .file_container {
@@ -509,18 +504,6 @@ input.filename-input, select.file-input, textarea.file-input {
   min-width: 200px;
 }
 
-#unpaired_container {
-  margin-right: 5%;
-  width: 65%;
-}
-
-#paired_container {
-  width: 30%;
-  display: flex;
-  flex-direction: column;
-}
-
-
 .file-container-title {
   width: 100%;
   height: 10%;
@@ -528,7 +511,7 @@ input.filename-input, select.file-input, textarea.file-input {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #7bb1b7;
+  color: #C3AED6;
 }
 
 #files_container {
@@ -536,17 +519,6 @@ input.filename-input, select.file-input, textarea.file-input {
   flex-direction: row;
   width: 100%;
   height: 80%;
-}
-
-#mei_container,
-#image_container {
-  width: 50%;
-  display: flex;
-  flex-direction: column;
-}
-
-#image_container {
-  border-left: 1px solid #dfdfdf;
 }
 
 .file_heading {
@@ -558,85 +530,25 @@ input.filename-input, select.file-input, textarea.file-input {
   border-bottom: 1px solid #dfdfdf;
 }
 
-.file_sort_name {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color:rgba(123, 177, 183, 0.1);
-  border-bottom: 1px solid #dfdfdf;
-  font-size: 80%;
-}
-
-.arrow_btn {
-  margin-left: 4px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
 .file_list {
   height: 100%;
   width: 99%;
   overflow: scroll;
 }
 
-.unpaired_item_container {
-  width: 95%;
-  min-height: 30px;
-  cursor: pointer;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-}
-
-.unpaired_item_radio {
-  cursor: pointer;
-}
-
-.unpaired_item_label {
-  font-size: 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-}
-
-.unpaired_del_btn {
+.upload_del_btn {
   width: 7%;
   opacity: 0.4;
   margin-left: auto;
   cursor: pointer;
 }
 
-#generate-pair-button-container {
-  width: 100%;
-  height: 10%;
-  display: flex;
-  justify-content: center;
-  align-content: center;
-  align-items: center;
-  border-top: 1px solid #dfdfdf;
-}
-
-.folio_list {
+.doc_list {
   height: 80%;
   width: 100%;
   overflow: scroll;
 }
 
-.folio_item {
-  border: 1px solid #d5d5d5;
-  border-radius: 4px;
-  height: 30px;
-  min-height: 30px;
-  margin: 5px;
-  padding: 0 5px;
-  display: flex;
-  align-items: center;
-}
-
-.folio-filename {
-  width: 100%;
-  font-size: 12px;
-}
 
 .unpair_btn {
   width: 9%;

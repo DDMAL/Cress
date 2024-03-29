@@ -6,74 +6,21 @@ export const uploadAreaHTML =
         <div id="initial_upload_message">Upload Files</div>
       </div>
     </div>
-    
-    <div id="uploading_container">
-      <div class="file_container" id="unpaired_container">
 
-        <div class="file-container-title">Unpaired Documents</div>
+    <div class="file_container" id="uploading_container">
 
-        <div id="files_container">
+      <div class="file-container-title">Uploading Documents</div>
+      <div class="doc_list" id="uploading_list"></div>
 
-          <div id="mei_container">
-            <div class="file_heading">MEI</div>
-            <div class="file_sort_name">
-              <div>Name</div>
-              <div class="sort_name arrow_btn">&#x22C0;</div>
-            </div>
-            <div class="file_list" id="mei_list">
-              <div class="unpaired_item_container" style="width: 100%; background: #DAEAF1; border-radius: 5px;">
-                <label class="unpaired_item_label">
-                  <input type="radio" class="unpaired_item_radio" name="mei_radio_group" value="create_mei">
-                    <span style="margin-top: auto;margin-left: 3px;">
-                      Create new MEI file
-                    </span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <div id="image_container">
-            <div class="file_heading">Images</div>
-            <div class="file_sort_name">
-              <div>Name</div>
-              <div class="sort_name arrow_btn">&#x22C0;</div>
-            </div>
-            <div class="file_list" id="image_list"></div>
-          </div>
-
-        </div>
-
-        <div id="generate-pair-button-container">
-          <div class="action_button" id="make_pair">Make Pair</div>
+      <div id="upload_button_container">
+        <div class="action_button" id="upload_button">
+          Upload
+          <div id="uploading_spinner">↻</div>
         </div>
       </div>
-
-      <div class="file_container" id="paired_container">
-
-        <div class="file-container-title">Paired Folios</div>
-        <div class="file_sort_name">
-          <div>Name</div>
-          <div class="sort_name arrow_btn">&#x22C0;</div>
-        </div>
-        <div class="folio_list" id="paired_list"></div>
-
-        <div id="upload_button_container">
-          <div class="action_button" id="upload_button">
-            Upload
-            <div id="uploading_spinner">↻</div>
-          </div>
-        </div>
-
-      </div>
-
-      <!--
-      <div class="file_container" id="manuscripts_container">
-        <h2 class="file_heading">Manuscripts</h2>
-        <div class="folio_list" id="manuscript_list"></div>
-      </div>
-      -->
 
     </div>
+
   </div>`;
 
 export const newFolderHTML = `
