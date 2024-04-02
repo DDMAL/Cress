@@ -1,6 +1,6 @@
 import PouchDB from 'pouchdb';
 import { AllDocs, Doc, uploadsInfo } from '../Types';
-import csv from 'csvtojson';
+import * as Papa from 'papaparse';
 
 export const db = new PouchDB('Cress-User-Storage');
 
@@ -25,9 +25,41 @@ export async function fetchUploads(): Promise<uploadsInfo> {
   }
 }
 
-export function createJson(id: string, title: string, file: File): Promise<string> {
+async function parseCSV(file: File): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    Papa.parse(file, {
+      header: true,
+      dynamicTyping: true,
+      complete: (results) => {
+        if (results.errors.length > 0) {
+          reject(new Error('Error parsing CSV file'));
+        } else {
+          resolve(results.data);
+        }
+      },
+      error: (error) => {
+        reject(error);
+      }
+    });
+  });
+}
+
+
+export function createJson(file: File, type: string): Promise<Blob> {
   return new Promise(async (resolve) => {
-    
+    let data: any[];
+    if ( type === 'csv' ) {
+      console.log(file);
+      data = await parseCSV(file);
+    } else if ( type === 'xlsx') {
+      // data = await parseXLSX(file);
+    } else {
+      console.error('Unsupported file format');
+      return;
+    }
+    const jsonBlob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    console.log(jsonBlob);
+    resolve(jsonBlob);
   });
 }
 
@@ -36,7 +68,6 @@ export function createJson(id: string, title: string, file: File): Promise<strin
  * @param id 
  * @param title 
  * @param content 
- * @param single is it a single page or a manuscript
  * @returns Promise<boolean>
  */
 export function addDocument(id: string, name: string, content: Blob): Promise<boolean> {

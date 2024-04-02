@@ -536,10 +536,20 @@ input.filename-input, select.file-input, textarea.file-input {
   overflow: scroll;
 }
 
+.upload_item_container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.upload_item_name {
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: 8px;
+}
+
 .upload_del_btn {
-  width: 7%;
+  width: 30px;
   opacity: 0.4;
-  margin-left: auto;
   cursor: pointer;
 }
 
