@@ -10,6 +10,7 @@ module.exports = {
   entry: {
     landing: './deployment/scripts/landing.ts',
     dashboard: './deployment/scripts/dashboard.ts',
+    editor: './deployment/scripts/editor.ts',
   },
   output: {
     path: path.resolve(__dirname, 'deployment', 'server', 'Cress-gh'),
