@@ -1,4 +1,14 @@
 import PouchDB from 'pouchdb';
+interface Glyph {
+    image: string | null;
+    name: string;
+    description: string | null;
+    classification: string;
+    width: string | number | [number, number] | [number, number, number];
+    mei: string;
+}
+
+export type GlyphArray = Glyph[];
 
 /** Type definitions for Cress */
 export type AllDocs = {
@@ -18,7 +28,7 @@ export type Doc = {
   _id: string,
   name: string,
   _attachments: {
-    table: {
+    glyphs: {
       content_type: string,
       data: Blob
     }
