@@ -58,7 +58,6 @@ export function createJson(file: File, type: string): Promise<Blob> {
       return;
     }
     const jsonBlob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    console.log(jsonBlob);
     resolve(jsonBlob);
   });
 }
@@ -76,7 +75,7 @@ export function addDocument(id: string, name: string, content: Blob): Promise<bo
       _id: id,
       name: name,
       _attachments: {
-        table: {
+        glyphs: {
           content_type: 'application/json',
           data: content
         }

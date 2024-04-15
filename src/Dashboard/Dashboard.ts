@@ -91,7 +91,7 @@ function openUploadAreaHandler() {
  */
 function openEditorTab(id: string, isSample: boolean) {
   const params = (isSample)
-    ? { manifest: id }
+    ? { glyphs: id }
     : { storage: id };
   const query = makeQuery(params);
   window.open(`./editor.html?${query}`, '_blank');
