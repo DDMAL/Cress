@@ -1,0 +1,110 @@
+<div class="overlay" id="loading">
+  <div class="loader"></div>
+</div>
+<nav class="navbar is-light">
+  <div class="navbar-brand">
+      <!-- Image src attributes are ste programatically because paths are not the same in dev and prod -->
+      <img id="cress-main-icon">
+    </a>
+    <a class="navbar-burger" id="burgerMenu" role="button" aria-label="menu" aria-expanded="false">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="navbar-menu" id="navMenu">
+
+    <div class="navbar-start">
+
+      <div class="navbar-main-content-container" id="navbar-main-content-container-top">
+        <div class="navbar-element" id="filename"></div>
+        <div id="unsaved-changes-container">
+          <img class="navbar-element" id="file-saved" alt="Your work is saved">
+        </div>
+        <div class="navbar-element" id="file-status">
+          <div id="validation_status_container">
+            <span class="file_status_title">MEI Status: </span>
+            <span id="validation_status"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="navbar-main-content-container" id="navbar-main-content-container-bottom">
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <div class="navbar-element navbar-btn">
+            <div class="navbar-btn-text">File</div>
+          </div>
+
+          <div class="navbar-dropdown">
+            <div id="save" class="navbar-dropdown-item">
+              <div class="navbar-dropdown-item-text">Save</div>
+            </div>
+            <div id="export" class="navbar-dropdown-item">
+              <div class="navbar-dropdown-item-text">Export to CSV File</div>
+            </div>
+            <a id="getmei" class="navbar-dropdown-item">
+             <div class="navbar-dropdown-item-text">Export to Excel File</div>
+            </a>
+          </div>   
+        </div>
+      
+        <div class="navbar-item has-dropdown is-hoverable">
+          <div class="navbar-element navbar-btn">
+            <div class="navbar-btn-text">Help</div>
+          </div>
+          <div class="navbar-dropdown">
+            <a class="navbar-dropdown-item" href="//ddmal.music.mcgill.ca" target="_blank">
+              DDMAL
+              <img class="external-link-icon">
+            </a>
+            <div class="navbar-dropdown-item">
+              <div id="navbar-item-hotkeys">Hotkeys</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="navbar-end">      
+      <a class="navbar-element navbar-btn" id="feedback-form-btn-container" href="https://forms.gle/vGUpvZKZxGX5QGJZ9" target="_blank">
+        Feedback Form
+        <img class="external-link-icon">
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div id="editor-body-container">
+  <div id="notification-content" style="display:none;"></div>
+  <div id="container">
+    <div class="neume-table-header">
+      <div style="max-width: 100px;"><b>Image</b></div>
+      <div><b>Name</b></div>
+      <div> <b>Generic Name</b></div>
+      <div> <b>Width </b></div>
+      <div> <b>Folio</b></div>
+      <div> <b>Description</b></div>
+      <div> <b>Classification</b></div>
+      <div class="mei-header"> <b>MEI Encoding</b></div><button id="select-all-button" style="display: none;"><i
+          class="fa fa-check"></i></button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Cress modal window -->
+<div id="cress-modal-window-container">
+  <div tabindex="0" id="cress-modal-window">
+    
+    <div id="cress-modal-window-header">
+      <div id="cress-modal-window-header-title"></div>
+      <div id="cress-modal-window-header-close">x</div>
+    </div>
+
+    <!-- Cress modal window content section -->
+    <div id="cress-modal-window-content-container"></div>
+  </div>
+  
+
+</div>
