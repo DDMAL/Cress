@@ -1,6 +1,6 @@
 import CressView from '../../src/CressView';
 import { IEntry, IFolder } from '../../src/Dashboard/FileSystem';
-import { GlyphArray } from '../../src/Types';
+import { CressDoc, Doc, GlyphArray } from '../../src/Types';
 import PouchDB from 'pouchdb';
 import * as Papa from 'papaparse';
 
@@ -13,29 +13,40 @@ if (id) {
         try {
             const localFileSystem = JSON.parse(fs) as IFolder;
             const filename = findFileNameById(localFileSystem);
-            const filePath = `./samples/${filename}.csv`;
+            if (filename) {
+              const filePath = `./samples/${filename}.csv`;
 
-            window.fetch(filePath)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(response.statusText);
-                    }
-                    return response.text();
-                })
-                .then(async text => {
-                    try {
-                        let data = Papa.parse(text);
-                        console.log(data);
-                        const view = new CressView();
-                        view.start();
-                    } catch (e) {
-                        console.error(e);
-                        console.debug(text);
-                    }
-                })
-                .catch(error => {
-                    console.error(error);
-                });
+              window.fetch(filePath)
+                  .then(response => {
+                      if (!response.ok) {
+                          throw new Error(response.statusText);
+                      }
+                      return response.text();
+                  })
+                  .then(async text => {
+                      try {
+                          let file = Papa.parse(text);
+                          let data = file.data;
+                          console.log(data);
+                          let cressDoc: CressDoc = {
+                            id: id,
+                            name: filename,
+                            glyphs: data
+                          }
+                          const view = new CressView(cressDoc);
+                          view.start();
+                      } catch (e) {
+                          console.error(e);
+                          console.debug(text);
+                      }
+                  })
+                  .catch(error => {
+                      console.error(error);
+                  });
+            } else {
+              console.error('Error finding file in local file system.');
+            }
+            
         } catch (e) {
             console.error('Error parsing local file system:', e);
         }
@@ -48,7 +59,14 @@ if (id) {
     return new window.Response(blob).json();
   }).then(async glyphs => {
     console.log(glyphs);
-    const view = new CressView();
+    const doc: Doc = await db.get(storage);
+    const name = doc.name;
+    let cressDoc: CressDoc = {
+      id: storage,
+      name: name,
+      glyphs: glyphs
+    };
+    const view = new CressView(cressDoc);
     view.start();
   });
 }
