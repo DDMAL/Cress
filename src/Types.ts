@@ -10,6 +10,12 @@ interface Glyph {
 
 export type GlyphArray = Glyph[];
 
+export type CressDoc = {
+  id: string,
+  name: string,
+  glyphs: any[]
+};
+
 /** Type definitions for Cress */
 export type AllDocs = {
   total_rows?: number,
