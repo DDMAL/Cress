@@ -1,6 +1,7 @@
 
 import setBody from './utils/Template';
 import { ModalWindow } from './utils/ModalWindow';
+import { EditableTable } from './utils/EditableTable';
 import {
   ModalWindowInterface,
 } from './Interfaces';
@@ -22,9 +23,6 @@ class CressView {
   /** Module that controls state and content of Cress modal windows */
   modal: ModalWindowInterface;
 
-  private container: HTMLElement;
-  
-
   /**
    * Constructor for CressView. Sets mode and passes constructors.
    */
@@ -32,8 +30,6 @@ class CressView {
     this.id = cressDoc.id;
     this.name = cressDoc.name;
     this.glyphs = cressDoc.glyphs;
-
-    this.container = document.getElementById('container');
   }
 
   /**
@@ -47,6 +43,8 @@ class CressView {
       listenUnsavedChanges();
 
       document.getElementById('loading').style.display = 'none';
+
+      new EditableTable(this.glyphs);
 
       return;
     }).then(() => {
