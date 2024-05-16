@@ -15,7 +15,6 @@ body {
     margin: 0px;
     display: flex;
     flex-direction: column;
-    overflow: scroll;
 }
 
 a {
@@ -133,6 +132,7 @@ a:hover {
 }
 .navbar-item:hover .navbar-dropdown {
     color: #8675A9;
+    z-index: 1000;
     display: block;
 }
 .navbar-dropdown {
@@ -251,8 +251,9 @@ a:hover {
 /* ----------------------- */
 
 #editor-body-container {
-    overflow: hidden;
+    overflow: auto;
     height: 91vh;
+    width: 100%;
     margin: 0;
 }
 #container {
@@ -521,4 +522,22 @@ a:hover {
 .hotkey-entry-description {
     width: 30%;
     word-break: break-word;
+}
+
+/* ----------------------- */
+/* Section: Handsontable
+/* ----------------------- */
+.handsontable.customMenuButton .changeType {
+    background: #e2e2e2;
+    border-radius: 100%;
+    width: 16px;
+    color: #0075ff;
+    height: 16px;
+    padding: 3px 2px;
+    border: none;
+  }
+  
+.handsontable.customMenuButton .changeType::before {
+    content: '▼ ';
+    zoom: 0.9;
 }
