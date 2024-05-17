@@ -1,0 +1,8 @@
+/node_modules
+.DS_Store
+.awcache
+.vscode
+
+/deployment/server/Cress-gh
+/deployment/public
+/dist
