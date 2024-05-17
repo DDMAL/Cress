@@ -22,6 +22,8 @@ class CressView {
   glyphs: any[];
   /** Module that controls state and content of Cress modal windows */
   modal: ModalWindowInterface;
+  /** Spreadsheet module */
+  table: EditableTable;
 
   /**
    * Constructor for CressView. Sets mode and passes constructors.
@@ -44,7 +46,7 @@ class CressView {
 
       document.getElementById('loading').style.display = 'none';
 
-      new EditableTable(this.glyphs);
+      this.table = new EditableTable(this.glyphs);
 
       return;
     }).then(() => {
