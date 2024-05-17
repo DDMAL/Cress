@@ -1,11 +1,16 @@
 import PouchDB from 'pouchdb';
 interface Glyph {
-    image: string | null;
+    imagePath: string | null;
+    imageBinary: string | null;
     name: string;
-    description: string | null;
+    folio: string;
+    descriptor: string | null;
     classification: string;
     width: string | number | [number, number] | [number, number, number];
     mei: string;
+    review: string;
+    dob: string;
+    project: string;
 }
 
 export type GlyphArray = Glyph[];
