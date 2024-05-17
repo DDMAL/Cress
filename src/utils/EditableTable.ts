@@ -7,26 +7,19 @@ export class EditableTable {
 
     constructor (data: any[]) {
         const container = document.getElementById('hot-container');
-
-        // get headers
-        const headers = data[0].slice(0, 11);
-
-        // remove the header
-        data = data.slice(1);
-        data = data.map(row => row.slice(0, 11));
         console.log(data);
 
         // create indices for the rows
         const indices = [];
-        for (let i = 1; i <= data.length; i++) {
-            indices.push(i);
+        for (let i = 0; i < data.length; i++) {
+            indices.push(i + 1);
         }
 
         this.table = new Handsontable(container, {
             data: data,
             startCols: 11,
             startRows: data.length,
-            height: 'auto', // '91vh',
+            height: '91vh',
             width: '100%',
             manualRowResize: true,
             manualColumnResize: true,
@@ -34,11 +27,24 @@ export class EditableTable {
             selectionMode: 'multiple',
             rowHeights: 30,
             colWidths: [120, 120, 100, 50, 80, 120, 60, 150, 50, 50, 130],
-            columns: [{ renderer: this.imgRenderer }, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+            columns: [
+              { data: 'imagePath', renderer: this.imgRenderer },
+              { data: 'imageBinary' }, 
+              { data: 'name' },
+              { data: 'folio' },
+              { data: 'descriptor' },
+              { data: 'classification' },
+              { data: 'width' },
+              { data: 'mei' },
+              { data: 'review' },
+              { data: 'dob' },
+              { data: 'project' }
+            ],
             rowHeaders: indices,
-            colHeaders: headers,
+            colHeaders: ['imagePath', 'imageBinary', 'name', 'folio', 'descriptor', 
+                         'classification', 'width', 'mei', 'review', 'dob', 'project'],
             stretchH: 'all',
-            minSpareRows: 2,
+            minSpareRows: 0,
             autoWrapRow: true,
             autoWrapCol: true,
             contextMenu: true,
