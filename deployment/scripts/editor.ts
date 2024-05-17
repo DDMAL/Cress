@@ -31,7 +31,7 @@ if (id) {
                           let cressDoc: CressDoc = {
                             id: id,
                             name: filename,
-                            glyphs: data
+                            glyphs: dataListToDict(data)
                           }
                           const view = new CressView(cressDoc);
                           view.start();
@@ -102,4 +102,17 @@ function findFileNameById(node: IEntry): string | null {
     }
 
     return null;
+}
+
+function dataListToDict(rows: any[]) {
+  let headers = rows[0];
+  const glyphArray: GlyphArray = [];
+  for (let i = 1; i < rows.length; i++) {
+      const glyph: any = {};
+      for (let j = 0; j < headers.length; j++) {
+          glyph[headers[j]] = rows[i][j];
+      }
+      glyphArray.push(glyph);
+  }
+  return glyphArray;
 }
