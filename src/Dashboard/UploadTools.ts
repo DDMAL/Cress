@@ -13,7 +13,7 @@ export function addNewFiles( files: File[] ): File[] {
   files.forEach( file => {
     const ext = file.name.split('.').pop();
 
-    if ( ['csv','xlsx'].includes(ext) ) {
+    if ( ['csv','xlsx','doc','docx'].includes(ext) ) {
       const uploadingItem = createUploadingItem(file.name);
       file_container.appendChild(uploadingItem);
       fm.addFile(file);

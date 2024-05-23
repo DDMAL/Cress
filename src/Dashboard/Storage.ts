@@ -45,6 +45,70 @@ async function parseCSV(file: File): Promise<any[]> {
 }
 
 
+async function parseWORD(file: File): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    var mammoth = require("mammoth");
+    mammoth.convertToHtml({arrayBuffer: file.arrayBuffer()})
+      .then(function(result){
+          var html = result.value;
+          var messages = result.messages;
+          console.log('messages:', messages);
+
+          // html to dom
+          var parser = new DOMParser();
+          var doc = parser.parseFromString(html, 'text/html');
+          // extract tables
+          var table = doc.getElementsByTagName('table')[0];
+          var headers = table.getElementsByTagName('tr')[0].getElementsByTagName('td');
+          // remove header row
+          table.deleteRow(0);
+          // get all rows
+          var rows = table.getElementsByTagName('tr');
+          var data = [];
+          for (var j = 0; j < rows.length; j++) {
+              var row = rows[j];
+              var cells = row.getElementsByTagName('td');
+              // initialize row data
+              var rowData = {};
+              for (var header of headers) {
+                  rowData[header.textContent] = '';
+              }
+              // populate row data
+              for (var k = 0; k < cells.length; k++) {
+                  var cell = cells[k];
+                  // get all <p> elements
+                  var paragraphs = cell.getElementsByTagName('p');
+                  var text = '';
+                  for (var p of paragraphs) {
+                      // if there is text in the paragraph
+                      if (p.textContent !== '') {
+                          text += p.textContent;
+                          text += '\n';
+                      } else {
+                          // if there are <img> elements
+                          var images = p.getElementsByTagName('img');
+                          for (var img of images) {
+                              var imgSrc = img.src;
+                              // if imgSrc not incluse 'emf', save the src into the text
+                              if (!imgSrc.includes('emf')) {
+                                  text += imgSrc;
+                              }
+                          }
+                      }
+                  }
+                  rowData[headers[k].textContent] = text;
+              }
+              data.push(rowData);
+          }
+          resolve(data);
+      })
+      .catch(function(error) {
+          console.error(error);
+          reject(error);
+      });
+  });
+}
+
 export function createJson(file: File, type: string): Promise<Blob> {
   return new Promise(async (resolve) => {
     let data: any[];
@@ -53,6 +117,9 @@ export function createJson(file: File, type: string): Promise<Blob> {
       data = await parseCSV(file);
     } else if ( type === 'xlsx') {
       // data = await parseXLSX(file);
+    } else if ( type === 'doc' || type === 'docx') {
+      console.log(file);
+      data = await parseWORD(file);
     } else {
       console.error('Unsupported file format');
       return;

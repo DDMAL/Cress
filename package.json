@@ -22,6 +22,7 @@
   "dependencies": {
     "handsontable": "^14.3.0",
     "http-server": "^14.1.1",
+    "mammoth": "^1.7.2",
     "pouchdb": "^8.0.1",
     "uuid": "^9.0.1"
   },
