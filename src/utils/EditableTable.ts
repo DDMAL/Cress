@@ -9,6 +9,36 @@ export class EditableTable {
         const container = document.getElementById('hot-container');
         console.log(data);
 
+        // headers for the table
+        const headers = ['imagePath', 'name', 'classification', 'mei'];
+
+        // for loop to get the columns
+        const columns = [];
+        for (let i = 0; i < headers.length; i++) {
+            if (headers[i].includes('image')) {
+                columns.push({
+                    data: headers[i],
+                    renderer: this.imgRenderer,
+                });
+            } else {
+                columns.push({
+                    data: headers[i],
+                });
+            }
+        }
+
+        // column widths
+        const colWidths = [];
+        for (let i = 0; i < headers.length; i++) {
+            if (headers[i].includes('image')) {
+                colWidths.push(150);
+            } else if (headers[i].includes('mei')) {
+                colWidths.push(200);
+            } else {
+                colWidths.push(100);
+            }
+        }
+
         // create indices for the rows
         const indices = [];
         for (let i = 0; i < data.length; i++) {
@@ -26,23 +56,10 @@ export class EditableTable {
             manualRowMove: true,
             selectionMode: 'multiple',
             rowHeights: 30,
-            colWidths: [120, 120, 100, 50, 80, 120, 60, 150, 50, 50, 130],
-            columns: [
-              { data: 'imagePath', renderer: this.imgRenderer },
-              { data: 'imageBinary' }, 
-              { data: 'name' },
-              { data: 'folio' },
-              { data: 'descriptor' },
-              { data: 'classification' },
-              { data: 'width' },
-              { data: 'mei' },
-              { data: 'review' },
-              { data: 'dob' },
-              { data: 'project' }
-            ],
+            colWidths: colWidths,
+            columns: columns,
             rowHeaders: indices,
-            colHeaders: ['imagePath', 'imageBinary', 'name', 'folio', 'descriptor', 
-                         'classification', 'width', 'mei', 'review', 'dob', 'project'],
+            colHeaders: headers,
             stretchH: 'all',
             minSpareRows: 0,
             autoWrapRow: true,
