@@ -34,7 +34,7 @@ module.exports = {
     new HardSourceWebpackPlugin(),
     new webpack.DefinePlugin({
       __LINK_LOCATION__: JSON.stringify('https://ddmal.music.mcgill.ca/Cress'),
-      __ASSET_PREFIX__: JSON.stringify('/Cress-gh/'),
+      __ASSET_PREFIX__: JSON.stringify('/Cress/Cress-gh/'),
     }),
   ],
 };
