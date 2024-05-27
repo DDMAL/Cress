@@ -11,7 +11,7 @@ module.exports = {
     dashboard: './deployment/scripts/dashboard.ts',
   },
   output: {
-    path: path.resolve(__dirname, 'gh-pages', 'Cress-gh'),
+    path: path.resolve(__dirname, 'gh-pages', 'Cress', 'Cress-gh'),
     filename: '[name].js',
   },
   node: {
