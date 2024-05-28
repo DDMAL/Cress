@@ -99,6 +99,7 @@ export class EditableTable {
         td.innerText = '';
         if (value && (value.includes('http') || value.includes('base64'))) {
             const container = document.createElement('div');
+            container.style.paddingTop = '5px';
             const img = this.createImageElement(value);
             const buttons = this.createButtons(instance, row, col);
 
@@ -117,6 +118,9 @@ export class EditableTable {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
+        input.style.width = '100%';
+        input.style.height = '100%';
+        input.style.padding = '5px';
         input.addEventListener('change', (event) => {
             const file = (event.target as HTMLInputElement).files[0];
             if (file) {
@@ -146,10 +150,11 @@ export class EditableTable {
     createButtons = (instance, row, col) => {
         const buttonContainer = document.createElement('div');
         buttonContainer.style.display = 'flex';
-        buttonContainer.style.marginTop = '10px';
+        buttonContainer.style.marginTop = '5px';
 
         const deleteButton = document.createElement('button');
         deleteButton.innerText = 'Delete Image';
+        deleteButton.style.marginRight = '5px';
         deleteButton.addEventListener('click', () => {
             instance.setDataAtCell(row, col, '');
             instance.render();
