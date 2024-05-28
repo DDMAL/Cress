@@ -19,6 +19,7 @@ export class EditableTable {
                 columns.push({
                     data: headers[i],
                     renderer: this.imgRenderer,
+                    readOnly: true,
                 });
             } else {
                 columns.push({
@@ -95,10 +96,24 @@ export class EditableTable {
     }
 
     imgRenderer(instance, td, row, col, prop, value, cellProperties) {
-        if (!value) {
-            return td;
-        }
-        if (value.includes('http') || value.includes('base64')) {
+        if (!value.includes('http') && !value.includes('base64')) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.addEventListener('change', (event) => {
+                const file = (event.target as HTMLInputElement).files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const base64String = (e.target.result as string);
+                        instance.setDataAtCell(row, col, base64String);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            td.innerText = '';
+            td.appendChild(input);
+        } else {
             const img = document.createElement('img');
             img.style.overflow = 'hidden';
             img.style.maxWidth = '100px';
@@ -109,8 +124,6 @@ export class EditableTable {
             });
             td.innerText = '';
             td.appendChild(img);
-        } else {
-            td.innerText = value;
         }
         return td;
     }
