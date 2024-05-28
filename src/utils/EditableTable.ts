@@ -19,6 +19,7 @@ export class EditableTable {
                 columns.push({
                     data: headers[i],
                     renderer: this.imgRenderer,
+                    readOnly: true,
                 });
             } else {
                 columns.push({
@@ -55,7 +56,7 @@ export class EditableTable {
             manualColumnResize: true,
             manualRowMove: true,
             selectionMode: 'multiple',
-            rowHeights: 30,
+            rowHeights: 100,
             colWidths: colWidths,
             columns: columns,
             rowHeaders: indices,
@@ -94,24 +95,81 @@ export class EditableTable {
         });
     }
 
-    imgRenderer(instance, td, row, col, prop, value, cellProperties) {
-        if (!value) {
-            return td;
-        }
-        if (value.includes('http') || value.includes('base64')) {
-            const img = document.createElement('img');
-            img.style.overflow = 'hidden';
-            img.style.maxWidth = '100px';
-            img.style.maxHeight = '100px';
-            img.src = value;
-            img.addEventListener('mousedown', (event) => {
-                event.preventDefault();
-            });
-            td.innerText = '';
-            td.appendChild(img);
+    imgRenderer = (instance, td, row, col, prop, value, cellProperties) => {
+        td.innerText = '';
+        if (value && (value.includes('http') || value.includes('base64'))) {
+            const container = document.createElement('div');
+            container.style.paddingTop = '5px';
+            const img = this.createImageElement(value);
+            const buttons = this.createButtons(instance, row, col);
+
+            container.appendChild(img);
+            container.appendChild(buttons);
+
+            td.appendChild(container);
         } else {
-            td.innerText = value;
+            const input = this.handleFileUpload(instance, row, col);
+            td.appendChild(input);
         }
         return td;
+    }
+
+    handleFileUpload = (instance, row, col) =>  {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.style.width = '100%';
+        input.style.height = '100%';
+        input.style.padding = '5px';
+        input.addEventListener('change', (event) => {
+            const file = (event.target as HTMLInputElement).files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const base64String = (e.target.result as string);
+                    instance.setDataAtCell(row, col, base64String);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        return input;
+    }
+
+    createImageElement = (value) => {
+        const img = document.createElement('img');
+        img.style.overflow = 'hidden';
+        img.style.maxWidth = '100px';
+        img.style.maxHeight = '60px';
+        img.src = value;
+        img.addEventListener('mousedown', (event) => {
+            event.preventDefault();
+        });
+        return img;
+    }
+
+    createButtons = (instance, row, col) => {
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.marginTop = '5px';
+
+        const deleteButton = document.createElement('button');
+        deleteButton.innerText = 'Delete Image';
+        deleteButton.style.marginRight = '5px';
+        deleteButton.addEventListener('click', () => {
+            instance.setDataAtCell(row, col, '');
+            instance.render();
+        });
+
+        const changeButton = document.createElement('button');
+        changeButton.innerText = 'Change Image';
+        changeButton.addEventListener('click', () => {
+            const changeInput = this.handleFileUpload(instance, row, col);
+            changeInput.click();
+        });
+
+        buttonContainer.appendChild(deleteButton);
+        buttonContainer.appendChild(changeButton);
+
+        return buttonContainer;
     }
 }
