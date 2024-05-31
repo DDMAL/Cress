@@ -1,8 +1,10 @@
 import Handsontable from 'handsontable';
+import writeXlsxFile from 'write-excel-file';
 
 export class EditableTable {
 
-    private exportButton: HTMLElement;
+    private exportToCsvButton: HTMLElement;
+    private exportToExcelButton: HTMLElement;
     private table: Handsontable;
 
     constructor (data: any[]) {
@@ -76,10 +78,9 @@ export class EditableTable {
             },
         });
 
-        this.exportButton = document.getElementById('export');
+        this.exportToCsvButton = document.getElementById('export-to-csv');
         const exportPlugin = this.table.getPlugin('exportFile');
-
-        this.exportButton.addEventListener('click', () => {
+        this.exportToCsvButton.addEventListener('click', () => {
             exportPlugin.downloadFile('csv', {
                 bom: false,
                 columnDelimiter: ',',
@@ -92,6 +93,35 @@ export class EditableTable {
                 mimeType: 'text/csv',
                 rowDelimiter: '\r\n',
             });
+        });
+
+        this.exportToExcelButton = document.getElementById('export-to-excel');
+        this.exportToExcelButton.addEventListener('click', async () => {
+            console.log('exporting to excel');
+            console.log(data);
+            var headerRow = [
+                { value: 'imagePath', type: String }, 
+                { value: 'name', type: String}, 
+                { value: 'classification', type: String }, 
+                { value: 'mei', type: String }
+            ];
+            var xlsxDataset = [headerRow];
+            // retrieve rows from data
+            for (let i = 0; i < data.length; i++) {
+                var xlsxRow = [
+                    { value: data[i].imagePath, type: String },
+                    { value: data[i].name, type: String },
+                    { value: data[i].classification, type: String },
+                    { value: data[i].mei, type: String }
+                ];
+                xlsxDataset.push(xlsxRow);
+            }
+            const year = new Date().getFullYear();
+            const month = new Date().getMonth() + 1;
+            const day = new Date().getDate();
+            await writeXlsxFile(xlsxDataset, {
+                fileName: `table-Excel-file_${year}-${month}-${day}.xlsx`,
+            })
         });
     }
 
