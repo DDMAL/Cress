@@ -21,7 +21,7 @@ export class EditableTable {
                 columns.push({
                     data: headers[i],
                     renderer: this.imgRenderer,
-                    readOnly: true,
+                    readOnly: false,
                 });
             } else {
                 columns.push({
@@ -137,9 +137,13 @@ export class EditableTable {
             container.appendChild(buttons);
 
             td.appendChild(container);
-        } else {
+            cellProperties.readOnly = true;
+        } else if (!value) {
             const input = this.handleFileUpload(instance, row, col);
             td.appendChild(input);
+            cellProperties.readOnly = true;
+        } else {
+            td.innerText = value;
         }
         return td;
     }
