@@ -1,8 +1,10 @@
 import Handsontable from 'handsontable';
+import writeXlsxFile from 'write-excel-file';
 
 export class EditableTable {
 
-    private exportButton: HTMLElement;
+    private exportToCsvButton: HTMLElement;
+    private exportToExcelButton: HTMLElement;
     private table: Handsontable;
 
     constructor (data: any[]) {
@@ -19,7 +21,7 @@ export class EditableTable {
                 columns.push({
                     data: headers[i],
                     renderer: this.imgRenderer,
-                    readOnly: true,
+                    readOnly: false,
                 });
             } else {
                 columns.push({
@@ -67,7 +69,7 @@ export class EditableTable {
             autoWrapCol: true,
             contextMenu: true,
             dropdownMenu: true,
-            className: 'customMenuButton',
+            className: 'table-menu-btn',
             licenseKey: 'non-commercial-and-evaluation',
             afterChange(change, source) {
                 if (source === 'loadData') {
@@ -76,10 +78,9 @@ export class EditableTable {
             },
         });
 
-        this.exportButton = document.getElementById('export');
+        this.exportToCsvButton = document.getElementById('export-to-csv');
         const exportPlugin = this.table.getPlugin('exportFile');
-
-        this.exportButton.addEventListener('click', () => {
+        this.exportToCsvButton.addEventListener('click', () => {
             exportPlugin.downloadFile('csv', {
                 bom: false,
                 columnDelimiter: ',',
@@ -92,6 +93,57 @@ export class EditableTable {
                 mimeType: 'text/csv',
                 rowDelimiter: '\r\n',
             });
+        });
+
+        this.exportToExcelButton = document.getElementById('export-to-excel');
+        this.exportToExcelButton.addEventListener('click', async () => {
+            const ExcelJS = require('exceljs');
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Sheet1');
+            worksheet.properties.defaultRowHeight = 60;
+            worksheet.properties.defaultColWidth = 30;
+
+            const header = headers;
+            worksheet.addRow(header);
+
+            for (let i = 0; i < data.length; i++) {
+                const row = [];
+                for (let j = 0; j < headers.length; j++) {
+                    const cellData = data[i][headers[j]];
+                    if (headers[j].includes('image')) {
+                        if (cellData && (cellData.includes('base64') || cellData.includes('http'))) {
+                            row.push('');
+                            const img = await workbook.addImage({
+                                base64: cellData,
+                                extension: 'png',
+                            });
+                            worksheet.addImage(img, `A${i + 2}:A${i + 2}`);
+                        } else {
+                            row.push(cellData);
+                        }
+                    } else {
+                        row.push(cellData);
+                    }
+                }
+                worksheet.addRow(row);
+            }
+
+            const currentDate = new Date();
+            const year = currentDate.getFullYear();
+            const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+            const day = String(currentDate.getDate()).padStart(2, '0');
+            const fileName = `table-XLSX-file_${year}-${month}-${day}.xlsx`;
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.click();
+
+            window.URL.revokeObjectURL(url);
         });
     }
 
@@ -107,9 +159,13 @@ export class EditableTable {
             container.appendChild(buttons);
 
             td.appendChild(container);
-        } else {
+            cellProperties.readOnly = true;
+        } else if (!value) {
             const input = this.handleFileUpload(instance, row, col);
             td.appendChild(input);
+            cellProperties.readOnly = true;
+        } else {
+            td.innerText = value;
         }
         return td;
     }

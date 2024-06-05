@@ -45,6 +45,48 @@ async function parseCSV(file: File): Promise<any[]> {
 }
 
 
+async function parseXLSX(file: File): Promise<any[]> {
+  return new Promise(async (resolve, reject) => {
+    const ExcelJS = require('exceljs');
+    const workbook = new ExcelJS.Workbook();
+    const data = await workbook.xlsx.load(file.arrayBuffer());
+    // to json
+    var worksheet = data.worksheets[0];
+    var headerNames = [];
+    worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
+      if (rowNumber === 1) {
+        row.values.forEach((header) => {
+          headerNames.push(header.toString());
+        });
+      }
+    });
+    var rows = [];
+    worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
+      if (rowNumber !== 1) {
+        var rowData = {};
+        row.values.forEach((cell, cellNumber) => {
+          var headerKey = headerNames[cellNumber - 1];
+          if (cell) {
+            rowData[headerKey] = cell.toString();
+          } else {
+            rowData[headerKey] = '';
+          }
+        });
+        rows.push(rowData);
+      }
+    });
+    for (const image of worksheet.getImages()) {
+      // fetch the media item with the data
+      const img = workbook.model.media.find(m => m.index === image.imageId);
+      const base64 = img.buffer.toString('base64');
+      const dataUrl = `data:${img.type};base64,${base64}`;
+      rows[image.range.tl.nativeRow - 1]['imagePath'] = dataUrl;
+    }
+    resolve(rows);
+  });
+}
+
+
 async function parseWORD(file: File): Promise<any[]> {
   return new Promise((resolve, reject) => {
     var mammoth = require("mammoth");
@@ -52,7 +94,7 @@ async function parseWORD(file: File): Promise<any[]> {
       .then(function(result){
           var html = result.value;
           var messages = result.messages;
-          console.log('messages:', messages);
+          console.log(messages);
 
           // html to dom
           var parser = new DOMParser();
@@ -113,12 +155,10 @@ export function createJson(file: File, type: string): Promise<Blob> {
   return new Promise(async (resolve) => {
     let data: any[];
     if ( type === 'csv' ) {
-      console.log(file);
       data = await parseCSV(file);
     } else if ( type === 'xlsx') {
-      // data = await parseXLSX(file);
+      data = await parseXLSX(file);
     } else if ( type === 'doc' || type === 'docx') {
-      console.log(file);
       data = await parseWORD(file);
     } else {
       console.error('Unsupported file format');
