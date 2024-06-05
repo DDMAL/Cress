@@ -1,0 +1,34 @@
+<mei
+    xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.0">
+    <meiHead>
+        <fileDesc>
+            <titleStmt>
+                <title>MEI Encoding Output (1.0.0)</title>
+            </titleStmt>
+            <pubStmt/>
+        </fileDesc>
+    </meiHead>
+    <music>
+        <body>
+            <mdiv>
+                <score>
+                    <scoreDef>
+                        <staffGrp>
+                            <staffDef n="1" notationtype="neume" lines="4" clef.shape="C" clef.line="3"/>
+                        </staffGrp>
+                    </scoreDef>
+                    <section>
+                        <pb/>
+                        <sb/>
+                        <section type="neon-neume-line">
+                            <staff n="1">
+                                <layer n="1">
+                                </layer>
+                            </staff>
+                        </section>
+                    </section>
+                </score>
+            </mdiv>
+        </body>
+    </music>
+</mei>

@@ -28,6 +28,15 @@ module.exports = {
         ],
         exclude: /node_modules/
       },
+      {
+        test: /Worker\.js$/,
+        use: [
+          {
+            loader: 'worker-loader',
+            options: { publicPath: '/Neon-gh/' }
+          }
+        ]
+      }
     ]
   },
   resolve: {

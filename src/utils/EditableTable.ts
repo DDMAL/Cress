@@ -1,5 +1,6 @@
 import Handsontable from 'handsontable';
 import writeXlsxFile from 'write-excel-file';
+import * as Validation from '../Validation';
 
 export class EditableTable {
 
@@ -44,9 +45,13 @@ export class EditableTable {
 
         // create indices for the rows
         const indices = [];
+        // get mei for validation
+        const meiData = [];
         for (let i = 0; i < data.length; i++) {
             indices.push(i + 1);
+            meiData.push(data[i].mei);
         }
+        Validation.sendForValidation(meiData);
 
         this.table = new Handsontable(container, {
             data: data,

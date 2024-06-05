@@ -172,7 +172,7 @@ export class ModalWindow implements ModalWindowInterface {
 
       case ModalWindowView.ERROR_LOG:
         container.innerHTML = 
-          `<div style="margin-bottom: 30px;white-space: pre-line;">${content}</div>
+          `<div style="margin-bottom: 30px;white-space: pre-line;overflow-y: scroll;">${content}</div>
           <div class="cress-modal-window-btn">
             <a href="data:text/plain;charset=utf-8,${encodeURI(content)}" download="error.log">
               Export
