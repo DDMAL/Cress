@@ -529,7 +529,7 @@ a:hover {
 /* ----------------------- */
 
 /* Keep camelCase names as they are from the library */
-.handsontable.customMenuButton .changeType {
+.handsontable.table-menu-btn .changeType {
     background: #e2e2e2;
     border-radius: 100%;
     width: 16px;
@@ -539,7 +539,7 @@ a:hover {
     border: none;
   }
   
-.handsontable.customMenuButton .changeType::before {
+.handsontable.table-menu-btn .changeType::before {
     content: '▼ ';
     zoom: 0.9;
 }

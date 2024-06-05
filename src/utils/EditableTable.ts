@@ -69,7 +69,7 @@ export class EditableTable {
             autoWrapCol: true,
             contextMenu: true,
             dropdownMenu: true,
-            className: 'customMenuButton',
+            className: 'table-menu-btn',
             licenseKey: 'non-commercial-and-evaluation',
             afterChange(change, source) {
                 if (source === 'loadData') {
