@@ -527,6 +527,8 @@ a:hover {
 /* ----------------------- */
 /* Section: Handsontable
 /* ----------------------- */
+
+/* Keep camelCase names as they are from the library */
 .handsontable.customMenuButton .changeType {
     background: #e2e2e2;
     border-radius: 100%;
