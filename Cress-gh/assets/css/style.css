@@ -93,6 +93,15 @@ a:hover {
     align-self: center;
     height: 50%;
 }
+#validation_status {
+    color: inherit;
+}
+#validation_status_container {
+    display: flex;
+}
+.file_status_title {
+    margin-right: 5px;
+}
 
 /* Bottom row: dropdown menu */
 .navbar-item {
@@ -388,6 +397,7 @@ a:hover {
     border-radius: 5px;
     overflow: hidden;
     outline: none;
+    box-sizing: border-box;
 }
 /* modal header */
 #cress-modal-window-header {
@@ -395,12 +405,13 @@ a:hover {
     width: 100%;
     padding-left: 20px;
     padding-right: 20px;
-    background-color: #7cb1b7;
+    background-color: #C3AED6;
     color: white;
     font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    box-sizing: border-box;
 }
 #cress-modal-window-header-close {
     border-radius: 50%;
@@ -429,6 +440,7 @@ a:hover {
     flex-direction: column;
     align-items: center;
     align-content: space-around;
+    box-sizing: border-box;
 }
 .cress-modal-window-content {
     display: none;
@@ -467,7 +479,7 @@ a:hover {
     width: 100%;
 }
 .cress-modal-window-btn {
-    background-color: #7cb1b7;
+    background-color: #C3AED6;
     color: white;
     cursor: pointer;
     padding: 5px;
@@ -527,7 +539,9 @@ a:hover {
 /* ----------------------- */
 /* Section: Handsontable
 /* ----------------------- */
-.handsontable.customMenuButton .changeType {
+
+/* Keep camelCase names as they are from the library */
+.handsontable.table-menu-btn .changeType {
     background: #e2e2e2;
     border-radius: 100%;
     width: 16px;
@@ -537,7 +551,12 @@ a:hover {
     border: none;
   }
   
-.handsontable.customMenuButton .changeType::before {
+.handsontable.table-menu-btn .changeType::before {
     content: '▼ ';
     zoom: 0.9;
+}
+
+.ht_master .wtHolder {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
 }
