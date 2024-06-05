@@ -10,7 +10,6 @@ export class EditableTable {
 
     constructor (data: any[]) {
         const container = document.getElementById('hot-container');
-        console.log(data);
 
         // headers for the table
         const headers = ['imagePath', 'name', 'classification', 'mei'];
