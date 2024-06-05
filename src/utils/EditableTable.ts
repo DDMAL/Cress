@@ -97,31 +97,53 @@ export class EditableTable {
 
         this.exportToExcelButton = document.getElementById('export-to-excel');
         this.exportToExcelButton.addEventListener('click', async () => {
-            console.log('exporting to excel');
-            console.log(data);
-            var headerRow = [
-                { value: 'imagePath', type: String }, 
-                { value: 'name', type: String}, 
-                { value: 'classification', type: String }, 
-                { value: 'mei', type: String }
-            ];
-            var xlsxDataset = [headerRow];
-            // retrieve rows from data
+            const ExcelJS = require('exceljs');
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Sheet1');
+            worksheet.properties.defaultRowHeight = 60;
+            worksheet.properties.defaultColWidth = 30;
+
+            const header = headers;
+            worksheet.addRow(header);
+
             for (let i = 0; i < data.length; i++) {
-                var xlsxRow = [
-                    { value: data[i].imagePath, type: String },
-                    { value: data[i].name, type: String },
-                    { value: data[i].classification, type: String },
-                    { value: data[i].mei, type: String }
-                ];
-                xlsxDataset.push(xlsxRow);
+                const row = [];
+                for (let j = 0; j < headers.length; j++) {
+                    const cellData = data[i][headers[j]];
+                    if (headers[j].includes('image')) {
+                        if (cellData && (cellData.includes('base64') || cellData.includes('http'))) {
+                            row.push('');
+                            const img = await workbook.addImage({
+                                base64: cellData,
+                                extension: 'png',
+                            });
+                            worksheet.addImage(img, `A${i + 2}:A${i + 2}`);
+                        } else {
+                            row.push(cellData);
+                        }
+                    } else {
+                        row.push(cellData);
+                    }
+                }
+                worksheet.addRow(row);
             }
-            const year = new Date().getFullYear();
-            const month = new Date().getMonth() + 1;
-            const day = new Date().getDate();
-            await writeXlsxFile(xlsxDataset, {
-                fileName: `table-Excel-file_${year}-${month}-${day}.xlsx`,
-            })
+
+            const currentDate = new Date();
+            const year = currentDate.getFullYear();
+            const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+            const day = String(currentDate.getDate()).padStart(2, '0');
+            const fileName = `table-XLSX-file_${year}-${month}-${day}.xlsx`;
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.click();
+
+            window.URL.revokeObjectURL(url);
         });
     }
 
