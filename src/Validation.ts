@@ -1,124 +1,86 @@
 import CressView from './CressView';
 import { ModalWindowView } from './utils/ModalWindow';
 
-const schemaResponse = fetch(__ASSET_PREFIX__ + 'assets/validation/mei-all.rng');
-const templateResponse = fetch(__ASSET_PREFIX__ + 'assets/validation/mei_template.mei');
-let worker: Worker, schema: string, meiTemplate: string, versionField: HTMLSpanElement, statusField: HTMLSpanElement;
-let validationResults: string[][] = []; // Array to store validation results for each MEI string
-let validationCount: number = 0; // Counter to track the number of validations done
+let schemaPromise: Promise<string> | null = null;
+let templatePromise: Promise<string> | null = null;
 
-/**
- * Update the UI with the validation results. Called when the WebWorker finishes validating.
- */
-function updateStatusUI(message: { data: string[] }): void {
-  const errors = message.data;
-  validationResults.push(errors);
-  validationCount--;
-
-  if (validationCount === 0) { // All validations are complete
-    let hasError = false;
-    let log = '';
-    
-    validationResults.forEach(result => {
-      if (result !== null) {
-        hasError = true;
-        result.forEach(line => {
-          log += line + '\n';
-        });
-      }
-    });
-
-    if (hasError) {
-      statusField.textContent = '';
-      statusField.style.color = 'red';
-      const status = document.createElement('div');
-      status.textContent = 'INVALID';
-      status.style.cursor = 'pointer';
-      statusField.appendChild(status);
-      status.addEventListener('click', statusOnClick.bind(this, log));
-    } else {
-      statusField.textContent = 'VALID';
-      statusField.style.color = '#4bc14b';
-      for (const child of statusField.children) {
-        child.remove();
-      }
-    }
-
-    // Clear validation results for the next validation
-    validationResults = [];
-  }
+async function fetchSchemaAndTemplate(): Promise<void> {
+    schemaPromise = fetch(
+        __ASSET_PREFIX__ + 'assets/validation/mei-all.rng'
+    ).then((response) => response.text());
+    templatePromise = fetch(
+        __ASSET_PREFIX__ + 'assets/validation/mei_template.mei'
+    ).then((response) => response.text());
 }
+
+const worker = new Worker(__ASSET_PREFIX__ + 'workers/ValidationWorker.js');
 
 function statusOnClick(log: string) {
-  this.modal.setModalWindowView(ModalWindowView.ERROR_LOG, log);
-  this.modal.openModalWindow();
+    this.modal.setModalWindowView(ModalWindowView.ERROR_LOG, log);
+    this.modal.openModalWindow();
 }
 
 /**
- * Add the validation information to the display and create the WebWorker
- * for validation MEI.
+ * MEI validation based on custom cell validator in Handsontable
+ * https://handsontable.com/docs/javascript-data-grid/cell-validator/#full-featured-example
+ * @param {string} value
  */
-export async function init(cressView: CressView): Promise<void> {
-  const fileStatusDiv = document.getElementById('file-status');
-  if (fileStatusDiv !== null) {
-    const meiStatus = document.getElementById('validation_status');
-    meiStatus.textContent = 'unknown';
-    statusField = meiStatus;
-    worker = new Worker(__ASSET_PREFIX__ + 'workers/ValidationWorker.js');
-    worker.onmessage = updateStatusUI.bind(cressView);
-  }
-}
+export const meiValidator = async (
+    value: string,
+    callback: (result: boolean) => void
+): Promise<void> => {
+    if (schemaPromise === null || templatePromise === null) {
+        await fetchSchemaAndTemplate();
+    }
 
-/**
- * Send the contents of multiple MEI files to the WebWorker for validation.
- * @param {string[]} meiDataArray
- */
-export async function sendForValidation(meiDataArray: string[]): Promise<void> {
-  if (statusField === undefined) return;
+    try {
+        let errors;
+        const [schema, meiTemplate] = await Promise.all([
+            schemaPromise!,
+            templatePromise!,
+        ]);
+        errors = await validateMEI(value, schema, meiTemplate);
+        if (errors == null) {
+            callback(true);
+        } else {
+            callback(false);
+        }
+    } catch (e) {
+        callback(false);
+    }
+};
 
-  if (schema === undefined) {
-    const response = await schemaResponse;
-    schema = await response.text();
-  }
+function validateMEI(
+    value: string,
+    schema: string,
+    meiTemplate: string
+): Promise<string> {
+    return new Promise((resolve) => {
+        try {
+            const parser = new DOMParser();
+            const meiDoc = parser.parseFromString(meiTemplate, 'text/xml');
+            const mei = meiDoc.documentElement;
 
-  if (meiTemplate === undefined) {
-    const meiTemplateResponse = await templateResponse;
-    meiTemplate = await meiTemplateResponse.text();
-  }
-  
-  statusField.textContent = 'checking...';
-  statusField.style.color = 'gray';
-  
-  validationCount = meiDataArray.length; // Initialize validation counter
+            const layer = mei.querySelector('layer');
+            layer.innerHTML = value;
+            const serializer = new XMLSerializer();
+            const toBeValidated = serializer.serializeToString(meiDoc);
 
-  meiDataArray.forEach(meiData => {
-    const parser = new DOMParser();
-    const meiDoc = parser.parseFromString(meiTemplate, 'text/xml');
-    const mei = meiDoc.documentElement;
+            const worker = new Worker(
+                __ASSET_PREFIX__ + 'workers/ValidationWorker.js'
+            );
 
-    const layer = mei.querySelector('layer');
-    layer.innerHTML = meiData;
-    const serializer = new XMLSerializer();
-    const toBeValidated = serializer.serializeToString(meiDoc);
+            worker.postMessage({
+                mei: toBeValidated,
+                schema: schema,
+            });
 
-    worker.postMessage({
-      mei: toBeValidated,
-      schema: schema
+            worker.onmessage = (message: { data: string }) => {
+                const errors = message.data;
+                resolve(errors);
+            };
+        } catch (e) {
+            resolve('Cannot read as XML');
+        }
     });
-  });
-}
-
-/**
- * Update the message on a blank page when there is no MEI.
- */
-export function blankPage(): void {
-  if (statusField === undefined || versionField === undefined) {
-    return;
-  }
-  
-  for (const child of statusField.children) {
-    child.remove();
-  }
-  statusField.textContent = 'No MEI';
-  statusField.style.color = 'color:gray';
 }
