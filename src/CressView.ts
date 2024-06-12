@@ -43,7 +43,6 @@ class CressView {
       // load the components
       // this.view = new this.params.View(this, this.params.Display, this.manifest.image);
       this.modal = new ModalWindow();
-      Validation.init(this);
       listenUnsavedChanges();
 
       document.getElementById('loading').style.display = 'none';

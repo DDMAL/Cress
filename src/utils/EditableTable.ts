@@ -1,18 +1,16 @@
 import Handsontable from 'handsontable';
-import writeXlsxFile from 'write-excel-file';
 import * as Validation from '../Validation';
 
 export class EditableTable {
-
     private exportToCsvButton: HTMLElement;
     private exportToExcelButton: HTMLElement;
     private table: Handsontable;
 
-    constructor (data: any[]) {
+    constructor(data: any[]) {
         const container = document.getElementById('hot-container');
 
         // headers for the table
-        const headers = ['imagePath', 'name', 'classification', 'mei'];
+        const headers = ['image', 'name', 'classification', 'mei'];
 
         // for loop to get the columns
         const columns = [];
@@ -22,6 +20,12 @@ export class EditableTable {
                     data: headers[i],
                     renderer: this.imgRenderer,
                     readOnly: false,
+                });
+            } else if (headers[i].includes('mei')) {
+                columns.push({
+                    data: headers[i],
+                    validator: Validation.meiValidator,
+                    allowInvalid: true,
                 });
             } else {
                 columns.push({
@@ -50,7 +54,6 @@ export class EditableTable {
             indices.push(i + 1);
             meiData.push(data[i].mei);
         }
-        Validation.sendForValidation(meiData);
 
         this.table = new Handsontable(container, {
             data: data,
@@ -75,10 +78,8 @@ export class EditableTable {
             dropdownMenu: true,
             className: 'table-menu-btn',
             licenseKey: 'non-commercial-and-evaluation',
-            afterChange(change, source) {
-                if (source === 'loadData') {
-                  return;
-                }
+            afterChange() {
+                this.validateCells();
             },
         });
 
@@ -115,7 +116,11 @@ export class EditableTable {
                 for (let j = 0; j < headers.length; j++) {
                     const cellData = data[i][headers[j]];
                     if (headers[j].includes('image')) {
-                        if (cellData && (cellData.includes('base64') || cellData.includes('http'))) {
+                        if (
+                            cellData &&
+                            (cellData.includes('base64') ||
+                                cellData.includes('http'))
+                        ) {
                             row.push('');
                             const img = await workbook.addImage({
                                 base64: cellData,
@@ -139,7 +144,9 @@ export class EditableTable {
             const fileName = `table-XLSX-file_${year}-${month}-${day}.xlsx`;
 
             const buffer = await workbook.xlsx.writeBuffer();
-            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const blob = new Blob([buffer], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            });
             const url = window.URL.createObjectURL(blob);
 
             const a = document.createElement('a');
@@ -172,9 +179,9 @@ export class EditableTable {
             td.innerText = value;
         }
         return td;
-    }
+    };
 
-    handleFileUpload = (instance, row, col) =>  {
+    handleFileUpload = (instance, row, col) => {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
@@ -186,14 +193,14 @@ export class EditableTable {
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    const base64String = (e.target.result as string);
+                    const base64String = e.target.result as string;
                     instance.setDataAtCell(row, col, base64String);
                 };
                 reader.readAsDataURL(file);
             }
         });
         return input;
-    }
+    };
 
     createImageElement = (value) => {
         const img = document.createElement('img');
@@ -205,7 +212,7 @@ export class EditableTable {
             event.preventDefault();
         });
         return img;
-    }
+    };
 
     createButtons = (instance, row, col) => {
         const buttonContainer = document.createElement('div');
@@ -231,5 +238,5 @@ export class EditableTable {
         buttonContainer.appendChild(changeButton);
 
         return buttonContainer;
-    }
+    };
 }
