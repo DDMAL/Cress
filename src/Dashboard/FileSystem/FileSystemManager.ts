@@ -9,12 +9,10 @@ interface FileSystemProps {
   getFileSystem: () => Promise<IFolder>;
   newTrash: (root: IFolder) => void;
 }
-  
 
 // Manager is used for accessing local storage and tracking the position of current folder
 export const FileSystemManager = (): FileSystemProps => {
-
-  async function getRoot(): Promise<IFolder> { 
+  async function getRoot(): Promise<IFolder> {
     return await getFileSystem();
   }
 
@@ -34,7 +32,7 @@ export const FileSystemManager = (): FileSystemProps => {
   async function getFileSystem(): Promise<IFolder> {
     try {
       const fs = window.localStorage.getItem('cress-fs');
-            
+
       // if localstorage exists, load previous root
       if (fs) {
         const localFileSystem = JSON.parse(fs) as IFolder;
@@ -53,14 +51,17 @@ export const FileSystemManager = (): FileSystemProps => {
       console.error(e);
       window.alert('Error loading file system');
     }
-  } 
+  }
 
   // This next function is solely for loading samples into the root as a default for Cress
   function loadSamples(root: IFolder) {
     // Make sample entries
-    const sampleEntries = samples.map(name => {
+    const sampleEntries = samples.map((name) => {
       const entry = FileSystemTools.createFile(name, uuidv4());
-      FileSystemTools.addMetadata(entry, {document: 'sample', immutable: true });
+      FileSystemTools.addMetadata(entry, {
+        document: 'sample',
+        immutable: true,
+      });
       return entry;
     });
 
@@ -73,7 +74,7 @@ export const FileSystemManager = (): FileSystemProps => {
     FileSystemTools.addEntry(samplesFolder, root);
     FileSystemTools.addMetadata(samplesFolder, { immutable: true });
 
-    return root;    
+    return root;
   }
 
   function newTrash(root: IFolder) {

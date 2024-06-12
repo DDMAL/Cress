@@ -11,5 +11,5 @@ indent_size = 2
 
 # TypeScript and JavaScript files
 [*.{ts,tsx,js,jsx}]
-indent_size = 4
+indent_size = 2
 quote_type = single
