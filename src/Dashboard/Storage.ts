@@ -34,7 +34,7 @@ async function parseCSV(file: File): Promise<any[]> {
         if (results.errors.length > 0) {
           reject(new Error('Error parsing CSV file'));
         } else {
-          resolve(results.data);
+          resolve([results.meta.fields, results.data]);
         }
       },
       error: (error) => {
@@ -50,8 +50,9 @@ async function parseXLSX(file: File): Promise<any[]> {
     const workbook = new ExcelJS.Workbook();
     const data = await workbook.xlsx.load(file.arrayBuffer());
     // to json
-    var worksheet = data.worksheets[0];
-    var headerNames = [];
+    let worksheet = data.worksheets[0];
+    let headerNames = [];
+    // TODO: enhance performance, get rid of loop
     worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
       if (rowNumber === 1) {
         row.values.forEach((header) => {
@@ -59,12 +60,12 @@ async function parseXLSX(file: File): Promise<any[]> {
         });
       }
     });
-    var rows = [];
+    let rows = [];
     worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
       if (rowNumber !== 1) {
-        var rowData = {};
+        let rowData = {};
         row.values.forEach((cell, cellNumber) => {
-          var headerKey = headerNames[cellNumber - 1];
+          let headerKey = headerNames[cellNumber - 1];
           if (cell) {
             rowData[headerKey] = cell.toString();
           } else {
@@ -81,57 +82,57 @@ async function parseXLSX(file: File): Promise<any[]> {
       const dataUrl = `data:${img.type};base64,${base64}`;
       rows[image.range.tl.nativeRow - 1]['imagePath'] = dataUrl;
     }
-    resolve(rows);
+    resolve([headerNames, rows]);
   });
 }
 
 async function parseWORD(file: File): Promise<any[]> {
   return new Promise((resolve, reject) => {
-    var mammoth = require('mammoth');
+    let mammoth = require('mammoth');
     mammoth
       .convertToHtml({ arrayBuffer: file.arrayBuffer() })
       .then(function (result) {
-        var html = result.value;
-        var messages = result.messages;
+        let html = result.value;
+        let messages = result.messages;
         console.log(messages);
 
         // html to dom
-        var parser = new DOMParser();
-        var doc = parser.parseFromString(html, 'text/html');
+        let parser = new DOMParser();
+        let doc = parser.parseFromString(html, 'text/html');
         // extract tables
-        var table = doc.getElementsByTagName('table')[0];
-        var headers = table
+        let table = doc.getElementsByTagName('table')[0];
+        let headerElements = table
           .getElementsByTagName('tr')[0]
           .getElementsByTagName('td');
+        let headers = Array.from(
+          table.getElementsByTagName('tr')[0].getElementsByTagName('td'),
+          (element) => element.innerText
+        );
         // remove header row
         table.deleteRow(0);
         // get all rows
-        var rows = table.getElementsByTagName('tr');
-        var data = [];
-        for (var j = 0; j < rows.length; j++) {
-          var row = rows[j];
-          var cells = row.getElementsByTagName('td');
-          // initialize row data
-          var rowData = {};
-          for (var header of headers) {
-            rowData[header.textContent] = '';
-          }
+        let rows = table.getElementsByTagName('tr');
+        let data = [];
+        for (let j = 0; j < rows.length; j++) {
+          let row = rows[j];
+          let cells = row.getElementsByTagName('td');
+          let rowData = {};
           // populate row data
-          for (var k = 0; k < cells.length; k++) {
-            var cell = cells[k];
+          for (let k = 0; k < cells.length; k++) {
+            let cell = cells[k];
             // get all <p> elements
-            var paragraphs = cell.getElementsByTagName('p');
-            var text = '';
-            for (var p of paragraphs) {
+            let paragraphs = cell.getElementsByTagName('p');
+            let text = '';
+            for (let p of paragraphs) {
               // if there is text in the paragraph
               if (p.textContent !== '') {
                 text += p.textContent;
                 text += '\n';
               } else {
                 // if there are <img> elements
-                var images = p.getElementsByTagName('img');
-                for (var img of images) {
-                  var imgSrc = img.src;
+                let images = p.getElementsByTagName('img');
+                for (let img of images) {
+                  let imgSrc = img.src;
                   // if imgSrc not incluse 'emf', save the src into the text
                   if (!imgSrc.includes('emf')) {
                     text += imgSrc;
@@ -139,11 +140,11 @@ async function parseWORD(file: File): Promise<any[]> {
                 }
               }
             }
-            rowData[headers[k].textContent] = text;
+            rowData[headerElements[k].textContent] = text;
           }
           data.push(rowData);
         }
-        resolve(data);
+        resolve([headers, data]);
       })
       .catch(function (error) {
         console.error(error);
@@ -154,18 +155,18 @@ async function parseWORD(file: File): Promise<any[]> {
 
 export function createJson(file: File, type: string): Promise<Blob> {
   return new Promise(async (resolve) => {
-    let data: any[];
+    let headers: string[], data: any[];
     if (type === 'csv') {
-      data = await parseCSV(file);
+      [headers, data] = await parseCSV(file);
     } else if (type === 'xlsx') {
-      data = await parseXLSX(file);
+      [headers, data] = await parseXLSX(file);
     } else if (type === 'doc' || type === 'docx') {
-      data = await parseWORD(file);
+      [headers, data] = await parseWORD(file);
     } else {
       console.error('Unsupported file format');
       return;
     }
-    const jsonBlob = new Blob([JSON.stringify(data, null, 2)], {
+    const jsonBlob = new Blob([JSON.stringify([headers, ...data], null, 2)], {
       type: 'application/json',
     });
     resolve(jsonBlob);

@@ -32,7 +32,8 @@ if (id) {
               let cressDoc: CressDoc = {
                 id: id,
                 name: filename,
-                glyphs: dataListToDict(data),
+                header: [],
+                body: dataListToDict(data),
               };
               const view = new CressView(cressDoc);
               view.start();
@@ -59,14 +60,15 @@ if (id) {
     .then((blob) => {
       return new window.Response(blob).json();
     })
-    .then(async (glyphs) => {
-      console.log(glyphs);
+    .then(async (table) => {
+      console.log(table);
       const doc: Doc = await db.get(storage);
       const name = doc.name;
       let cressDoc: CressDoc = {
         id: storage,
         name: name,
-        glyphs: glyphs,
+        header: table[0],
+        body: table.slice(1),
       };
       const view = new CressView(cressDoc);
       view.start();

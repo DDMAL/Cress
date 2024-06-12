@@ -16,7 +16,8 @@ class CressView {
   /** Name of the document loaded. */
   name: string;
   /** Content of the document loaded. */
-  glyphs: any[];
+  header: string[];
+  body: any[];
   /** Module that controls state and content of Cress modal windows */
   modal: ModalWindowInterface;
   /** Spreadsheet module */
@@ -28,7 +29,8 @@ class CressView {
   constructor(cressDoc: CressDoc) {
     this.id = cressDoc.id;
     this.name = cressDoc.name;
-    this.glyphs = cressDoc.glyphs;
+    this.header = cressDoc.header;
+    this.body = cressDoc.body;
   }
 
   /**
@@ -38,13 +40,12 @@ class CressView {
     setBody(this)
       .then(() => {
         // load the components
-        // this.view = new this.params.View(this, this.params.Display, this.manifest.image);
         this.modal = new ModalWindow();
         listenUnsavedChanges();
 
         document.getElementById('loading').style.display = 'none';
 
-        this.table = new EditableTable(this.glyphs);
+        this.table = new EditableTable(this.header, this.body);
 
         return;
       })

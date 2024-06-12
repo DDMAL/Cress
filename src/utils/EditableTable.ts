@@ -6,7 +6,7 @@ export class EditableTable {
   private exportToExcelButton: HTMLElement;
   private table: Handsontable;
 
-  constructor(data: any[]) {
+  constructor(inputHeader: string[], body: any[]) {
     const container = document.getElementById('hot-container');
 
     // headers for the table
@@ -16,8 +16,11 @@ export class EditableTable {
     const columns = [];
     for (let i = 0; i < headers.length; i++) {
       if (headers[i].includes('image')) {
+        let inputImgHeader = inputHeader.find((header) =>
+          header.includes('image')
+        );
         columns.push({
-          data: headers[i],
+          data: inputImgHeader,
           renderer: this.imgRenderer,
           readOnly: false,
         });
@@ -50,15 +53,15 @@ export class EditableTable {
     const indices = [];
     // get mei for validation
     const meiData = [];
-    for (let i = 0; i < data.length; i++) {
+    for (let i = 0; i < body.length; i++) {
       indices.push(i + 1);
-      meiData.push(data[i].mei);
+      meiData.push(body[i].mei);
     }
 
     this.table = new Handsontable(container, {
-      data: data,
+      data: body,
       startCols: 11,
-      startRows: data.length,
+      startRows: body.length,
       height: '91vh',
       width: '100%',
       manualRowResize: true,
@@ -111,10 +114,10 @@ export class EditableTable {
       const header = headers;
       worksheet.addRow(header);
 
-      for (let i = 0; i < data.length; i++) {
+      for (let i = 0; i < body.length; i++) {
         const row = [];
         for (let j = 0; j < headers.length; j++) {
-          const cellData = data[i][headers[j]];
+          const cellData = body[i][headers[j]];
           if (headers[j].includes('image')) {
             if (
               cellData &&
