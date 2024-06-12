@@ -18,7 +18,8 @@ export type GlyphArray = Glyph[];
 export type CressDoc = {
   id: string;
   name: string;
-  glyphs: any[];
+  header: string[];
+  body: any[];
 };
 
 /** Type definitions for Cress */
@@ -42,7 +43,7 @@ export type Doc = {
   _id: string;
   name: string;
   _attachments: {
-    glyphs: {
+    table: {
       content_type: string;
       data: Blob;
     };
