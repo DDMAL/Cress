@@ -158,6 +158,7 @@ export class EditableTable {
         });
     }
 
+    // Render image and upload buttons if no image found
     imgRenderer = (instance, td, row, col, prop, value, cellProperties) => {
         td.innerText = '';
         if (value && (value.includes('http') || value.includes('base64'))) {
@@ -172,7 +173,7 @@ export class EditableTable {
             td.appendChild(container);
             cellProperties.readOnly = true;
         } else if (!value) {
-            const input = this.handleFileUpload(instance, row, col);
+            const input = this.handleImgUpload(instance, row, col);
             td.appendChild(input);
             cellProperties.readOnly = true;
         } else {
@@ -181,10 +182,10 @@ export class EditableTable {
         return td;
     };
 
-    handleFileUpload = (instance, row, col) => {
+    handleImgUpload = (instance, row, col) => {
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = 'image/*';
+        input.accept = 'image/*'; // Only accept image upload
         input.style.width = '100%';
         input.style.height = '100%';
         input.style.padding = '5px';
@@ -230,7 +231,7 @@ export class EditableTable {
         const changeButton = document.createElement('button');
         changeButton.innerText = 'Change Image';
         changeButton.addEventListener('click', () => {
-            const changeInput = this.handleFileUpload(instance, row, col);
+            const changeInput = this.handleImgUpload(instance, row, col);
             changeInput.click();
         });
 
