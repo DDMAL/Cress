@@ -1,35 +1,38 @@
 import { ModalWindowInterface } from '../Interfaces';
-import { hotkeysModal, editTextModal } from '../Contents';
-import { newFolderHTML, renameHTML, uploadAreaHTML } from '../Dashboard/DashboardContent';
+import { hotkeysModal } from '../Contents';
+import {
+  newFolderHTML,
+  renameHTML,
+  uploadAreaHTML,
+} from '../Dashboard/DashboardContent';
 
 /**
  * Defines modal types.
  * To create new modal window types, add enum option and implement logic inside Modal class.
  */
 export enum ModalWindowView {
-  EDIT_TEXT,
   HOTKEYS,
   ERROR_LOG, // for validation errors against MEI schema and invalid element errors
   DOCUMENT_UPLOAD,
   MOVE_TO,
   NEW_FOLDER,
-  RENAME
+  RENAME,
 }
 
 enum ModalWindowState {
   OPEN,
-  CLOSED
+  CLOSED,
 }
 
 /**
- * Modal class is used to create and control state/content 
+ * Modal class is used to create and control state/content
  * of modal windows in cress.
  */
 export class ModalWindow implements ModalWindowInterface {
   private modalWindowView: ModalWindowView; // current modal type
   private modalWindowState: ModalWindowState; // open or closed?
 
-  constructor () {
+  constructor() {
     this.modalWindowState = ModalWindowState.CLOSED;
     this.setupEventListeners();
   }
@@ -38,20 +41,31 @@ export class ModalWindow implements ModalWindowInterface {
    * Set event listeners that apply to all modal windows
    */
   private setupEventListeners() {
-    document.getElementById('cress-modal-window-header-close').addEventListener('click', this.hideModalWindow.bind(this));
-    document.getElementById('cress-modal-window').addEventListener('keydown', this.keydownListener.bind(this));
-    document.getElementById('cress-modal-window-container').addEventListener('click', this.focusModalWindow.bind(this));
+    document
+      .getElementById('cress-modal-window-header-close')
+      .addEventListener('click', this.hideModalWindow.bind(this));
+    document
+      .getElementById('cress-modal-window')
+      .addEventListener('keydown', this.keydownListener.bind(this));
+    document
+      .getElementById('cress-modal-window-container')
+      .addEventListener('click', this.focusModalWindow.bind(this));
   }
 
   /**
    * Remove event listeners associated with this modal window
    */
   private removeEventListeners() {
-    document.getElementById('cress-modal-window-header-close').removeEventListener('click', this.hideModalWindow.bind(this));
-    document.getElementById('cress-modal-window').removeEventListener('keydown', this.keydownListener.bind(this));
-    document.getElementById('cress-modal-window-container').removeEventListener('click', this.focusModalWindow.bind(this));
+    document
+      .getElementById('cress-modal-window-header-close')
+      .removeEventListener('click', this.hideModalWindow.bind(this));
+    document
+      .getElementById('cress-modal-window')
+      .removeEventListener('keydown', this.keydownListener.bind(this));
+    document
+      .getElementById('cress-modal-window-container')
+      .removeEventListener('click', this.focusModalWindow.bind(this));
   }
-
 
   /**
    * Set the modal view of this Modal instance.
@@ -63,7 +77,6 @@ export class ModalWindow implements ModalWindowInterface {
     this.setModalWindowContent(content);
   }
 
-
   /**
    * Return the current modal view as a string
    */
@@ -71,38 +84,37 @@ export class ModalWindow implements ModalWindowInterface {
     return this.modalWindowView.toString();
   }
 
-
   /**
    * Open a model window with content representing the current ModalView.
    */
   openModalWindow(): void {
     // make sure no other modal content is being displayed
-    Array.from(document.getElementsByClassName('cress-modal-window-content')).forEach((elem) => {
+    Array.from(
+      document.getElementsByClassName('cress-modal-window-content')
+    ).forEach((elem) => {
       elem.classList.remove('visible');
     });
-    switch(this.modalWindowView) {
-      
-      case ModalWindowView.EDIT_TEXT:
-        this.openEditSylTextModalWindow();
-        break;
-        
+    switch (this.modalWindowView) {
       case ModalWindowView.HOTKEYS:
         // set up and diplay hotkey modal content
-        document.getElementById('cress-modal-window-content-hotkeys').classList.add('visible');
+        document
+          .getElementById('cress-modal-window-content-hotkeys')
+          .classList.add('visible');
 
       case ModalWindowView.DOCUMENT_UPLOAD:
-        // add function to pairing button
-        // break;
+      // add function to pairing button
+      // break;
 
       case ModalWindowView.MOVE_TO:
-        
-        // break;
+
+      // break;
       case ModalWindowView.NEW_FOLDER:
 
       case ModalWindowView.RENAME:
 
       default:
-        document.getElementById('cress-modal-window-container').style.display = 'flex';
+        document.getElementById('cress-modal-window-container').style.display =
+          'flex';
         this.focusModalWindow();
         break;
     }
@@ -112,29 +124,25 @@ export class ModalWindow implements ModalWindowInterface {
     this.modalWindowState = ModalWindowState.OPEN;
   }
 
-
-
   /**
    * Hide the cress modal window
    */
   hideModalWindow(): void {
-    switch(this.modalWindowView) {
-      case ModalWindowView.EDIT_TEXT:
-        const span = (<HTMLSpanElement> document.getElementById('syl_text').querySelectorAll('span.selected-to-edit')[0]);
-        span.classList.remove('selected-to-edit');
-        break;
-        
+    switch (this.modalWindowView) {
       case ModalWindowView.DOCUMENT_UPLOAD:
       case ModalWindowView.MOVE_TO:
       case ModalWindowView.NEW_FOLDER:
       case ModalWindowView.RENAME:
-        document.getElementById('cress-modal-window-content-container').innerHTML = '';
+        document.getElementById(
+          'cress-modal-window-content-container'
+        ).innerHTML = '';
         break;
 
       default:
         break;
-    } 
-    document.getElementById('cress-modal-window-container').style.display = 'none';
+    }
+    document.getElementById('cress-modal-window-container').style.display =
+      'none';
     // reset scroll behavior of body
     document.body.style.overflowX = 'hidden';
     document.body.style.overflowY = 'scroll';
@@ -142,39 +150,27 @@ export class ModalWindow implements ModalWindowInterface {
     this.removeEventListeners();
   }
 
-
   /**
    * Set content of modal window
    */
   private setModalWindowContent(content?: string): void {
-    const container = document.getElementById('cress-modal-window-content-container');
+    const container = document.getElementById(
+      'cress-modal-window-content-container'
+    );
     const title = document.getElementById('cress-modal-window-header-title');
 
     switch (this.modalWindowView) {
-      case ModalWindowView.EDIT_TEXT:
-        container.innerHTML = editTextModal;
-        // set modal window title
-        title.innerText = 'EDIT SYLLABLE TEXT';
-
-        // span and current text of selected-to-edit syllable and filter out unwanted chars
-        const span = <HTMLSpanElement> document.getElementById('syl_text').querySelectorAll('span.selected-to-edit')[0];
-        const removeSymbol = /\u{25CA}/u;
-        const orig = span.textContent.replace(removeSymbol, '').trim();
-
-        // set value of input field to current syllable text
-        (<HTMLInputElement> (document.getElementById('cress-modal-window-edit-text-input'))).value = orig;
-        break;
-
       case ModalWindowView.HOTKEYS:
         container.innerHTML = hotkeysModal;
         title.innerText = 'HOTKEYS';
         break;
 
       case ModalWindowView.ERROR_LOG:
-        container.innerHTML = 
-          `<div style="margin-bottom: 30px;white-space: pre-line;overflow-y: scroll;">${content}</div>
+        container.innerHTML = `<div style="margin-bottom: 30px;white-space: pre-line;overflow-y: scroll;">${content}</div>
           <div class="cress-modal-window-btn">
-            <a href="data:text/plain;charset=utf-8,${encodeURI(content)}" download="error.log">
+            <a href="data:text/plain;charset=utf-8,${encodeURI(
+              content
+            )}" download="error.log">
               Export
             </a>
             </div>`;
@@ -202,32 +198,44 @@ export class ModalWindow implements ModalWindowInterface {
 
       default:
         console.error('Unknown selection type. This should not have occurred.');
-    } 
+    }
   }
-
 
   /**
    * Fill modal window with content for updating syllable text
    */
-  private openEditSylTextModalWindow = function(): void {
+  private openEditSylTextModalWindow = function (): void {
     // make sure no other modal content is being displayed
-    Array.from(document.getElementsByClassName('cress-modal-window-content')).forEach( (elem) => {
+    Array.from(
+      document.getElementsByClassName('cress-modal-window-content')
+    ).forEach((elem) => {
       elem.classList.remove('visible');
     });
 
     // set up Edit Syllable Text modal window
-    document.getElementById('cress-modal-window-content-edit-text').classList.add('visible');
-    
+    document
+      .getElementById('cress-modal-window-content-edit-text')
+      .classList.add('visible');
+
     // Reset "Cancel" button event listener
-    document.getElementById('cress-modal-window-edit-text-cancel').removeEventListener('click', this.hideModalWindow);
-    document.getElementById('cress-modal-window-edit-text-cancel').addEventListener('click', this.hideModalWindow.bind(this));
+    document
+      .getElementById('cress-modal-window-edit-text-cancel')
+      .removeEventListener('click', this.hideModalWindow);
+    document
+      .getElementById('cress-modal-window-edit-text-cancel')
+      .addEventListener('click', this.hideModalWindow.bind(this));
 
     // Reset "Save" button event listener
-    document.getElementById('cress-modal-window-edit-text-save').removeEventListener('click', this.updateSylText.bind(this));
-    document.getElementById('cress-modal-window-edit-text-save').addEventListener('click', this.updateSylText.bind(this));
+    document
+      .getElementById('cress-modal-window-edit-text-save')
+      .removeEventListener('click', this.updateSylText.bind(this));
+    document
+      .getElementById('cress-modal-window-edit-text-save')
+      .addEventListener('click', this.updateSylText.bind(this));
 
     // display modal window
-    document.getElementById('cress-modal-window-container').style.display = 'flex';
+    document.getElementById('cress-modal-window-container').style.display =
+      'flex';
     this.focusModalWindow();
   };
 
@@ -240,17 +248,15 @@ export class ModalWindow implements ModalWindowInterface {
   };
 
   /**
-   * Update the bounding box selected when the edit text modal has been clicked 
-  */
-  updateSelectedBBox (span: HTMLSpanElement): void {
-  }
-
+   * Update the bounding box selected when the edit text modal has been clicked
+   */
+  updateSelectedBBox(span: HTMLSpanElement): void {}
 
   /**
    * Fill modal window with hotkey info content
    */
   /*
-  private openHotkeyModalWindow = function() {   
+  private openHotkeyModalWindow = function() {
     // make sure no other modal content is being displayed
     Array.from(document.getElementsByClassName('cress-modal-window-content')).forEach((elem) => {
       elem.classList.remove('visible');
@@ -264,31 +270,20 @@ export class ModalWindow implements ModalWindowInterface {
   };
   */
 
-
   /**
    * Define event listeners for modal window based on modalView type
    */
-  private keydownListener = function(e) {
+  private keydownListener = function (e) {
     e.stopImmediatePropagation(); // prevent cress hotkey events from firing when user is typing
 
-    switch(this.modalWindowView) {
-      case ModalWindowView.EDIT_TEXT:
-        if (e.key === 'Enter') this.updateSylText();
-
-      default:
-        if (e.key === 'Escape') this.hideModalWindow();
-    }  
+    if (e.key === 'Escape') this.hideModalWindow();
   };
-
 
   /**
    * Event listener that focuses the modal window if user clicks anywhere outside of it
    */
-  private focusModalWindow = function() {
-    switch(this.modalWindowView) {
-      case ModalWindowView.EDIT_TEXT:
-        (<HTMLInputElement> document.getElementById('cress-modal-window-edit-text-input')).select();
-        break;
+  private focusModalWindow = function () {
+    switch (this.modalWindowView) {
       case ModalWindowView.DOCUMENT_UPLOAD:
       case ModalWindowView.NEW_FOLDER:
       case ModalWindowView.RENAME:
@@ -297,5 +292,4 @@ export class ModalWindow implements ModalWindowInterface {
         document.getElementById('cress-modal-window').focus();
     }
   };
-
 }

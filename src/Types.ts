@@ -1,31 +1,34 @@
 import PouchDB from 'pouchdb';
 interface Glyph {
-    imagePath: string | null;
-    imageBinary: string | null;
-    name: string;
-    folio: string;
-    descriptor: string | null;
-    classification: string;
-    width: string | number | [number, number] | [number, number, number];
-    mei: string;
-    review: string;
-    dob: string;
-    project: string;
+  imagePath: string | null;
+  imageBinary: string | null;
+  name: string;
+  folio: string;
+  descriptor: string | null;
+  classification: string;
+  width: string | number | [number, number] | [number, number, number];
+  mei: string;
+  review: string;
+  dob: string;
+  project: string;
 }
 
 export type GlyphArray = Glyph[];
 
 export type CressDoc = {
-  id: string,
-  name: string,
-  glyphs: any[]
+  id: string;
+  name: string;
+  glyphs: any[];
 };
 
 /** Type definitions for Cress */
 export type AllDocs = {
-  total_rows?: number,
+  total_rows?: number;
   rows?: {
-    doc?: PouchDB.Core.ExistingDocument<PouchDB.Core.AllDocsMeta> & { type?: string; name?: string; };
+    doc?: PouchDB.Core.ExistingDocument<PouchDB.Core.AllDocsMeta> & {
+      type?: string;
+      name?: string;
+    };
     id: string;
     key: string;
     value: {
@@ -36,14 +39,14 @@ export type AllDocs = {
 };
 
 export type Doc = {
-  _id: string,
-  name: string,
+  _id: string;
+  name: string;
   _attachments: {
     glyphs: {
-      content_type: string,
-      data: Blob
-    }
-  },
+      content_type: string;
+      data: Blob;
+    };
+  };
 };
 
 export type uploadsInfo = {
