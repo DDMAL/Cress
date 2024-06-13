@@ -190,7 +190,7 @@ export function addDocument(
       _id: id,
       name: name,
       _attachments: {
-        glyphs: {
+        table: {
           content_type: 'application/json',
           data: content,
         },

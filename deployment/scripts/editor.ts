@@ -4,10 +4,10 @@ import { CressDoc, Doc, GlyphArray } from '../../src/Types';
 import PouchDB from 'pouchdb';
 import * as Papa from 'papaparse';
 
-const id = getGetParam('glyphs');
-const storage = getGetParam('storage');
+const sampleId = getGetParam('sample');
+const uploadId = getGetParam('upload');
 
-if (id) {
+if (sampleId) {
   const fs = window.localStorage.getItem('cress-fs');
   if (fs) {
     try {
@@ -30,7 +30,7 @@ if (id) {
               let data = file.data;
               console.log(data);
               let cressDoc: CressDoc = {
-                id: id,
+                id: sampleId,
                 name: filename,
                 header: [],
                 body: dataListToDict(data),
@@ -56,16 +56,16 @@ if (id) {
   }
 } else {
   const db = new PouchDB('Cress-User-Storage');
-  db.getAttachment(storage, 'glyphs')
+  db.getAttachment(uploadId, 'table')
     .then((blob) => {
       return new window.Response(blob).json();
     })
     .then(async (table) => {
       console.log(table);
-      const doc: Doc = await db.get(storage);
+      const doc: Doc = await db.get(uploadId);
       const name = doc.name;
       let cressDoc: CressDoc = {
-        id: storage,
+        id: uploadId,
         name: name,
         header: table[0],
         body: table.slice(1),
@@ -92,7 +92,7 @@ function getGetParam(paramName): string {
 
 // Recursive function to find the filename by ID
 function findFileNameById(node: IEntry): string | null {
-  if (node.id === id) {
+  if (node.id === sampleId) {
     return node.name;
   }
 
