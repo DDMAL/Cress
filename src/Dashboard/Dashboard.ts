@@ -104,7 +104,7 @@ function openUploadAreaHandler() {
  * @param isSample boolean to decide where to fetch file
  */
 function openEditorTab(id: string, isSample: boolean) {
-  const params = isSample ? { glyphs: id } : { storage: id };
+  const params = isSample ? { sample: id } : { upload: id };
   const query = makeQuery(params);
   window.open(`./editor.html?${query}`, '_blank');
 }
