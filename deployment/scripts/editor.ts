@@ -14,7 +14,7 @@ if (sampleId) {
       const localFileSystem = JSON.parse(fs) as IFolder;
       const filename = findFileNameById(localFileSystem);
       if (filename) {
-        const filePath = `./Cress-gh/samples/${filename}.csv`;
+        const filePath = `./Cress-gh/assets/samples/${filename}.csv`;
 
         window
           .fetch(filePath)
