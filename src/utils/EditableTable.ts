@@ -90,7 +90,7 @@ export class EditableTable {
     const exportPlugin = this.table.getPlugin('exportFile');
     this.exportToCsvButton.addEventListener('click', () => {
       exportPlugin.downloadFile('csv', {
-        bom: false,
+        bom: true,
         columnDelimiter: ',',
         rowHeaders: false,
         columnHeaders: true,
@@ -98,7 +98,7 @@ export class EditableTable {
         exportHiddenRows: true,
         fileExtension: 'csv',
         filename: 'table-CSV-file_[YYYY]-[MM]-[DD]',
-        mimeType: 'text/csv',
+        mimeType: 'text/csv;charset=UTF-8',
         rowDelimiter: '\r\n',
       });
     });
