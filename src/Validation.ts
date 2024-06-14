@@ -1,8 +1,38 @@
-import CressView from './CressView';
-import { ModalWindowView } from './utils/ModalWindow';
+import { validationStatus } from './Types';
 
 let schemaPromise: Promise<string> | null = null;
 let templatePromise: Promise<string> | null = null;
+
+/**
+ * Update the UI with the validation results. Called when the WebWorker finishes validating.
+ */
+export function updateStatus(
+  status: validationStatus,
+  hasInvalid?: boolean
+): void {
+  const meiStatus: HTMLSpanElement =
+    document.getElementById('validation_status')!;
+  switch (status) {
+    case 'processing':
+      meiStatus.textContent = 'checking...';
+      break;
+
+    case 'done':
+      if (hasInvalid) {
+        meiStatus.textContent = 'INVALID';
+        meiStatus.style.color = 'red';
+      } else {
+        meiStatus.textContent = 'VALID';
+        meiStatus.style.color = '#4bc14b';
+      }
+      break;
+
+    default:
+      meiStatus.textContent = 'unknown';
+      meiStatus.style.color = 'gray';
+      break;
+  }
+}
 
 async function fetchSchemaAndTemplate(): Promise<void> {
   schemaPromise = fetch(
@@ -11,13 +41,6 @@ async function fetchSchemaAndTemplate(): Promise<void> {
   templatePromise = fetch(
     __ASSET_PREFIX__ + 'assets/validation/mei_template.mei'
   ).then((response) => response.text());
-}
-
-const worker = new Worker(__ASSET_PREFIX__ + 'workers/ValidationWorker.js');
-
-function statusOnClick(log: string) {
-  this.modal.setModalWindowView(ModalWindowView.ERROR_LOG, log);
-  this.modal.openModalWindow();
 }
 
 /**
@@ -66,6 +89,10 @@ function validateMEI(
       const serializer = new XMLSerializer();
       const toBeValidated = serializer.serializeToString(meiDoc);
 
+      /**
+       * TODO: optimize performance
+       * use id to track each worker request
+       */
       const worker = new Worker(
         __ASSET_PREFIX__ + 'workers/ValidationWorker.js'
       );
@@ -78,9 +105,10 @@ function validateMEI(
       worker.onmessage = (message: { data: string }) => {
         const errors = message.data;
         resolve(errors);
+        worker.terminate();
       };
     } catch (e) {
-      resolve('Cannot read as XML');
+      resolve('Failed to validate MEI');
     }
   });
 }

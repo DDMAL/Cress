@@ -58,6 +58,10 @@ export class EditableTable {
       meiData.push(body[i].mei);
     }
 
+    let validationInProgress = false;
+    let pendingValidations = 0;
+    let hasInvalid = false;
+
     this.table = new Handsontable(container, {
       data: body,
       startCols: 11,
@@ -83,6 +87,24 @@ export class EditableTable {
       licenseKey: 'non-commercial-and-evaluation',
       afterChange() {
         this.validateCells();
+      },
+      beforeValidate(value) {
+        if (!validationInProgress) {
+          validationInProgress = true;
+          Validation.updateStatus('processing');
+        }
+
+        if (value) pendingValidations++;
+      },
+      afterValidate(isValid) {
+        if (!isValid) hasInvalid = true;
+
+        pendingValidations--;
+        if (pendingValidations === 0) {
+          validationInProgress = false;
+          Validation.updateStatus('done', hasInvalid);
+          hasInvalid = false;
+        }
       },
     });
 
