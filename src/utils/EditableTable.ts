@@ -108,8 +108,14 @@ export class EditableTable {
       const ExcelJS = require('exceljs');
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('Sheet1');
-      worksheet.properties.defaultRowHeight = 60;
-      worksheet.properties.defaultColWidth = 30;
+      worksheet.properties.defaultRowHeight = 150;
+      worksheet.columns = headers.map((header) => {
+        if (header.includes('mei')) {
+          return { width: 70 };
+        } else {
+          return { width: 30 };
+        }
+      });
 
       // Add headers to exported excel file
       worksheet.addRow(headers);
