@@ -554,8 +554,3 @@ a:hover {
   content: "▼ ";
   zoom: 0.9;
 }
-
-.ht_master .wtHolder {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-}

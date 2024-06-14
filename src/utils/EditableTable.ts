@@ -90,7 +90,7 @@ export class EditableTable {
     const exportPlugin = this.table.getPlugin('exportFile');
     this.exportToCsvButton.addEventListener('click', () => {
       exportPlugin.downloadFile('csv', {
-        bom: false,
+        bom: true,
         columnDelimiter: ',',
         rowHeaders: false,
         columnHeaders: true,
@@ -98,7 +98,7 @@ export class EditableTable {
         exportHiddenRows: true,
         fileExtension: 'csv',
         filename: 'table-CSV-file_[YYYY]-[MM]-[DD]',
-        mimeType: 'text/csv',
+        mimeType: 'text/csv;charset=UTF-8',
         rowDelimiter: '\r\n',
       });
     });
@@ -108,36 +108,56 @@ export class EditableTable {
       const ExcelJS = require('exceljs');
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('Sheet1');
-      worksheet.properties.defaultRowHeight = 60;
-      worksheet.properties.defaultColWidth = 30;
+      worksheet.properties.defaultRowHeight = 150;
+      worksheet.columns = headers.map((header) => {
+        if (header.includes('mei')) {
+          return { width: 70 };
+        } else {
+          return { width: 30 };
+        }
+      });
 
-      const header = headers;
-      worksheet.addRow(header);
+      // Add headers to exported excel file
+      worksheet.addRow(headers);
 
+      // Add body data to exported excel file
       for (let i = 0; i < body.length; i++) {
         const row = [];
         for (let j = 0; j < headers.length; j++) {
-          const cellData = body[i][headers[j]];
+          let inputCurrentHeader = inputHeader.find((header) =>
+            header.includes(headers[j])
+          );
+          let cellValue = body[i][inputCurrentHeader];
+          // check if cellValue is an image
           if (headers[j].includes('image')) {
-            if (
-              cellData &&
-              (cellData.includes('base64') || cellData.includes('http'))
-            ) {
-              row.push('');
-              const img = await workbook.addImage({
-                base64: cellData,
+            if (cellValue.includes('http') || cellValue.includes('base64')) {
+              cellValue = '';
+              // Add image to excel file
+              const img = workbook.addImage({
+                base64: body[i][inputCurrentHeader],
                 extension: 'png',
               });
-              worksheet.addImage(img, `A${i + 2}:A${i + 2}`);
-            } else {
-              row.push(cellData);
+              // get the size of the image
+              const [width, height] = await this.getImageDimensions(
+                body[i][inputCurrentHeader]
+              );
+              worksheet.addImage(img, {
+                tl: { col: j, row: i + 1 },
+                ext: { width: width, height: height },
+              });
             }
-          } else {
-            row.push(cellData);
           }
+          row.push(cellValue);
         }
-        worksheet.addRow(row);
+        worksheet.insertRow(i + 2, row);
       }
+
+      // for all columns, set alignment
+      worksheet.columns.forEach((column) => {
+        column.eachCell((cell) => {
+          cell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+        });
+      });
 
       const currentDate = new Date();
       const year = currentDate.getFullYear();
@@ -241,5 +261,31 @@ export class EditableTable {
     buttonContainer.appendChild(changeButton);
 
     return buttonContainer;
+  };
+
+  // Function to get image dimensions from a base64 string
+  getImageDimensions = (base64String: string): Promise<[number, number]> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const maxWidth = 60;
+      const maxHeight = 60;
+      img.onload = () => {
+        // Resize image if it's too big or too small
+        const widthRatio = maxWidth / img.width;
+        const heightRatio = maxHeight / img.height;
+        let ratio;
+        if (img.width > maxWidth || img.height > maxHeight) {
+          ratio = Math.min(widthRatio, heightRatio);
+        }
+        else {
+          ratio = Math.max(widthRatio, heightRatio);
+        }
+        img.width = img.width * ratio;
+        img.height = img.height * ratio;
+        resolve([img.width, img.height]);
+      };
+      img.onerror = reject;
+      img.src = base64String;
+    });
   };
 }
