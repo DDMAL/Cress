@@ -55,5 +55,7 @@ export type uploadsInfo = {
   name: string;
 }[];
 
+export type validationStatus = 'unknown' | 'processing' | 'done';
+
 /** An <svg> element from any DOM queries */
 export type HTMLSVGElement = HTMLElement & SVGSVGElement;
