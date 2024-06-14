@@ -139,6 +139,13 @@ export class EditableTable {
         worksheet.addRow(row);
       }
 
+      // for all columns, set alignment
+      worksheet.columns.forEach((column) => {
+        column.eachCell((cell) => {
+          cell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+        });
+      });
+
       const currentDate = new Date();
       const year = currentDate.getFullYear();
       const month = String(currentDate.getMonth() + 1).padStart(2, '0');
