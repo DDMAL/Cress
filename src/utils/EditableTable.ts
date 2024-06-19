@@ -5,6 +5,7 @@ export class EditableTable {
   private exportToCsvButton: HTMLElement;
   private exportToExcelButton: HTMLElement;
   private table: Handsontable;
+  private images: any[] = []; // Array to store images
 
   constructor(inputHeader: string[], body: any[]) {
     const container = document.getElementById('hot-container');
@@ -58,9 +59,16 @@ export class EditableTable {
       meiData.push(body[i].mei);
     }
 
+    // declare variables for global validation
     let validationInProgress = false;
     let pendingValidations = 0;
     let hasInvalid = false;
+
+    // call store images function
+    let inputImgHeader = inputHeader.find((header) =>
+      header.includes('image')
+    );
+    this.storeImages(inputImgHeader, body);
 
     this.table = new Handsontable(container, {
       data: body,
@@ -160,9 +168,9 @@ export class EditableTable {
                 extension: 'png',
               });
               // get the size of the image
-              const [width, height] = await this.getImageDimensions(
-                body[i][inputCurrentHeader]
-              );
+              const image = this.images.find((image) => image.row === i);
+              const width = image.width;
+              const height = image.height;
               worksheet.addImage(img, {
                 tl: { col: j, row: i + 1 },
                 ext: { width: width, height: height },
@@ -202,19 +210,53 @@ export class EditableTable {
     });
   }
 
+  // Function to store images
+  storeImages = (inputImgHeader: string, body: any[]) => {
+    for (let i = 0; i < body.length; i++) {
+      const image = body[i][inputImgHeader];
+      if (image && (image.includes('http') || image.includes('base64'))) {
+        // get image size and store it in the images array
+        this.getImageDimensions(image).then(([width, height]) => {
+          this.images.push({
+            image: image,
+            width: width,
+            height: height,
+            row: i,
+          });
+        });
+      }
+    }
+  };
+
   // Render image and upload buttons if no image found
   imgRenderer = (instance, td, row, col, prop, value, cellProperties) => {
     td.innerText = '';
     if (value && (value.includes('http') || value.includes('base64'))) {
       const container = document.createElement('div');
       container.style.paddingTop = '5px';
-      const img = this.createImageElement(value);
-      const buttons = this.createButtons(instance, row, col);
+      container.style.position = 'relative';
+      container.style.display = 'inline-block';
+      container.style.maxWidth = '100%';
+      container.style.maxHeight = '100%';
 
+      const img = this.createImageElement(value);
+      // get image size from the images array
+      const image = this.images.find((image) => image.row === row);
+      // if image is not loaded, use the default size
+      img.style.width = image ? `${image.width}px` : '100%';
+      img.style.height = image ? `${image.height}px` : '100%';
       container.appendChild(img);
-      container.appendChild(buttons);
+
+      // Create resize handle
+      const resizeHandle = this.createResizeHandle();
+      this.makeImageResizable(img, resizeHandle, row);
+      container.appendChild(resizeHandle);
 
       td.appendChild(container);
+
+      const buttons = this.createButtons(instance, row, col);
+      td.appendChild(buttons);
+
       cellProperties.readOnly = true;
     } else if (!value) {
       const input = this.handleImgUpload(instance, row, col);
@@ -250,13 +292,54 @@ export class EditableTable {
   createImageElement = (value) => {
     const img = document.createElement('img');
     img.style.overflow = 'hidden';
-    img.style.maxWidth = '100px';
-    img.style.maxHeight = '60px';
+    img.style.maxWidth = '100%';
+    img.style.maxHeight = '100%';
     img.src = value;
     img.addEventListener('mousedown', (event) => {
       event.preventDefault();
     });
     return img;
+  };
+
+  createResizeHandle = () => {
+    const resizeHandle = document.createElement('div');
+    resizeHandle.style.width = '10px';
+    resizeHandle.style.height = '10px';
+    resizeHandle.style.backgroundColor = 'gray';
+    resizeHandle.style.position = 'absolute';
+    resizeHandle.style.right = '0';
+    resizeHandle.style.bottom = '0';
+    resizeHandle.style.cursor = 'se-resize';
+    return resizeHandle;
+  };
+
+  makeImageResizable = (img, resizeHandle, row) => {
+    resizeHandle.addEventListener('mousedown', (event) => {
+      event.preventDefault();
+      const startX = event.clientX;
+      const startY = event.clientY;
+      const startWidth = img.offsetWidth;
+      const startHeight = img.offsetHeight;
+
+      const onMouseMove = (e) => {
+        const newWidth = startWidth + (e.clientX - startX);
+        const newHeight = startHeight + (e.clientY - startY);
+        img.style.width = `${newWidth}px`;
+        img.style.height = `${newHeight}px`;
+        // update image size in the images array
+        const image = this.images.find((image) => image.row === row);
+        image.width = newWidth;
+        image.height = newHeight;
+      };
+
+      const onMouseUp = () => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
   };
 
   createButtons = (instance, row, col) => {
