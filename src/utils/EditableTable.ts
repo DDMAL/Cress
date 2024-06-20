@@ -41,9 +41,7 @@ export class EditableTable {
     // column widths
     const colWidths = [];
     for (let i = 0; i < headers.length; i++) {
-      if (headers[i].includes('image')) {
-        colWidths.push(150);
-      } else if (headers[i].includes('mei')) {
+      if (headers[i].includes('mei')) {
         colWidths.push(200);
       } else {
         colWidths.push(100);
@@ -233,30 +231,30 @@ export class EditableTable {
     td.innerText = '';
     if (value && (value.includes('http') || value.includes('base64'))) {
       const container = document.createElement('div');
-      container.style.paddingTop = '5px';
-      container.style.position = 'relative';
-      container.style.display = 'inline-block';
-      container.style.maxWidth = '100%';
-      container.style.maxHeight = '100%';
+      container.classList.add('img-cell-container');
 
+      const imgContainer = document.createElement('div');
+      imgContainer.classList.add('img-container');
+      
       const img = this.createImageElement(value);
       // get image size from the images array
       const image = this.images.find((image) => image.row === row);
       // if image is not loaded, use the default size
-      img.style.width = image ? `${image.width}px` : '100%';
-      img.style.height = image ? `${image.height}px` : '100%';
-      container.appendChild(img);
+      img.style.width = image ? `${image.width}px` : '60px';
+      img.style.height = image ? `${image.height}px` : '40px';
+      imgContainer.appendChild(img);
 
       // Create resize handle
       const resizeHandle = this.createResizeHandle();
       this.makeImageResizable(img, resizeHandle, row);
-      container.appendChild(resizeHandle);
+      imgContainer.appendChild(resizeHandle);
 
-      td.appendChild(container);
+      container.appendChild(imgContainer);
 
       const buttons = this.createButtons(instance, row, col);
-      td.appendChild(buttons);
+      container.appendChild(buttons);
 
+      td.appendChild(container);
       cellProperties.readOnly = true;
     } else if (!value) {
       const input = this.handleImgUpload(instance, row, col);
@@ -269,13 +267,27 @@ export class EditableTable {
   };
 
   handleImgUpload = (instance, row, col) => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*'; // Only accept image upload
-    input.style.width = '100%';
-    input.style.height = '100%';
-    input.style.padding = '5px';
-    input.addEventListener('change', (event) => {
+    const container = document.createElement('div');
+    container.classList.add('upload-img-container');
+
+    const uploadImgButton = document.createElement('button');
+    uploadImgButton.classList.add('upload-img-btn');
+  
+    const uploadImgIcon = document.createElement('img');
+    uploadImgIcon.src = './Cress-gh/assets/img/upload-img.svg';
+    uploadImgIcon.alt = 'Upload';
+    uploadImgButton.appendChild(uploadImgIcon);
+  
+    const imgInput = document.createElement('input');
+    imgInput.type = 'file';
+    imgInput.accept = 'image/*'; // Only accept image upload
+    imgInput.style.display = 'none'; // Hide the input element
+  
+    uploadImgButton.addEventListener('click', () => {
+      imgInput.click(); // Trigger the input click event
+    });
+
+    imgInput.addEventListener('change', (event) => {
       const file = (event.target as HTMLInputElement).files[0];
       if (file) {
         const reader = new FileReader();
@@ -286,7 +298,9 @@ export class EditableTable {
         reader.readAsDataURL(file);
       }
     });
-    return input;
+    container.appendChild(uploadImgButton);
+    container.appendChild(imgInput);
+    return container;
   };
 
   createImageElement = (value) => {
@@ -328,8 +342,11 @@ export class EditableTable {
         img.style.height = `${newHeight}px`;
         // update image size in the images array
         const image = this.images.find((image) => image.row === row);
-        image.width = newWidth;
-        image.height = newHeight;
+        // if found image, update the size
+        if (image) {
+          image.width = newWidth;
+          image.height = newHeight;
+        }
       };
 
       const onMouseUp = () => {
@@ -344,22 +361,30 @@ export class EditableTable {
 
   createButtons = (instance, row, col) => {
     const buttonContainer = document.createElement('div');
-    buttonContainer.style.display = 'flex';
-    buttonContainer.style.marginTop = '5px';
+    buttonContainer.classList.add('img-btn-container');
 
     const deleteButton = document.createElement('button');
-    deleteButton.innerText = 'Delete Image';
-    deleteButton.style.marginRight = '5px';
+    deleteButton.classList.add('icon-btn');
+    const deleteIcon = document.createElement('img');
+    deleteIcon.src = './Cress-gh/assets/img/remove-doc.svg';
+    deleteIcon.alt = 'Delete';
+    deleteIcon.title = 'Delete Image';
+    deleteButton.appendChild(deleteIcon);
     deleteButton.addEventListener('click', () => {
       instance.setDataAtCell(row, col, '');
       instance.render();
     });
 
     const changeButton = document.createElement('button');
-    changeButton.innerText = 'Change Image';
+    changeButton.classList.add('icon-btn');
+    const changeIcon = document.createElement('img');
+    changeIcon.src = './Cress-gh/assets/img/rename-doc.svg';
+    changeIcon.alt = 'Change';
+    changeIcon.title = 'Change Image';
+    changeButton.appendChild(changeIcon);
     changeButton.addEventListener('click', () => {
       const changeInput = this.handleImgUpload(instance, row, col);
-      changeInput.click();
+      changeInput.querySelector('input').click();
     });
 
     buttonContainer.appendChild(deleteButton);
