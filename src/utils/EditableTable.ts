@@ -294,6 +294,16 @@ export class EditableTable {
         reader.onload = (e) => {
           const base64String = e.target.result as string;
           instance.setDataAtCell(row, col, base64String);
+          instance.render();
+          // add new image to the images array
+          this.getImageDimensions(base64String).then(([width, height]) => {
+            this.images.push({
+              image: base64String,
+              width: width,
+              height: height,
+              row: row,
+            });
+          });
         };
         reader.readAsDataURL(file);
       }
