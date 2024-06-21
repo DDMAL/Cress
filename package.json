@@ -6,7 +6,7 @@
   "scripts": {
     "start": "http-server deployment/server/ -p 9000",
     "build": "rm -rf deployment/server/Cress-gh && webpack --config webpack.config.js && cp -R assets src/workers deployment/server/Cress-gh",
-    "bundle:pages": "rm -rf gh-pages/Cress/Cress-gh && webpack --config webpack.pages-config.js && cp -R assets gh-pages/Cress/Cress-gh"
+    "bundle:pages": "rm -rf gh-pages/Cress/Cress-gh && webpack --config webpack.pages-config.js && cp -R assets src/workers gh-pages/Cress/Cress-gh"
   },
   "repository": "https://github.com/DDMAL/Cress.git",
   "author": {
