@@ -13,6 +13,11 @@ export class EditableTable {
     // headers for the table
     const headers = ['image', 'name', 'classification', 'mei'];
 
+    // for all mei data, convert all quote signs to inch marks
+    for (let i = 0; i < body.length; i++) {
+      body[i].mei = body[i].mei.replace(/“/g, '"').replace(/”/g, '"');
+    }
+
     // for loop to get the columns
     const columns = [];
     for (let i = 0; i < headers.length; i++) {
