@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { IFolder, FileSystemTools } from '.';
 import { fetchUploads } from '../Storage';
 
-const samples = ['SQUAREnotation-NEUMElevel'];
+const samples = ['SQUAREnotation-NEUMElevel.csv', 'Neume shape-small.docx'];
 interface FileSystemProps {
   getRoot: () => Promise<IFolder>;
   setFileSystem: (root: IFolder) => boolean;

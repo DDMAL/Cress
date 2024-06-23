@@ -86,11 +86,11 @@ async function parseXLSX(file: File): Promise<any[]> {
   });
 }
 
-async function parseWORD(file: File): Promise<any[]> {
+export async function parseWORD(arrayBuffer: ArrayBuffer): Promise<any[]> {
   return new Promise((resolve, reject) => {
     let mammoth = require('mammoth');
     mammoth
-      .convertToHtml({ arrayBuffer: file.arrayBuffer() })
+      .convertToHtml({ arrayBuffer: arrayBuffer })
       .then(function (result) {
         let html = result.value;
         let messages = result.messages;
@@ -161,7 +161,8 @@ export function createJson(file: File, type: string): Promise<Blob> {
     } else if (type === 'xlsx') {
       [headers, data] = await parseXLSX(file);
     } else if (type === 'doc' || type === 'docx') {
-      [headers, data] = await parseWORD(file);
+      let arrayBuffer = await file.arrayBuffer();
+      [headers, data] = await parseWORD(arrayBuffer);
     } else {
       console.error('Unsupported file format');
       return;
