@@ -1,4 +1,5 @@
 import CressView from '../../src/CressView';
+import { parseWORD } from '../../src/Dashboard/Storage';  
 import { IEntry, IFolder } from '../../src/Dashboard/FileSystem';
 import { CressDoc, Doc, GlyphArray } from '../../src/Types';
 import PouchDB from 'pouchdb';
@@ -14,32 +15,49 @@ if (sampleId) {
       const localFileSystem = JSON.parse(fs) as IFolder;
       const filename = findFileNameById(localFileSystem);
       if (filename) {
-        const filePath = `./Cress-gh/assets/samples/${filename}.csv`;
-
+        let filePath = `./Cress-gh/assets/samples/${filename}`;
         window
           .fetch(filePath)
           .then((response) => {
             if (!response.ok) {
               throw new Error(response.statusText);
             }
-            return response.text();
+            return response;
           })
-          .then(async (text) => {
+          .then(async (response) => {
             try {
-              let file = Papa.parse(text);
-              let data = file.data;
-              console.log(data);
-              let cressDoc: CressDoc = {
-                id: sampleId,
-                name: filename,
-                header: [],
-                body: dataListToDict(data),
-              };
-              const view = new CressView(cressDoc);
-              view.start();
+              // get file extension
+              let extension = filePath.split('.').pop();
+              if (extension === 'csv') {
+                // handle csv sample
+                const text = await response.text();
+                let file = Papa.parse(text);
+                let data = file.data;
+                let cressDoc: CressDoc = {
+                  id: sampleId,
+                  name: filename,
+                  header: [],
+                  body: dataListToDict(data),
+                };
+                const view = new CressView(cressDoc);
+                view.start();
+              } else if (extension === 'docx') {
+                // handle docx sample
+                const arrayBuffer = await response.arrayBuffer();
+                let headers: string[], data: any[];
+                [headers, data] = await parseWORD(arrayBuffer);
+                let cressDoc: CressDoc = {
+                  id: sampleId,
+                  name: filename,
+                  header: headers,
+                  body: data,
+                };
+                const view = new CressView(cressDoc);
+                view.start();
+              }
             } catch (e) {
               console.error(e);
-              console.debug(text);
+              console.debug(response);
             }
           })
           .catch((error) => {
