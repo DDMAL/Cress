@@ -39,6 +39,11 @@ a:hover {
   align-items: center;
   height: 100%;
 }
+.navbar-home-btn {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
 #cress-main-icon {
   height: 50%;
   margin: 10px;
@@ -49,6 +54,7 @@ a:hover {
   background-color: #f2f2f2;
   color: black;
   display: flex;
+  padding-left: 10px;
 }
 .navbar-menu {
   color: black;
