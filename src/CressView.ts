@@ -1,7 +1,7 @@
 import setBody from './utils/Template';
 import * as Validation from './Validation';
 import { ModalWindow } from './utils/ModalWindow';
-import { EditableTable } from './utils/EditableTable';
+import { CressTable } from './Editor/CressTable';
 import { ModalWindowInterface } from './Interfaces';
 import { setSavedStatus, listenUnsavedChanges } from './utils/Unsaved';
 import { CressDoc } from './Types';
@@ -21,7 +21,7 @@ class CressView {
   /** Module that controls state and content of Cress modal windows */
   modal: ModalWindowInterface;
   /** Spreadsheet module */
-  table: EditableTable;
+  table: CressTable;
 
   /**
    * Constructor for CressView. Sets mode and passes constructors.
@@ -45,7 +45,7 @@ class CressView {
 
         document.getElementById('loading').style.display = 'none';
 
-        this.table = new EditableTable(this.header, this.body);
+        this.table = new CressTable(this.header, this.body);
 
         return;
       })
