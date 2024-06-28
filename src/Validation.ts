@@ -15,6 +15,7 @@ export function updateStatus(
   switch (status) {
     case 'processing':
       meiStatus.textContent = 'checking...';
+      meiStatus.style.color = 'gray';
       break;
 
     case 'done':
