@@ -13,7 +13,12 @@ export class ImageHandler {
       const base64Image = row[inputImgHeader];
       if (base64Image) {
         this.getImageDimensions(base64Image).then(([width, height]) => {
-          this.images.push({ image: base64Image, width, height, row: rowIndex });
+          this.images.push({
+            image: base64Image,
+            width,
+            height,
+            row: rowIndex,
+          });
         });
       }
     });
@@ -54,29 +59,29 @@ export class ImageHandler {
     cellProperties: Handsontable.CellProperties
   ) {
     Handsontable.dom.empty(td);
-  
+
     if (value && (value.includes('http') || value.includes('base64'))) {
       const container = document.createElement('div');
       container.classList.add('img-cell-container');
-  
+
       const imgContainer = document.createElement('div');
       imgContainer.classList.add('img-container');
-      
+
       const img = this.createImageElement(value);
-      const image = this.images.find(image => image.row === row);
+      const image = this.images.find((image) => image.row === row);
       img.style.width = image ? `${image.width}px` : '60px';
       img.style.height = image ? `${image.height}px` : '40px';
       imgContainer.appendChild(img);
-  
+
       const resizeHandle = this.createResizeHandle();
       this.makeImageResizable(img, resizeHandle, row);
       imgContainer.appendChild(resizeHandle);
-  
+
       container.appendChild(imgContainer);
-  
+
       const buttons = this.createButtons(instance, row, col);
       container.appendChild(buttons);
-  
+
       td.appendChild(container);
       cellProperties.readOnly = true;
     } else if (!value) {
@@ -88,7 +93,7 @@ export class ImageHandler {
     }
     return td;
   }
-  
+
   // Image Upload Functions
   handleImgUpload(instance: Handsontable, row: number, col: number) {
     const container = document.createElement('div');
@@ -96,17 +101,17 @@ export class ImageHandler {
 
     const uploadImgButton = document.createElement('button');
     uploadImgButton.classList.add('upload-img-btn');
-  
+
     const uploadImgIcon = document.createElement('img');
     uploadImgIcon.src = './Cress-gh/assets/img/upload-img.svg';
     uploadImgIcon.alt = 'Upload';
     uploadImgButton.appendChild(uploadImgIcon);
-  
+
     const imgInput = document.createElement('input');
     imgInput.type = 'file';
     imgInput.accept = 'image/*';
     imgInput.style.display = 'none';
-  
+
     uploadImgButton.addEventListener('click', () => {
       imgInput.click();
     });
@@ -138,7 +143,7 @@ export class ImageHandler {
     img.style.maxWidth = '100%';
     img.style.maxHeight = '100%';
     img.src = value;
-    img.addEventListener('mousedown', event => {
+    img.addEventListener('mousedown', (event) => {
       event.preventDefault();
     });
     return img;
@@ -156,8 +161,12 @@ export class ImageHandler {
     return resizeHandle;
   }
 
-  makeImageResizable(img: HTMLImageElement, resizeHandle: HTMLElement, row: number) {
-    resizeHandle.addEventListener('mousedown', event => {
+  makeImageResizable(
+    img: HTMLImageElement,
+    resizeHandle: HTMLElement,
+    row: number
+  ) {
+    resizeHandle.addEventListener('mousedown', (event) => {
       event.preventDefault();
       const startX = event.clientX;
       const startY = event.clientY;
@@ -169,7 +178,7 @@ export class ImageHandler {
         const newHeight = startHeight + (e.clientY - startY);
         img.style.width = `${newWidth}px`;
         img.style.height = `${newHeight}px`;
-        const image = this.images.find(image => image.row === row);
+        const image = this.images.find((image) => image.row === row);
         if (image) {
           image.width = newWidth;
           image.height = newHeight;

@@ -16,12 +16,17 @@ export class ExportHandler {
     });
   }
 
-  async exportToExcel(inputHeader: string[], body: any[], headers: string[], images: any[]) {
+  async exportToExcel(
+    inputHeader: string[],
+    body: any[],
+    headers: string[],
+    images: any[]
+  ) {
     const ExcelJS = require('exceljs');
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Sheet1');
     worksheet.properties.defaultRowHeight = 150;
-    worksheet.columns = headers.map(header => {
+    worksheet.columns = headers.map((header) => {
       return { width: header.includes('mei') ? 70 : 30 };
     });
 
@@ -30,7 +35,9 @@ export class ExportHandler {
     for (let i = 0; i < body.length; i++) {
       const row = [];
       for (let j = 0; j < headers.length; j++) {
-        let inputCurrentHeader = inputHeader.find(header => header.includes(headers[j]));
+        let inputCurrentHeader = inputHeader.find((header) =>
+          header.includes(headers[j])
+        );
         let cellValue = body[i][inputCurrentHeader];
         if (headers[j].includes('image')) {
           if (cellValue.includes('http') || cellValue.includes('base64')) {
@@ -39,7 +46,7 @@ export class ExportHandler {
               base64: body[i][inputCurrentHeader],
               extension: 'png',
             });
-            const image = images.find(image => image.row === i);
+            const image = images.find((image) => image.row === i);
             const width = image.width;
             const height = image.height;
             worksheet.addImage(img, {
@@ -53,9 +60,13 @@ export class ExportHandler {
       worksheet.insertRow(i + 2, row);
     }
 
-    worksheet.columns.forEach(column => {
-      column.eachCell(cell => {
-        cell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+    worksheet.columns.forEach((column) => {
+      column.eachCell((cell) => {
+        cell.alignment = {
+          vertical: 'top',
+          horizontal: 'left',
+          wrapText: true,
+        };
       });
     });
 
