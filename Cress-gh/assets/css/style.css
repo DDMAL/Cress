@@ -38,6 +38,12 @@ a:hover {
   display: flex;
   align-items: center;
   height: 100%;
+  padding-left: 10px;
+}
+.navbar-home-btn {
+  height: 100%;
+  display: flex;
+  align-items: center;
 }
 #cress-main-icon {
   height: 50%;
@@ -45,31 +51,47 @@ a:hover {
 }
 .navbar.is-light {
   height: 9vh;
+  width: 100%;
   border-bottom: 1px solid #8675a9;
   background-color: #f2f2f2;
   color: black;
   display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
 }
 .navbar-menu {
   color: black;
   display: flex;
   width: 100%;
   justify-content: space-between;
+  padding: 0px 10px 0px 0px;
 }
 .navbar-start {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  width: 85%;
 }
 .navbar-end {
   display: flex;
-  margin: 20px;
   flex-direction: row;
+  margin: 10px 0px 10px 0px;
 }
-.navbar-main-content-container {
+.navbar-main-content-container-top {
   display: flex;
   flex-direction: row;
   height: 50%;
   align-items: center;
+  flex-wrap: wrap;
+  align-content: center;
+}
+.navbar-main-content-container-bottom {
+  display: flex;
+  flex-direction: row;
+  height: 50%;
+  align-items: center;
+  padding-top: 5px;
 }
 
 /* Top row */
@@ -187,6 +209,13 @@ a:hover {
 }
 /* Tov navbar styles styles for smaller devices */
 @media screen and (max-width: 1023px) {
+  .navbar-start {
+    width: 90%;
+  }
+  .navbar-main-content-container-bottom {
+    height: 30%;
+    padding-top: 10px;
+  }
   .navbar-menu.is-active {
     display: flex;
     flex-direction: column;
@@ -195,9 +224,6 @@ a:hover {
     overflow: scroll;
     gap: 30px;
     padding: 0;
-  }
-  .navbar-start {
-    justify-content: center;
   }
   .navbar-main-content-container {
     display: flex;
@@ -223,11 +249,8 @@ a:hover {
     color: #8675a9;
     display: block;
   }
-  .navbar-element.navbar-btn {
-    cursor: pointer;
-    overflow: hidden;
-    font-size: 1.2rem;
-    height: 100%;
+  .navbar-element {
+    font-size: 10px;
   }
   .navbar-btn-text {
     font-weight: bold;
@@ -246,7 +269,8 @@ a:hover {
     padding-top: 0.5rem;
   }
   .navbar-dropdown-item {
-    font-size: 1rem;
+    font-size: 0.7rem;
+    width: max-content;
   }
   #feedback-form-btn-container {
     margin: 0;
@@ -555,7 +579,6 @@ a:hover {
   zoom: 0.9;
 }
 
-
 /* ----------------------- */
 /* Section: Image Cell
 /* ----------------------- */
@@ -596,7 +619,9 @@ a:hover {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
 }
 
 .upload-img-btn:hover {
