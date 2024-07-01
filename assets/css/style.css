@@ -564,6 +564,10 @@ a:hover {
 /* ----------------------- */
 
 /* Keep camelCase names as they are from the library */
+#hot-container {
+  z-index: 7;
+}
+
 .handsontable.table-menu-btn .changeType {
   background: #e2e2e2;
   border-radius: 100%;
