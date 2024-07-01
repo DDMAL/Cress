@@ -4,6 +4,8 @@ import { ImageHandler } from './ImageHandler';
 import { ExportHandler } from './ExportHandler';
 import { ColumnTools } from './ColumnTools';
 import { updateAttachment } from '../Dashboard/Storage';
+import { setSavedStatus } from '../utils/Unsaved';
+import * as Notification from '../utils/Notification';
 
 export class CressTable {
   private table: Handsontable;
@@ -64,6 +66,7 @@ export class CressTable {
       className: 'table-menu-btn',
       licenseKey: 'non-commercial-and-evaluation',
       afterChange() {
+        setSavedStatus(false);
         this.validateCells();
       },
       beforeValidate: (value) => this.setProcessStatus(value),
@@ -99,9 +102,23 @@ export class CressTable {
       const result = await updateAttachment(id, [inputHeader, ...body]);
 
       if (result) {
-        // TODO: notification
+        setSavedStatus(true);
+        Notification.queueNotification('Saved', 'success');
       } else {
-        // TODO: notification
+        Notification.queueNotification('Save failed', 'error');
+      }
+    });
+
+    document.body.addEventListener('keydown', async (evt) => {
+      if (evt.key === 's') {
+        const result = await updateAttachment(id, [inputHeader, ...body]);
+
+        if (result) {
+          setSavedStatus(true);
+          Notification.queueNotification('Saved', 'success');
+        } else {
+          Notification.queueNotification('Save failed', 'error');
+        }
       }
     });
   }
