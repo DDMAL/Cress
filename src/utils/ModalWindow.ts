@@ -90,7 +90,7 @@ export class ModalWindow implements ModalWindowInterface {
   openModalWindow(): void {
     // make sure no other modal content is being displayed
     Array.from(
-      document.getElementsByClassName('cress-modal-window-content')
+      document.getElementsByClassName('cress-modal-window-content'),
     ).forEach((elem) => {
       elem.classList.remove('visible');
     });
@@ -134,7 +134,7 @@ export class ModalWindow implements ModalWindowInterface {
       case ModalWindowView.NEW_FOLDER:
       case ModalWindowView.RENAME:
         document.getElementById(
-          'cress-modal-window-content-container'
+          'cress-modal-window-content-container',
         ).innerHTML = '';
         break;
 
@@ -155,7 +155,7 @@ export class ModalWindow implements ModalWindowInterface {
    */
   private setModalWindowContent(content?: string): void {
     const container = document.getElementById(
-      'cress-modal-window-content-container'
+      'cress-modal-window-content-container',
     );
     const title = document.getElementById('cress-modal-window-header-title');
 
@@ -169,7 +169,7 @@ export class ModalWindow implements ModalWindowInterface {
         container.innerHTML = `<div style="margin-bottom: 30px;white-space: pre-line;overflow-y: scroll;">${content}</div>
           <div class="cress-modal-window-btn">
             <a href="data:text/plain;charset=utf-8,${encodeURI(
-              content
+              content,
             )}" download="error.log">
               Export
             </a>
@@ -207,7 +207,7 @@ export class ModalWindow implements ModalWindowInterface {
   private openEditSylTextModalWindow = function (): void {
     // make sure no other modal content is being displayed
     Array.from(
-      document.getElementsByClassName('cress-modal-window-content')
+      document.getElementsByClassName('cress-modal-window-content'),
     ).forEach((elem) => {
       elem.classList.remove('visible');
     });

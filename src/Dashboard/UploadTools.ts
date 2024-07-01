@@ -50,7 +50,7 @@ function createUploadingItem(filename: string): HTMLDivElement {
 }
 
 export async function handleUploadAllDocuments(
-  currentFolder: IFolder
+  currentFolder: IFolder,
 ): Promise<unknown> {
   const promises = fm
     .getDocs()
@@ -62,8 +62,8 @@ export async function handleUploadAllDocuments(
   promises.map((p) =>
     Promise.resolve(p).then(
       (value) => ({ status: 'fulfilled', value }),
-      (reason) => ({ status: 'rejected', reason })
-    )
+      (reason) => ({ status: 'rejected', reason }),
+    ),
   );
 
   fm.clear();
@@ -75,11 +75,11 @@ async function uploadDoc(
   name: string,
   file: File,
   type: string,
-  currentFolder: IFolder
+  currentFolder: IFolder,
 ): Promise<boolean> {
   const newName = fnConflictHandler(
     name,
-    FileSystemTools.getAllNames(currentFolder)
+    FileSystemTools.getAllNames(currentFolder),
   );
   return (
     createJson(file, type)
@@ -112,14 +112,14 @@ export function formatFilename(filename: string, maxLen: number): string {
   else
     return `${filename.substring(0, chunkLen - 1)}...${filename.substring(
       len - chunkLen + 2,
-      len
+      len,
     )}`;
 }
 
 // Renames file if there are naming conflicts, in the form of 'foobar (1)'
 export function fnConflictHandler(
   filename: string,
-  existingNames: string[]
+  existingNames: string[],
 ): string {
   let newFilename = filename;
   let counter = 1;

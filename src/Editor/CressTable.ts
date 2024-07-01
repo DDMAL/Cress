@@ -27,7 +27,7 @@ export class CressTable {
     // Register the custom image renderer
     Handsontable.renderers.registerRenderer(
       'imgRenderer',
-      this.imageHandler.imgRender.bind(this.imageHandler)
+      this.imageHandler.imgRender.bind(this.imageHandler),
     );
 
     // Prepare table configuration
@@ -77,7 +77,7 @@ export class CressTable {
   private initializeExportButtons(
     inputHeader: string[],
     body: any[],
-    headers: string[]
+    headers: string[],
   ) {
     this.exportToCsvButton = document.getElementById('export-to-csv');
     const exportPlugin = this.table.getPlugin('exportFile');
@@ -91,7 +91,7 @@ export class CressTable {
         inputHeader,
         body,
         headers,
-        this.images
+        this.images,
       );
     });
   }

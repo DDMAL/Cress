@@ -1,7 +1,5 @@
 name: check-format
-on:
-  pull_request:
-    types: [push, pull_request]
+on: [push, pull_request]
 jobs:
   format-test:
     runs-on: ubuntu-latest

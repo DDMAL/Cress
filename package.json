@@ -38,6 +38,7 @@
     "hard-source-webpack-plugin": "^0.13.1",
     "papaparse": "^5.4.1",
     "pouchdb-core": "^8.0.1",
+    "prettier": "^3.3.2",
     "ts-loader": "8.4.0",
     "typescript": "^5.4.2",
     "webpack": "4.47.0",

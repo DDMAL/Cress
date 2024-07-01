@@ -12,7 +12,7 @@ export class ColumnTools {
     for (let i = 0; i < headers.length; i++) {
       if (headers[i].includes('image')) {
         let inputImgHeader = this.inputHeader.find((header) =>
-          header.includes('image')
+          header.includes('image'),
         );
         columns.push({
           data: inputImgHeader,

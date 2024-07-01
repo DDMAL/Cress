@@ -137,7 +137,7 @@ export function dashboardState(): DashboardState {
 
     for (const folderName of folderNames) {
       const targetFolder = currentFolder.children.find(
-        (child) => child.name === folderName
+        (child) => child.name === folderName,
       );
       if (targetFolder && targetFolder.type === 'folder') {
         currentFolder = targetFolder as IFolder;
@@ -156,7 +156,7 @@ export function dashboardState(): DashboardState {
 
   function getTrashFolder() {
     const trashFolders = root().children.filter(
-      (entry) => entry.type === 'trash'
+      (entry) => entry.type === 'trash',
     ) as IFolder[];
     return trashFolders[0];
   }

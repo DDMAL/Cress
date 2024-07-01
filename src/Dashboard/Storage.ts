@@ -106,7 +106,7 @@ export async function parseWORD(arrayBuffer: ArrayBuffer): Promise<any[]> {
           .getElementsByTagName('td');
         let headers = Array.from(
           table.getElementsByTagName('tr')[0].getElementsByTagName('td'),
-          (element) => element.innerText
+          (element) => element.innerText,
         );
         // remove header row
         table.deleteRow(0);
@@ -184,7 +184,7 @@ export function createJson(file: File, type: string): Promise<Blob> {
 export function addDocument(
   id: string,
   name: string,
-  content: Blob
+  content: Blob,
 ): Promise<boolean> {
   return new Promise((resolve, reject) => {
     db.put({
@@ -202,7 +202,7 @@ export function addDocument(
       })
       .catch((err) => {
         window.alert(
-          `Error Uploading Document: ${err.message}, title: ${name}, id: ${id}.`
+          `Error Uploading Document: ${err.message}, title: ${name}, id: ${id}.`,
         );
         reject(false);
       });

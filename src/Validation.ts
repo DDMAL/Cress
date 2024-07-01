@@ -8,7 +8,7 @@ let templatePromise: Promise<string> | null = null;
  */
 export function updateStatus(
   status: validationStatus,
-  hasInvalid?: boolean
+  hasInvalid?: boolean,
 ): void {
   const meiStatus: HTMLSpanElement =
     document.getElementById('validation_status')!;
@@ -37,10 +37,10 @@ export function updateStatus(
 
 async function fetchSchemaAndTemplate(): Promise<void> {
   schemaPromise = fetch(
-    __ASSET_PREFIX__ + 'assets/validation/mei-all.rng'
+    __ASSET_PREFIX__ + 'assets/validation/mei-all.rng',
   ).then((response) => response.text());
   templatePromise = fetch(
-    __ASSET_PREFIX__ + 'assets/validation/mei_template.mei'
+    __ASSET_PREFIX__ + 'assets/validation/mei_template.mei',
   ).then((response) => response.text());
 }
 
@@ -51,7 +51,7 @@ async function fetchSchemaAndTemplate(): Promise<void> {
  */
 export const meiValidator = async (
   value: string,
-  callback: (result: boolean) => void
+  callback: (result: boolean) => void,
 ): Promise<void> => {
   if (schemaPromise === null || templatePromise === null) {
     await fetchSchemaAndTemplate();
@@ -77,7 +77,7 @@ export const meiValidator = async (
 function validateMEI(
   value: string,
   schema: string,
-  meiTemplate: string
+  meiTemplate: string,
 ): Promise<string> {
   return new Promise((resolve) => {
     try {
@@ -95,7 +95,7 @@ function validateMEI(
        * use id to track each worker request
        */
       const worker = new Worker(
-        __ASSET_PREFIX__ + 'workers/ValidationWorker.js'
+        __ASSET_PREFIX__ + 'workers/ValidationWorker.js',
       );
 
       worker.postMessage({
