@@ -1,5 +1,5 @@
 import CressView from '../../src/CressView';
-import { parseWORD } from '../../src/Dashboard/Storage';  
+import { parseWORD } from '../../src/Dashboard/Storage';
 import { IEntry, IFolder } from '../../src/Dashboard/FileSystem';
 import { CressDoc, Doc, GlyphArray } from '../../src/Types';
 import PouchDB from 'pouchdb';

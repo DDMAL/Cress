@@ -56,7 +56,7 @@ export class ImageHandler {
     col: number,
     prop: string,
     value: any,
-    cellProperties: Handsontable.CellProperties
+    cellProperties: Handsontable.CellProperties,
   ) {
     Handsontable.dom.empty(td);
 
@@ -164,7 +164,7 @@ export class ImageHandler {
   makeImageResizable(
     img: HTMLImageElement,
     resizeHandle: HTMLElement,
-    row: number
+    row: number,
   ) {
     resizeHandle.addEventListener('mousedown', (event) => {
       event.preventDefault();

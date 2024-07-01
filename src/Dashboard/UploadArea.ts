@@ -5,7 +5,7 @@ import { IFolder } from './FileSystem';
 
 async function handleUploadUpdate(
   modalWindow: ModalWindow,
-  currentFolder: IFolder
+  currentFolder: IFolder,
 ) {
   const spinner = document.querySelector('#uploading_spinner');
   spinner.classList.add('visible');
@@ -36,7 +36,7 @@ export function InitUploadArea(currentFolder: IFolder): void {
 
   const uploadButton = document.querySelector('#upload_button');
   uploadButton.addEventListener('click', () =>
-    handleUploadUpdate(modalWindow, currentFolder)
+    handleUploadUpdate(modalWindow, currentFolder),
   );
 
   // request user file system when clicking on upload area
@@ -51,8 +51,8 @@ export function InitUploadArea(currentFolder: IFolder): void {
       const filenames = rejectFiles.map((file) => file.name);
       window.alert(
         `The following files are not .csv or .xlsx files: \n\n${filenames.join(
-          '\n'
-        )}`
+          '\n',
+        )}`,
       );
     }
     // remove selection
@@ -61,7 +61,7 @@ export function InitUploadArea(currentFolder: IFolder): void {
 
   // Add event listeners for click and drag and drop
   const upload_area: HTMLDivElement = document.querySelector(
-    '#initial_upload_area'
+    '#initial_upload_area',
   );
   upload_area.onclick = () => fileSelector.click();
   // add visual cues for dragging files over upload area
@@ -84,8 +84,8 @@ export function InitUploadArea(currentFolder: IFolder): void {
       const filenames = rejectFiles.map((file) => file.name);
       window.alert(
         `The following files are not .csv or .xlsx files: \n\n${filenames.join(
-          '\n'
-        )}`
+          '\n',
+        )}`,
       );
     }
   };

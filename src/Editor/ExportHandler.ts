@@ -20,7 +20,7 @@ export class ExportHandler {
     inputHeader: string[],
     body: any[],
     headers: string[],
-    images: any[]
+    images: any[],
   ) {
     const ExcelJS = require('exceljs');
     const workbook = new ExcelJS.Workbook();
@@ -36,7 +36,7 @@ export class ExportHandler {
       const row = [];
       for (let j = 0; j < headers.length; j++) {
         let inputCurrentHeader = inputHeader.find((header) =>
-          header.includes(headers[j])
+          header.includes(headers[j]),
         );
         let cellValue = body[i][inputCurrentHeader];
         if (headers[j].includes('image')) {

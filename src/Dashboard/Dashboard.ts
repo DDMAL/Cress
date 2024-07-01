@@ -7,21 +7,21 @@ import * as contextMenuContent from './ContextMenuContent';
 import { ModalWindow, ModalWindowView } from '../utils/ModalWindow';
 
 const documentsContainer: HTMLDivElement = document.querySelector(
-  '#fs-content-container'
+  '#fs-content-container',
 );
 const backgroundArea: HTMLDivElement = document.querySelector(
-  '#main-section-content'
+  '#main-section-content',
 );
 const openButton: HTMLButtonElement = document.querySelector('#open-doc');
 const removeButton: HTMLButtonElement = document.querySelector('#remove-doc');
 const navPathContainer: HTMLDivElement = document.querySelector(
-  '#nav-path-container'
+  '#nav-path-container',
 );
 let backButton: HTMLButtonElement = document.querySelector('#fs-back-btn');
 let emptyButton: HTMLButtonElement = document.querySelector('#fs-empty-btn');
 let deleteButton: HTMLButtonElement = document.querySelector('#fs-delete-btn');
 const uploadDocumentsButton: HTMLButtonElement = document.querySelector(
-  '#upload-new-doc-button'
+  '#upload-new-doc-button',
 );
 const newFolderButton: HTMLButtonElement =
   document.querySelector('#add-folder-button');
@@ -31,13 +31,13 @@ const fsm = FileSystemManager();
 const state = dashboardState();
 
 const mainSection: HTMLElement = document.querySelector(
-  '.main-section-content'
+  '.main-section-content',
 );
 const contextMenu: HTMLElement = document.querySelector(
-  '.right-click-file-menu'
+  '.right-click-file-menu',
 );
 const contextMenuContentWrapper: HTMLElement = document.querySelector(
-  '.context-menu-items-wrapper'
+  '.context-menu-items-wrapper',
 );
 
 let metaKeyIsPressed = false;
@@ -162,7 +162,7 @@ function unselect(index: number) {
  */
 function unselectAll() {
   Array.from(document.querySelectorAll('.document-entry.selected')).forEach(
-    (tile) => tile.classList.remove('selected')
+    (tile) => tile.classList.remove('selected'),
   );
   state.resetSelection();
 }
@@ -242,7 +242,7 @@ function createTile(entry: IEntry) {
 async function addTileEventListener(
   index: number,
   entry: IEntry,
-  tile: HTMLDivElement
+  tile: HTMLDivElement,
 ) {
   // double click event immediately opens document
   if (entry.type === 'folder') {
@@ -279,7 +279,7 @@ function addShiftSelectionListener(tile: HTMLDivElement, index: number) {
     function (_e) {
       shiftSelectionHandler(index);
     },
-    false
+    false,
   );
 }
 
@@ -412,7 +412,7 @@ function deleteFileEntry(file: IFile, parentFolder: IFolder): Promise<boolean> {
  */
 function deleteFolderEntry(
   folder: IFolder,
-  parentFolder: IFolder
+  parentFolder: IFolder,
 ): Promise<boolean> {
   return new Promise((resolve) => {
     const deletePromises = folder.children.map((child) => {
@@ -448,7 +448,7 @@ function deleteDocsHandler() {
     entryArray.map((entry) => `- ${entry.name} (${entry.type})`).join('\n');
 
   const alertMessage = `Are you sure you want to delete:\n${createList(
-    allEntries
+    allEntries,
   )}\nThis action is irreversible.`;
 
   const isConfirmed = window.confirm(alertMessage);
@@ -569,13 +569,13 @@ function updateNavPath(): void {
     const targetPath = state.getFolderPath().slice(0, idx + 1);
     navSection.addEventListener(
       'click',
-      async () => await updateDashboard(targetPath)
+      async () => await updateDashboard(targetPath),
     );
     // add drop target to move dragged element to the prospective folders
     addDropTargetListeners(
       navSection,
       state.getParentFolder(),
-      targetPath.at(-1)
+      targetPath.at(-1),
     );
 
     return navSection;
@@ -611,15 +611,15 @@ function updateBackButton() {
     buttonClone.removeAttribute('disabled');
     buttonClone.addEventListener('click', handleNavigateBack);
     buttonClone.addEventListener('ondragenter', () =>
-      buttonClone.classList.add('active')
+      buttonClone.classList.add('active'),
     );
     buttonClone.addEventListener('ondragleave', () =>
-      buttonClone.classList.remove('active')
+      buttonClone.classList.remove('active'),
     );
     addDropTargetListeners(
       buttonClone,
       state.getParentFolder(),
-      state.getFolderPath().at(-2)
+      state.getFolderPath().at(-2),
     );
   }
   backButton = buttonClone;
@@ -711,7 +711,7 @@ function handleAddFolder(folderName: string) {
   const newFolder = FileSystemTools.createFolder(folderName);
   const succeeded = FileSystemTools.addEntry(
     newFolder,
-    state.getParentFolder()
+    state.getParentFolder(),
   );
   if (succeeded) {
     newFolderTile.setAttribute('id', folderName);
@@ -732,7 +732,7 @@ function renameEntry(entry: IEntry, newName: string) {
   const succeeded = FileSystemTools.renameEntry(
     entry,
     state.getParentFolder(),
-    newName
+    newName,
   );
   if (succeeded) {
     // Update database if entry is a file
@@ -819,7 +819,7 @@ function addDragStartListener(elem: Element) {
 function addDropTargetListeners(
   elem: Element,
   currentFolder: IFolder,
-  destinationFolder: IFolder
+  destinationFolder: IFolder,
 ) {
   /**
    * The dragenter and dragover events need to be overriden in order to implement the drag-and-drop functionality.
@@ -837,7 +837,7 @@ function addDropTargetListeners(
 
   elem.addEventListener(
     'drop',
-    createHandleDrop(currentFolder, destinationFolder)
+    createHandleDrop(currentFolder, destinationFolder),
   );
 }
 
@@ -869,7 +869,7 @@ function createHandleDrop(currentFolder: IFolder, destinationFolder: IFolder) {
 function moveToFolder(
   entries: IEntry[],
   parentFolder: IFolder,
-  newFolder: IFolder
+  newFolder: IFolder,
 ) {
   const errorMessages = [];
   entries.forEach((entry) => {
@@ -883,7 +883,7 @@ function moveToFolder(
     const response = FileSystemTools.canMoveEntry(
       entry,
       parentFolder,
-      newFolder
+      newFolder,
     );
     if (!response.succeeded) errorMessages.push(response.error);
     else FileSystemTools.moveEntry(entry, parentFolder, newFolder);
@@ -924,7 +924,7 @@ function openMoveToWindow() {
   treeContainer.appendChild(rootTree);
 
   const modalContainer = document.getElementById(
-    'cress-modal-window-content-container'
+    'cress-modal-window-content-container',
   );
   modalContainer.innerHTML =
     '<span class="move-menu-msg">Double-click the folder you want to move your items to!</span>';
@@ -944,13 +944,13 @@ function openNewFolderWindow() {
   modalWindow.openModalWindow();
 
   const inputContainer = document.getElementById(
-    'dashboard_input_container'
+    'dashboard_input_container',
   ) as HTMLDivElement;
   const cancelButton = document.getElementById(
-    'cancel_dashboard'
+    'cancel_dashboard',
   ) as HTMLButtonElement;
   const confirmButton = document.getElementById(
-    'confirm_dashboard'
+    'confirm_dashboard',
   ) as HTMLButtonElement;
 
   const input = document.createElement('input');
@@ -965,7 +965,7 @@ function openNewFolderWindow() {
 
   cancelButton.addEventListener('click', () => modalWindow.hideModalWindow());
   confirmButton.addEventListener('click', () =>
-    confirmNewFolderAction(modalWindow, input.value)
+    confirmNewFolderAction(modalWindow, input.value),
   );
 
   inputContainer.addEventListener('keydown', (event) => {
@@ -997,13 +997,13 @@ function openRenameWindow() {
   modalWindow.openModalWindow();
 
   const inputContainer = document.getElementById(
-    'dashboard_input_container'
+    'dashboard_input_container',
   ) as HTMLDivElement;
   const cancelButton = document.getElementById(
-    'cancel_dashboard'
+    'cancel_dashboard',
   ) as HTMLButtonElement;
   const confirmButton = document.getElementById(
-    'confirm_dashboard'
+    'confirm_dashboard',
   ) as HTMLButtonElement;
 
   const input = document.createElement('input');
@@ -1019,7 +1019,7 @@ function openRenameWindow() {
 
   cancelButton.addEventListener('click', () => modalWindow.hideModalWindow());
   confirmButton.addEventListener('click', () =>
-    confirmRenameAction(modalWindow, input.value, prevName)
+    confirmRenameAction(modalWindow, input.value, prevName),
   );
 
   inputContainer.addEventListener('keydown', (event) => {
@@ -1035,7 +1035,7 @@ function openRenameWindow() {
 function confirmRenameAction(
   modalWindow: ModalWindow,
   newName: string,
-  prevName: string
+  prevName: string,
 ) {
   // check for duplicated names
   if (newName === prevName) {
@@ -1068,7 +1068,7 @@ function nameExists(name: string): boolean {
 function generateFolderTree(
   folder: IFolder,
   moveToCallback: (newParentFolder: IFolder) => void,
-  degree: number
+  degree: number,
 ): HTMLLIElement {
   const tree = document.createElement('li');
   // container for folder name and arrow
@@ -1130,7 +1130,7 @@ function generateFolderTree(
       const folderTree = generateFolderTree(
         entry as IFolder,
         moveToCallback,
-        degree + 1
+        degree + 1,
       );
       ul.appendChild(folderTree);
     }
@@ -1145,7 +1145,7 @@ function generateFolderTree(
  * @returns
  */
 function generateRootTree(
-  moveToCallback: (newParentFolder: IFolder) => void
+  moveToCallback: (newParentFolder: IFolder) => void,
 ): HTMLUListElement {
   const rootTree = document.createElement('ul');
   rootTree.id = 'tree-root';
@@ -1499,7 +1499,7 @@ function initializeDefaultContextMenu() {
       showContextMenu(
         'default',
         (<MouseEvent>e).clientX,
-        (<MouseEvent>e).clientY
+        (<MouseEvent>e).clientY,
       );
     });
 
@@ -1529,7 +1529,7 @@ function addSpecificContextMenuListeners(tile, index) {
     showContextMenu(
       'selection-options',
       (<MouseEvent>e).clientX,
-      (<MouseEvent>e).clientY
+      (<MouseEvent>e).clientY,
     );
     contextMenu.classList.remove('hidden');
     rightClicked = true;
@@ -1567,7 +1567,7 @@ function updateTrash(root: IFolder): void {
   const trashFolder = state.getTrashFolder();
   const currentDate = new Date();
   const thirtyDaysAgo = new Date(
-    currentDate.getTime() - 30 * 24 * 60 * 60 * 1000
+    currentDate.getTime() - 30 * 24 * 60 * 60 * 1000,
   ); // 30 days in milliseconds
 
   // Helper function to check if an entry was deleted 30 days ago

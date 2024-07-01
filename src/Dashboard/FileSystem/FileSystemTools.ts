@@ -15,7 +15,7 @@ const createEntry = (
   name: string,
   type: EntryType,
   id: string,
-  children?: IEntry[]
+  children?: IEntry[],
 ): IEntry => {
   const metadata = {};
   if (type === EntryType.File) return { name, type, id, metadata } as IEntry;
@@ -99,7 +99,7 @@ const canRemoveEntry = (entry: IEntry, parent: IFolder): responseProp => {
 const canMoveEntry = (
   entry: IEntry,
   parent: IFolder,
-  newParent: IFolder
+  newParent: IFolder,
 ): responseProp => {
   // is A a child of B
   function isChildOf(a: IEntry, b: IFolder) {
@@ -150,11 +150,11 @@ const canMoveEntry = (
 const canRenameEntry = (
   entry: IEntry,
   parent: IFolder,
-  newName: string
+  newName: string,
 ): responseProp => {
   // Check if newName already exists in parent
   const nameExists = parent.children.some(
-    (e, idx, arr) => e.name === entry.name && idx !== arr.indexOf(e)
+    (e, idx, arr) => e.name === entry.name && idx !== arr.indexOf(e),
   );
 
   const returnObj = { succeeded: false, error: '' };
@@ -194,7 +194,7 @@ const addEntry = (entry: IEntry, parent: IFolder): boolean => {
 const removeEntry = (
   entry: IEntry,
   parent: IFolder,
-  force = false
+  force = false,
 ): boolean => {
   const { succeeded, error } = canRemoveEntry(entry, parent);
   if (succeeded || force) {
@@ -217,7 +217,7 @@ const removeEntry = (
 function moveEntry(
   entry: IEntry,
   parent: IFolder,
-  newParent: IFolder
+  newParent: IFolder,
 ): boolean {
   const moveResponse = canMoveEntry(entry, parent, newParent);
 
@@ -228,11 +228,11 @@ function moveEntry(
       if (added) return true;
       else
         console.error(
-          `Moving: failed to add ${entry.name} to ${newParent.name}`
+          `Moving: failed to add ${entry.name} to ${newParent.name}`,
         );
     } else {
       console.error(
-        `Moving: failed to remove ${entry.name} from ${parent.name}`
+        `Moving: failed to remove ${entry.name} from ${parent.name}`,
       );
     }
   } else {
@@ -251,7 +251,7 @@ function moveEntry(
 const renameEntry = (
   entry: IEntry,
   parent: IFolder,
-  newName: string
+  newName: string,
 ): boolean => {
   const { succeeded, error } = canRenameEntry(entry, parent, newName);
 
