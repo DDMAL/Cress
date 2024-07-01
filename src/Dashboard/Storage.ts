@@ -251,3 +251,39 @@ export function updateDocName(id: string, newName: string): Promise<boolean> {
       .catch((err) => reject(err)); // db.get
   });
 }
+
+/**
+ * Update the doc from the database
+ * @param id
+ * @param body [header, ...content]
+ * @returns Promise<boolean>
+ */
+export async function updateAttachment(
+  id: string,
+  body: any[],
+): Promise<boolean> {
+  try {
+    // Retrieve the document using the provided id
+    const doc = await db.get(id);
+
+    // Convert the body array to a JSON blob
+    const jsonBlob = new Blob([JSON.stringify(body)], {
+      type: 'application/json',
+    });
+
+    // Update the attachment
+    doc._attachments = doc._attachments || {};
+    doc._attachments['table'] = {
+      content_type: 'application/json',
+      data: jsonBlob,
+    };
+
+    // Save the document back to the database
+    await db.put(doc);
+
+    return true;
+  } catch (error) {
+    console.error('Error updating attachment:', error);
+    return false;
+  }
+}
