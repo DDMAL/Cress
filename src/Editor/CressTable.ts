@@ -3,17 +3,16 @@ import * as Validation from '../Validation';
 import { ImageHandler } from './ImageHandler';
 import { ExportHandler } from './ExportHandler';
 import { ColumnTools } from './ColumnTools';
+import { updateAttachment } from '../Dashboard/Storage';
 
 export class CressTable {
-  private exportToCsvButton: HTMLElement;
-  private exportToExcelButton: HTMLElement;
   private table: Handsontable;
   private images: any[] = []; // Array to store images
   private imageHandler: ImageHandler;
   private exportHandler: ExportHandler;
   private ColumnTools: ColumnTools;
 
-  constructor(inputHeader: string[], body: any[]) {
+  constructor(id: string, inputHeader: string[], body: any[]) {
     const container = document.getElementById('hot-container');
 
     // Initialize handlers
@@ -71,28 +70,39 @@ export class CressTable {
       afterValidate: (isValid) => this.setResultStatus(isValid),
     });
 
-    this.initializeExportButtons(inputHeader, body, headers);
+    this.initFileListener(id, inputHeader, body, headers);
   }
 
-  private initializeExportButtons(
+  private initFileListener(
+    id: string,
     inputHeader: string[],
     body: any[],
     headers: string[],
   ) {
-    this.exportToCsvButton = document.getElementById('export-to-csv');
     const exportPlugin = this.table.getPlugin('exportFile');
-    this.exportToCsvButton.addEventListener('click', () => {
+    document.getElementById('export-to-csv').addEventListener('click', () => {
       this.exportHandler.exportToCsv(exportPlugin);
     });
 
-    this.exportToExcelButton = document.getElementById('export-to-excel');
-    this.exportToExcelButton.addEventListener('click', async () => {
-      await this.exportHandler.exportToExcel(
-        inputHeader,
-        body,
-        headers,
-        this.images,
-      );
+    document
+      .getElementById('export-to-excel')
+      .addEventListener('click', async () => {
+        await this.exportHandler.exportToExcel(
+          inputHeader,
+          body,
+          headers,
+          this.images,
+        );
+      });
+
+    document.getElementById('save').addEventListener('click', async () => {
+      const result = await updateAttachment(id, [inputHeader, ...body]);
+
+      if (result) {
+        // TODO: notification
+      } else {
+        // TODO: notification
+      }
     });
   }
 

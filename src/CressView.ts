@@ -45,7 +45,7 @@ class CressView {
 
         document.getElementById('loading').style.display = 'none';
 
-        this.table = new CressTable(this.header, this.body);
+        this.table = new CressTable(this.id, this.header, this.body);
 
         return;
       })
