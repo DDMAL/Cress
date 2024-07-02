@@ -1,5 +1,4 @@
 import setBody from './utils/Template';
-import * as Validation from './Validation';
 import { ModalWindow } from './utils/ModalWindow';
 import { CressTable } from './Editor/CressTable';
 import { ModalWindowInterface } from './Interfaces';
@@ -51,21 +50,6 @@ class CressView {
       })
       .then(() => {});
   }
-
-  /**
-   * Save the current state to the browser database.
-   */
-  // save (): Promise<void> {
-  //   setSavedStatus(true);
-  //   return this.core.updateDatabase();
-  // }
-
-  /**
-   * Deletes the local database of the loaded MEI file(s).
-   */
-  // deleteDb (): Promise<void[]> {
-  //   return this.core.deleteDb();
-  // }
 }
 
 export { CressView as default };
