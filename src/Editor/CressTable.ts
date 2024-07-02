@@ -65,8 +65,8 @@ export class CressTable {
       dropdownMenu: true,
       className: 'table-menu-btn',
       licenseKey: 'non-commercial-and-evaluation',
-      afterChange() {
-        setSavedStatus(false);
+      afterChange(changes, source) {
+        if (source != 'loadData') setSavedStatus(false);
         this.validateCells();
       },
       beforeValidate: (value) => this.setProcessStatus(value),
