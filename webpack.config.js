@@ -1,7 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
-const childProcess = require('child_process');
-const HardSourceWebpackPlugin = require('hard-source-webpack-plugin');
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 
 module.exports = {
   mode: 'production',
@@ -13,40 +12,35 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'deployment', 'server', 'Cress-gh'),
     publicPath: '/',
-    filename: '[name].js'
-  },
-  node: {
-    fs: 'empty'
+    filename: '[name].js',
   },
   devtool: 'inline-source-map',
   module: {
     rules: [
       {
         test: /\.tsx?$/,
-        use: [
-          'ts-loader'
-        ],
-        exclude: /node_modules/
+        use: ['cache-loader', 'ts-loader'],
+        exclude: /node_modules/,
       },
       {
         test: /Worker\.js$/,
         use: [
           {
             loader: 'worker-loader',
-            options: { publicPath: '/Cress-gh/' }
-          }
-        ]
-      }
-    ]
+            options: { publicPath: '/Cress-gh/' },
+          },
+        ],
+      },
+    ],
   },
   resolve: {
-    extensions: [ '.ts', '.js' ]
+    extensions: ['.ts', '.js'],
   },
   plugins: [
-    new HardSourceWebpackPlugin(),
+    new NodePolyfillPlugin(),
     new webpack.DefinePlugin({
       __LINK_LOCATION__: JSON.stringify('/'),
-      __ASSET_PREFIX__: JSON.stringify('/Cress-gh/')
-    })
-  ]
+      __ASSET_PREFIX__: JSON.stringify('/Cress-gh/'),
+    }),
+  ],
 };
