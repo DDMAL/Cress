@@ -26,8 +26,7 @@
     "http-server": "^14.1.1",
     "mammoth": "^1.8.0",
     "pouchdb": "^9.0.0",
-    "uuid": "^10.0.0",
-    "write-excel-file": "^2.0.3"
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@types/papaparse": "^5.3.14",
