@@ -1,4 +1,5 @@
 import PouchDB from 'pouchdb';
+
 interface Glyph {
   imagePath: string | null;
   imageBinary: string | null;
@@ -61,3 +62,15 @@ export type validationStatus = 'unknown' | 'processing' | 'done';
 export type HTMLSVGElement = HTMLElement & SVGSVGElement;
 
 export type NotificationType = 'default' | 'error' | 'warning' | 'success';
+
+export type TableEvent =
+  | 'afterChange'
+  | 'afterColumnMove'
+  | 'afterColumnSequenceChange'
+  | 'afterCreateCol'
+  | 'afterCreateRow'
+  | 'afterCut'
+  | 'afterRemoveCol'
+  | 'afterRemoveRow'
+  | 'afterRowMove'
+  | 'afterRowSequenceChange';

@@ -6,6 +6,20 @@ import { ColumnTools } from './ColumnTools';
 import { updateAttachment } from '../Dashboard/Storage';
 import { setSavedStatus } from '../utils/Unsaved';
 import * as Notification from '../utils/Notification';
+import { TableEvent } from '../Types';
+
+const changeHooks: TableEvent[] = [
+  'afterChange',
+  'afterColumnMove',
+  'afterColumnSequenceChange',
+  'afterCreateCol',
+  'afterCreateRow',
+  'afterCut',
+  'afterRemoveCol',
+  'afterRemoveRow',
+  'afterRowMove',
+  'afterRowSequenceChange',
+];
 
 export class CressTable {
   private table: Handsontable;
@@ -65,8 +79,7 @@ export class CressTable {
       dropdownMenu: true,
       className: 'table-menu-btn',
       licenseKey: 'non-commercial-and-evaluation',
-      afterChange(changes, source) {
-        if (source != 'loadData') setSavedStatus(false);
+      afterChange() {
         this.validateCells();
       },
       beforeValidate: (value) => this.setProcessStatus(value),
@@ -74,6 +87,7 @@ export class CressTable {
     });
 
     this.initFileListener(id, inputHeader, body, headers);
+    this.initChangeListener();
   }
 
   private initFileListener(
@@ -140,5 +154,13 @@ export class CressTable {
       Validation.updateStatus('done', this.ColumnTools.hasInvalid);
       this.ColumnTools.hasInvalid = false;
     }
+  }
+
+  private initChangeListener() {
+    changeHooks.forEach((hook) => {
+      this.table.addHook(hook, (source) => {
+        if (source != 'loadData') setSavedStatus(false);
+      });
+    });
   }
 }
