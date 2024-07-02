@@ -22,6 +22,7 @@
   "license": "MIT",
   "dependencies": {
     "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
     "handsontable": "^14.4.0",
     "http-server": "^14.1.1",
     "mammoth": "^1.8.0",
