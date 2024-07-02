@@ -16,7 +16,7 @@ function updateIndicator(): void {
 }
 
 /**
- * Set the saved status of the folio
+ * Set the saved status of the file
  *
  * @param status boolean value. true if status is "saved", false if "not saved"
  */
