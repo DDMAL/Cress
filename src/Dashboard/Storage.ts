@@ -1,6 +1,7 @@
 import PouchDB from 'pouchdb';
 import { AllDocs, Doc, uploadsInfo } from '../Types';
 import * as Papa from 'papaparse';
+import * as mammoth from 'mammoth/mammoth.browser';
 
 export const db = new PouchDB('Cress-User-Storage');
 
@@ -88,7 +89,6 @@ async function parseXLSX(file: File): Promise<any[]> {
 
 export async function parseWORD(arrayBuffer: ArrayBuffer): Promise<any[]> {
   return new Promise((resolve, reject) => {
-    let mammoth = require('mammoth');
     mammoth
       .convertToHtml({ arrayBuffer: arrayBuffer })
       .then(function (result) {
