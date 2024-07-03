@@ -257,7 +257,6 @@ a:hover {
   }
   .navbar-dropdown {
     border-top: none;
-    box-shadow: none;
     display: none;
     position: absolute;
     background-color: #fff;
@@ -270,7 +269,7 @@ a:hover {
   }
   .navbar-dropdown-item {
     font-size: 0.7rem;
-    width: max-content;
+    width: auto;
   }
   #feedback-form-btn-container {
     margin: 0;
