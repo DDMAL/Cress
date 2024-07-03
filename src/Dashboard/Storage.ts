@@ -76,12 +76,13 @@ async function parseXLSX(file: File): Promise<any[]> {
         rows.push(rowData);
       }
     });
+    let imageHeader = headerNames.find((header) => header.includes('image'));
     for (const image of worksheet.getImages()) {
       // fetch the media item with the data
       const img = workbook.model.media.find((m) => m.index === image.imageId);
       const base64 = img.buffer.toString('base64');
       const dataUrl = `data:${img.type};base64,${base64}`;
-      rows[image.range.tl.nativeRow - 1]['imagePath'] = dataUrl;
+      rows[image.range.tl.nativeRow - 1][imageHeader] = dataUrl;
     }
     resolve([headerNames, rows]);
   });
