@@ -2,7 +2,7 @@ import setBody from './utils/Template';
 import { ModalWindow } from './utils/ModalWindow';
 import { CressTable } from './Editor/CressTable';
 import { ModalWindowInterface } from './Interfaces';
-import { setSavedStatus, listenUnsavedChanges } from './utils/Unsaved';
+import { listenUnsavedChanges } from './utils/Unsaved';
 import { CressDoc } from './Types';
 
 /**
