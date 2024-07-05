@@ -49,7 +49,7 @@ export class ImageTools {
   }
 
   // Image Renderer Functions
-  imgRender(
+  public imgRender(
     instance: Handsontable,
     td: HTMLElement,
     row: number,
