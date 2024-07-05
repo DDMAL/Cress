@@ -19,7 +19,7 @@ export type GlyphArray = Glyph[];
 export type CressDoc = {
   id: string;
   name: string;
-  header: string[];
+  header: string[] | undefined;
   body: any[];
 };
 

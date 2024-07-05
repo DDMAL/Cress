@@ -31,13 +31,12 @@ if (sampleId) {
               if (extension === 'csv') {
                 // handle csv sample
                 const text = await response.text();
-                let file = Papa.parse(text);
-                let data = file.data;
+                let results = Papa.parse(text, { header: true });
                 let cressDoc: CressDoc = {
                   id: sampleId,
                   name: filename,
-                  header: [],
-                  body: dataListToDict(data),
+                  header: results.meta.fields,
+                  body: results.data,
                 };
                 const view = new CressView(cressDoc);
                 view.start();
