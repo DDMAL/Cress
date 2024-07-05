@@ -35,7 +35,7 @@ export class MeiTools {
     row: number,
     mei?: string,
     isValid?: boolean,
-    errorMsg?: string[],
+    errorMsg?: string,
   ) {
     const meiData = this.meiData.find((meiData) => meiData.row === row);
     if (meiData) {
@@ -102,14 +102,17 @@ export class MeiTools {
         invalidContainer.appendChild(meiData);
 
         // tooltip icon and text
+        const tooltipText = document.createElement('span');
+        tooltipText.className = 'tooltip-text';
+        tooltipText.textContent = mei.errorMsg;
+
         const tooltipIcon = document.createElement('img');
         tooltipIcon.src = './Cress-gh/assets/img/info-icon.svg';
         tooltipIcon.className = 'tooltip-icon';
-        invalidContainer.appendChild(tooltipIcon);
-        const tooltipText = document.createElement('span');
-        tooltipText.className = 'tooltip-text';
-        tooltipText.textContent = mei.errorMsg.join('\n\n');
+
         invalidContainer.appendChild(tooltipText);
+        invalidContainer.appendChild(tooltipIcon);
+
         tooltipIcon.addEventListener('mouseover', () => {
           tooltipText.style.display = 'block';
         });
@@ -118,6 +121,7 @@ export class MeiTools {
         });
 
         td.appendChild(invalidContainer);
+        td.style.backgroundColor = '#ffbeba';
       } else {
         td.textContent = mei.mei;
       }

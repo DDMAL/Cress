@@ -673,7 +673,6 @@ a:hover {
 .invalid-container {
   display: flex;
   align-items: flex-start;
-  background-color: #ffbeba !important;
   justify-content: space-between;
 }
 
@@ -684,11 +683,13 @@ a:hover {
 
 .tooltip-text {
   display: none;
-  position: absolute;
-  background-color: white;
-  border: 1px solid black;
+  position: relative;
+  background-color: #fff8c5;
+  border: 1px solid #d4a72c;
   padding: 5px;
+  margin-top: 5px;
   z-index: 1;
   width: 30vw;
   color: black;
+  border-radius: 5px;
 }

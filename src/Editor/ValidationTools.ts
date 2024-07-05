@@ -52,7 +52,7 @@ export class ValidationTools {
   /**
    * MEI validation function
    */
-  public meiValidator(value: string): Promise<[boolean, string[] | null]> {
+  public meiValidator(value: string): Promise<[boolean, string | null]> {
     return new Promise(async (resolve) => {
       if (this.schemaPromise === null || this.templatePromise === null) {
         await this.fetchSchemaAndTemplate();
@@ -66,10 +66,14 @@ export class ValidationTools {
         if (errors == null) {
           resolve([true, null]);
         } else {
-          resolve([false, [errors]]);
+          let log = '';
+          errors.forEach((line) => {
+            log += line + '\n';
+          });
+          resolve([false, log]);
         }
       } catch (e) {
-        resolve([false, ['Failed to validate MEI']]);
+        resolve([false, 'Failed to validate MEI']);
       }
     });
   }
@@ -78,7 +82,7 @@ export class ValidationTools {
     value: string,
     schema: string,
     meiTemplate: string,
-  ): Promise<string> {
+  ): Promise<string[]> {
     return new Promise((resolve) => {
       try {
         const parser = new DOMParser();
@@ -103,13 +107,13 @@ export class ValidationTools {
           schema: schema,
         });
 
-        worker.onmessage = (message: { data: string }) => {
+        worker.onmessage = (message: { data: string[] }) => {
           const errors = message.data;
           resolve(errors);
           worker.terminate();
         };
       } catch (e) {
-        resolve('Failed to validate MEI');
+        resolve(['Failed to validate MEI']);
       }
     });
   }
