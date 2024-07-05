@@ -1,8 +1,4 @@
 export class ColumnTools {
-  public validationInProgress = false;
-  public pendingValidations = 0;
-  public hasInvalid = false;
-
   constructor(private inputHeader: string[]) {}
 
   getColumns(headers: string[]) {

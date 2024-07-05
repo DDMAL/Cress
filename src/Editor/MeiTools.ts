@@ -1,7 +1,10 @@
 import Handsontable from 'handsontable';
-
+import { updateStatus } from './ValidationTools';
 export class MeiTools {
   private meiData: any[];
+  public validationInProgress = false;
+  public pendingValidations = 0;
+  public hasInvalid = false;
 
   constructor() {
     this.meiData = [];
@@ -55,8 +58,27 @@ export class MeiTools {
     }
   }
 
+  public setProcessStatus(value: any) {
+    if (!this.validationInProgress) {
+      this.validationInProgress = true;
+      updateStatus('processing');
+    }
+    // Update `pendingValidations` if value is not empty
+    if (value) this.pendingValidations++;
+  }
+
+  public setResultStatus(isValid: boolean) {
+    if (!isValid) this.hasInvalid = true;
+    this.pendingValidations--;
+    if (this.pendingValidations === 0) {
+      this.validationInProgress = false;
+      updateStatus('done', this.hasInvalid);
+      this.hasInvalid = false;
+    }
+  }
+
   // Mei Renderer Functions
-  meiRender(
+  public meiRender(
     instance: Handsontable,
     td: HTMLElement,
     row: number,

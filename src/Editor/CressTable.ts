@@ -1,7 +1,7 @@
 import Handsontable from 'handsontable';
 import { ImageTools } from './ImageTools';
 import { MeiTools } from './MeiTools';
-import { ValidationTools, updateStatus } from './ValidationTools';
+import { ValidationTools } from './ValidationTools';
 import { ExportTools } from './ExportTools';
 import { ColumnTools } from './ColumnTools';
 import { updateAttachment } from '../Dashboard/Storage';
@@ -29,7 +29,7 @@ export class CressTable {
   private meiTools: MeiTools;
   private validationTools: ValidationTools;
   private exportTools: ExportTools;
-  private ColumnTools: ColumnTools;
+  private columnTools: ColumnTools;
 
   constructor(id: string, inputHeader: string[], body: any[]) {
     const container = document.getElementById('hot-container');
@@ -39,10 +39,10 @@ export class CressTable {
     this.meiTools = new MeiTools();
     this.validationTools = new ValidationTools();
     this.exportTools = new ExportTools();
-    this.ColumnTools = new ColumnTools(inputHeader);
+    this.columnTools = new ColumnTools(inputHeader);
 
     // Convert all quote signs to inch marks in mei data
-    this.ColumnTools.convertMeiQuoteSign(body);
+    this.columnTools.convertMeiQuoteSign(body);
 
     // Register the custom image renderer
     Handsontable.renderers.registerRenderer(
@@ -58,9 +58,9 @@ export class CressTable {
 
     // Prepare table configuration
     const headers = ['image', 'name', 'classification', 'mei'];
-    const columns = this.ColumnTools.getColumns(headers);
-    const colWidths = this.ColumnTools.getColWidths(headers);
-    const indices = this.ColumnTools.getIndices(body).map(String);
+    const columns = this.columnTools.getColumns(headers);
+    const colWidths = this.columnTools.getColWidths(headers);
+    const indices = this.columnTools.getIndices(body).map(String);
 
     // Process images
     let inputImgHeader = inputHeader.find((header) => header.includes('image'));
@@ -148,25 +148,6 @@ export class CressTable {
     });
   }
 
-  // private setProcessStatus(value: any) {
-  //   if (!this.ColumnTools.validationInProgress) {
-  //     this.ColumnTools.validationInProgress = true;
-  //     updateStatus('processing');
-  //   }
-  //   // Update `pendingValidations` if value is not empty
-  //   if (value) this.ColumnTools.pendingValidations++;
-  // }
-
-  // private setResultStatus(isValid: boolean) {
-  //   if (!isValid) this.ColumnTools.hasInvalid = true;
-  //   this.ColumnTools.pendingValidations--;
-  //   if (this.ColumnTools.pendingValidations === 0) {
-  //     this.ColumnTools.validationInProgress = false;
-  //     updateStatus('done', this.ColumnTools.hasInvalid);
-  //     this.ColumnTools.hasInvalid = false;
-  //   }
-  // }
-
   private initChangeListener() {
     changeHooks.forEach((hook) => {
       this.table.addHook(hook, (source) => {
@@ -179,17 +160,20 @@ export class CressTable {
     if (source == 'loadData') {
       // Validate mei data and update the validation status
       this.meiTools.getMeiData().forEach((mei) => {
+        this.meiTools.setProcessStatus(mei);
         this.validationTools
           .meiValidator(mei.mei)
           .then(([isValid, errorMsg]) => {
             this.meiTools.updateMeiData(mei.row, mei.mei, isValid, errorMsg);
             this.table.render();
+            this.meiTools.setResultStatus(isValid);
           });
       });
     } else {
       changes?.forEach(([row, prop, oldValue, newValue]) => {
         if (prop === 'mei' && oldValue !== newValue) {
           // validate the new edited mei data and update the validation status
+          this.meiTools.setProcessStatus(newValue);
           this.meiTools.updateMeiData(row, newValue, undefined, undefined);
           this.table.render();
           this.validationTools
@@ -197,6 +181,7 @@ export class CressTable {
             .then(([isValid, errorMsg]) => {
               this.meiTools.updateMeiData(row, undefined, isValid, errorMsg);
               this.table.render();
+              this.meiTools.setResultStatus(isValid);
             });
         }
       });
