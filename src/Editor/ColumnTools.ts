@@ -1,4 +1,3 @@
-
 export class ColumnTools {
   public validationInProgress = false;
   public pendingValidations = 0;

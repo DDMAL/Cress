@@ -5,9 +5,10 @@ import { validationStatus } from '../Types';
  */
 export function updateStatus(
   status: validationStatus,
-  hasInvalid?: boolean
+  hasInvalid?: boolean,
 ): void {
-  const meiStatus: HTMLSpanElement = document.getElementById('validation_status')!;
+  const meiStatus: HTMLSpanElement =
+    document.getElementById('validation_status')!;
   switch (status) {
     case 'processing':
       meiStatus.textContent = 'checking...';
@@ -41,10 +42,10 @@ export class ValidationTools {
 
   private async fetchSchemaAndTemplate(): Promise<void> {
     this.schemaPromise = fetch(
-      __ASSET_PREFIX__ + 'assets/validation/mei-all.rng'
+      __ASSET_PREFIX__ + 'assets/validation/mei-all.rng',
     ).then((response) => response.text());
     this.templatePromise = fetch(
-      __ASSET_PREFIX__ + 'assets/validation/mei_template.mei'
+      __ASSET_PREFIX__ + 'assets/validation/mei_template.mei',
     ).then((response) => response.text());
   }
 
@@ -76,7 +77,7 @@ export class ValidationTools {
   private validateMEI(
     value: string,
     schema: string,
-    meiTemplate: string
+    meiTemplate: string,
   ): Promise<string> {
     return new Promise((resolve) => {
       try {
@@ -94,7 +95,7 @@ export class ValidationTools {
          * use id to track each worker request
          */
         const worker = new Worker(
-          __ASSET_PREFIX__ + 'workers/ValidationWorker.js'
+          __ASSET_PREFIX__ + 'workers/ValidationWorker.js',
         );
 
         worker.postMessage({

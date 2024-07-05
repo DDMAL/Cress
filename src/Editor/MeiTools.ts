@@ -32,7 +32,7 @@ export class MeiTools {
     row: number,
     mei?: string,
     isValid?: boolean,
-    errorMsg?: string[]
+    errorMsg?: string[],
   ) {
     const meiData = this.meiData.find((meiData) => meiData.row === row);
     if (meiData) {
@@ -69,9 +69,7 @@ export class MeiTools {
 
     const mei = this.meiData.find((mei) => mei.row === row);
     if (mei) {
-      
       if (mei.isValid === false) {
-
         // container for the invalid cell
         const invalidContainer = document.createElement('div');
         invalidContainer.className = 'invalid-container';
@@ -105,5 +103,4 @@ export class MeiTools {
 
     return td;
   }
-
 }

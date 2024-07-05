@@ -49,7 +49,7 @@ export class CressTable {
       'imgRenderer',
       this.imageTools.imgRender.bind(this.imageTools),
     );
-  
+
     // Register the custom mei renderer
     Handsontable.renderers.registerRenderer(
       'meiRenderer',
@@ -94,7 +94,7 @@ export class CressTable {
       dropdownMenu: true,
       className: 'table-menu-btn',
       licenseKey: 'non-commercial-and-evaluation',
-      afterChange: this.afterChange,
+      afterChange: (changes, source) => this.validateMei(changes, source),
     });
 
     this.initFileListener(id, inputHeader, body, headers);
@@ -175,14 +175,16 @@ export class CressTable {
     });
   }
 
-  afterChange = (changes, source) => {
+  private validateMei(changes, source) {
     if (source == 'loadData') {
       // Validate mei data and update the validation status
       this.meiTools.getMeiData().forEach((mei) => {
-        this.validationTools.meiValidator(mei.mei).then(([isValid, errorMsg]) => {
-          this.meiTools.updateMeiData(mei.row, mei.mei, isValid, errorMsg);
-          this.table.render();
-        });
+        this.validationTools
+          .meiValidator(mei.mei)
+          .then(([isValid, errorMsg]) => {
+            this.meiTools.updateMeiData(mei.row, mei.mei, isValid, errorMsg);
+            this.table.render();
+          });
       });
     } else {
       changes?.forEach(([row, prop, oldValue, newValue]) => {
@@ -190,12 +192,14 @@ export class CressTable {
           // validate the new edited mei data and update the validation status
           this.meiTools.updateMeiData(row, newValue, undefined, undefined);
           this.table.render();
-          this.validationTools.meiValidator(newValue).then(([isValid, errorMsg]) => {
-            this.meiTools.updateMeiData(row, undefined, isValid, errorMsg);
-            this.table.render();
-          });
+          this.validationTools
+            .meiValidator(newValue)
+            .then(([isValid, errorMsg]) => {
+              this.meiTools.updateMeiData(row, undefined, isValid, errorMsg);
+              this.table.render();
+            });
         }
       });
     }
-  };
+  }
 }
