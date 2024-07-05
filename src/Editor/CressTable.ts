@@ -1,7 +1,8 @@
 import Handsontable from 'handsontable';
-import * as Validation from '../Validation';
-import { ImageHandler } from './ImageHandler';
-import { ExportHandler } from './ExportHandler';
+import { ImageTools } from './ImageTools';
+import { MeiTools } from './MeiTools';
+import { ValidationTools, updateStatus } from './ValidationTools';
+import { ExportTools } from './ExportTools';
 import { ColumnTools } from './ColumnTools';
 import { updateAttachment } from '../Dashboard/Storage';
 import { setSavedStatus } from '../utils/Unsaved';
@@ -24,16 +25,20 @@ const changeHooks: TableEvent[] = [
 export class CressTable {
   private table: Handsontable;
   private images: any[] = []; // Array to store images
-  private imageHandler: ImageHandler;
-  private exportHandler: ExportHandler;
+  private imageTools: ImageTools;
+  private meiTools: MeiTools;
+  private validationTools: ValidationTools;
+  private exportTools: ExportTools;
   private ColumnTools: ColumnTools;
 
   constructor(id: string, inputHeader: string[], body: any[]) {
     const container = document.getElementById('hot-container');
 
-    // Initialize handlers
-    this.imageHandler = new ImageHandler(this.images);
-    this.exportHandler = new ExportHandler();
+    // Initialize Toolss
+    this.imageTools = new ImageTools(this.images);
+    this.meiTools = new MeiTools();
+    this.validationTools = new ValidationTools();
+    this.exportTools = new ExportTools();
     this.ColumnTools = new ColumnTools(inputHeader);
 
     // Convert all quote signs to inch marks in mei data
@@ -42,7 +47,13 @@ export class CressTable {
     // Register the custom image renderer
     Handsontable.renderers.registerRenderer(
       'imgRenderer',
-      this.imageHandler.imgRender.bind(this.imageHandler),
+      this.imageTools.imgRender.bind(this.imageTools),
+    );
+  
+    // Register the custom mei renderer
+    Handsontable.renderers.registerRenderer(
+      'meiRenderer',
+      this.meiTools.meiRender.bind(this.meiTools),
     );
 
     // Prepare table configuration
@@ -53,7 +64,11 @@ export class CressTable {
 
     // Process images
     let inputImgHeader = inputHeader.find((header) => header.includes('image'));
-    this.imageHandler.storeImages(inputImgHeader, body);
+    this.imageTools.storeImages(inputImgHeader, body);
+
+    // Process mei data
+    let inputMeiHeader = inputHeader.find((header) => header.includes('mei'));
+    this.meiTools.initMeiData(inputMeiHeader, body);
 
     // Initialize table
     this.table = new Handsontable(container, {
@@ -79,13 +94,7 @@ export class CressTable {
       dropdownMenu: true,
       className: 'table-menu-btn',
       licenseKey: 'non-commercial-and-evaluation',
-      afterChange(_, source) {
-        if (source == 'loadData') {
-          this.validateCells();
-        }
-      },
-      beforeValidate: (value) => this.setProcessStatus(value),
-      afterValidate: (isValid) => this.setResultStatus(isValid),
+      afterChange: this.afterChange,
     });
 
     this.initFileListener(id, inputHeader, body, headers);
@@ -100,13 +109,13 @@ export class CressTable {
   ) {
     const exportPlugin = this.table.getPlugin('exportFile');
     document.getElementById('export-to-csv').addEventListener('click', () => {
-      this.exportHandler.exportToCsv(exportPlugin);
+      this.exportTools.exportToCsv(exportPlugin);
     });
 
     document
       .getElementById('export-to-excel')
       .addEventListener('click', async () => {
-        await this.exportHandler.exportToExcel(
+        await this.exportTools.exportToExcel(
           inputHeader,
           body,
           headers,
@@ -139,24 +148,24 @@ export class CressTable {
     });
   }
 
-  private setProcessStatus(value: any) {
-    if (!this.ColumnTools.validationInProgress) {
-      this.ColumnTools.validationInProgress = true;
-      Validation.updateStatus('processing');
-    }
-    // Update `pendingValidations` if value is not empty
-    if (value) this.ColumnTools.pendingValidations++;
-  }
+  // private setProcessStatus(value: any) {
+  //   if (!this.ColumnTools.validationInProgress) {
+  //     this.ColumnTools.validationInProgress = true;
+  //     updateStatus('processing');
+  //   }
+  //   // Update `pendingValidations` if value is not empty
+  //   if (value) this.ColumnTools.pendingValidations++;
+  // }
 
-  private setResultStatus(isValid: boolean) {
-    if (!isValid) this.ColumnTools.hasInvalid = true;
-    this.ColumnTools.pendingValidations--;
-    if (this.ColumnTools.pendingValidations === 0) {
-      this.ColumnTools.validationInProgress = false;
-      Validation.updateStatus('done', this.ColumnTools.hasInvalid);
-      this.ColumnTools.hasInvalid = false;
-    }
-  }
+  // private setResultStatus(isValid: boolean) {
+  //   if (!isValid) this.ColumnTools.hasInvalid = true;
+  //   this.ColumnTools.pendingValidations--;
+  //   if (this.ColumnTools.pendingValidations === 0) {
+  //     this.ColumnTools.validationInProgress = false;
+  //     updateStatus('done', this.ColumnTools.hasInvalid);
+  //     this.ColumnTools.hasInvalid = false;
+  //   }
+  // }
 
   private initChangeListener() {
     changeHooks.forEach((hook) => {
@@ -165,4 +174,28 @@ export class CressTable {
       });
     });
   }
+
+  afterChange = (changes, source) => {
+    if (source == 'loadData') {
+      // Validate mei data and update the validation status
+      this.meiTools.getMeiData().forEach((mei) => {
+        this.validationTools.meiValidator(mei.mei).then(([isValid, errorMsg]) => {
+          this.meiTools.updateMeiData(mei.row, mei.mei, isValid, errorMsg);
+          this.table.render();
+        });
+      });
+    } else {
+      changes?.forEach(([row, prop, oldValue, newValue]) => {
+        if (prop === 'mei' && oldValue !== newValue) {
+          // validate the new edited mei data and update the validation status
+          this.meiTools.updateMeiData(row, newValue, undefined, undefined);
+          this.table.render();
+          this.validationTools.meiValidator(newValue).then(([isValid, errorMsg]) => {
+            this.meiTools.updateMeiData(row, undefined, isValid, errorMsg);
+            this.table.render();
+          });
+        }
+      });
+    }
+  };
 }
