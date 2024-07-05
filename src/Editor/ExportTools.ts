@@ -1,6 +1,6 @@
 import { saveAs } from 'file-saver';
 
-export class ExportHandler {
+export class ExportTools {
   exportToCsv(exportPlugin: any) {
     exportPlugin.downloadFile('csv', {
       bom: true,

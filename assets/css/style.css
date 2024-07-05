@@ -665,3 +665,48 @@ a:hover {
   width: 100%;
   height: 100%;
 }
+
+/* ----------------------- */
+/* Section: Invalid Cell
+/* ----------------------- */
+
+.invalid-container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.tooltip-container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: end;
+  max-width: 50%;
+}
+
+.tooltip-container .tooltip-text {
+  display: none;
+  position: relative;
+  background-color: #fff8c5;
+  border: 1px solid #d4a72c;
+  padding: 5px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  z-index: 10;
+  color: black;
+  border-radius: 5px;
+}
+
+.tooltip-container:hover .tooltip-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.tooltip-container .tooltip-icon {
+  width: 20px;
+  margin: 5px;
+}
+
+.tooltip-copy:hover {
+  cursor: pointer;
+}

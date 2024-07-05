@@ -1,6 +1,6 @@
 import Handsontable from 'handsontable';
 
-export class ImageHandler {
+export class ImageTools {
   private images: any[];
 
   constructor(images: any[]) {

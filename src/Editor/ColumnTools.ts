@@ -1,10 +1,4 @@
-import * as Validation from '../Validation';
-
 export class ColumnTools {
-  public validationInProgress = false;
-  public pendingValidations = 0;
-  public hasInvalid = false;
-
   constructor(private inputHeader: string[]) {}
 
   getColumns(headers: string[]) {
@@ -22,8 +16,7 @@ export class ColumnTools {
       } else if (headers[i].includes('mei')) {
         columns.push({
           data: headers[i],
-          validator: Validation.meiValidator,
-          allowInvalid: true,
+          renderer: 'meiRenderer',
         });
       } else {
         columns.push({
