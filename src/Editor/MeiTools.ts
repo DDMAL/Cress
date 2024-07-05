@@ -1,5 +1,7 @@
 import Handsontable from 'handsontable';
 import { updateStatus } from './ValidationTools';
+import * as Notification from '../utils/Notification';
+
 export class MeiTools {
   private meiData: any[];
   public validationInProgress = false;
@@ -102,26 +104,41 @@ export class MeiTools {
         invalidContainer.appendChild(meiData);
 
         // tooltip icon and text
-        const tooltipText = document.createElement('span');
-        tooltipText.className = 'tooltip-text';
-        tooltipText.textContent = mei.errorMsg;
+        const tooltipContainer = document.createElement('div');
+        tooltipContainer.className = 'tooltip-container';
+
+        const tooltipContent = document.createElement('div');
+        tooltipContent.className = 'tooltip-text';
+        tooltipContent.textContent = mei.errorMsg;
+
+        const copyBtn = document.createElement('img');
+        copyBtn.src = './Cress-gh/assets/img/copy-icon.svg';
+        copyBtn.className = 'tooltip-copy';
 
         const tooltipIcon = document.createElement('img');
         tooltipIcon.src = './Cress-gh/assets/img/info-icon.svg';
         tooltipIcon.className = 'tooltip-icon';
 
-        invalidContainer.appendChild(tooltipText);
-        invalidContainer.appendChild(tooltipIcon);
-
-        tooltipIcon.addEventListener('mouseover', () => {
-          tooltipText.style.display = 'block';
-        });
-        tooltipIcon.addEventListener('mouseout', () => {
-          tooltipText.style.display = 'none';
-        });
+        tooltipContent.appendChild(copyBtn);
+        tooltipContainer.appendChild(tooltipContent);
+        tooltipContainer.appendChild(tooltipIcon);
+        invalidContainer.appendChild(tooltipContainer);
 
         td.appendChild(invalidContainer);
         td.style.backgroundColor = '#ffbeba';
+
+        copyBtn.addEventListener('click', () => {
+          // Copy the tooltipContent's text to the clipboard
+          navigator.clipboard
+            .writeText(mei.errorMsg)
+            .then(() => {
+              Notification.queueNotification('Copied to clipboard', 'success');
+            })
+            .catch((err) => {
+              Notification.queueNotification('Failed to copy text', 'error');
+              console.error('Failed to copy text: ', err);
+            });
+        });
       } else {
         td.textContent = mei.mei;
       }
