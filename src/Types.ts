@@ -51,7 +51,7 @@ export type Doc = {
   };
 };
 
-export type uploadsInfo = {
+export type UploadsInfo = {
   id: string;
   name: string;
 }[];

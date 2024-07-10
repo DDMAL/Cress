@@ -1,5 +1,5 @@
 import PouchDB from 'pouchdb';
-import { AllDocs, Doc, uploadsInfo } from '../Types';
+import { AllDocs, Doc, UploadsInfo } from '../Types';
 import * as Papa from 'papaparse';
 import * as mammoth from 'mammoth/mammoth.browser';
 
@@ -13,7 +13,7 @@ function getAllDocuments(): Promise<AllDocs> {
   });
 }
 
-export async function fetchUploads(): Promise<uploadsInfo> {
+export async function fetchUploads(): Promise<UploadsInfo> {
   try {
     const res = await getAllDocuments();
     return res.rows.map((row) => ({
