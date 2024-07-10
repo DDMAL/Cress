@@ -74,3 +74,10 @@ export type TableEvent =
   | 'afterRemoveRow'
   | 'afterRowMove'
   | 'afterRowSequenceChange';
+
+export type MeiData = {
+  mei: string;
+  row: number;
+  isValid: boolean | null;
+  errorMsg: string | null;
+}[];

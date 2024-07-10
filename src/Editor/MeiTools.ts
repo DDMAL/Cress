@@ -1,9 +1,10 @@
 import Handsontable from 'handsontable';
 import { updateStatus } from './ValidationTools';
 import * as Notification from '../utils/Notification';
+import { MeiData } from '../Types';
 
 export class MeiTools {
-  private meiData: any[];
+  private meiData: MeiData;
   public validationInProgress = false;
   public pendingValidations = 0;
   public hasInvalid = false;
@@ -18,7 +19,7 @@ export class MeiTools {
       const mei = row[inputMeiHeader];
       if (mei) {
         this.meiData.push({
-          mei,
+          mei: mei,
           row: rowIndex,
           isValid: null,
           errorMsg: null,
