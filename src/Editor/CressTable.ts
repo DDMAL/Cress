@@ -166,7 +166,7 @@ export class CressTable {
           .then(([isValid, errorMsg]) => {
             this.meiTools.updateMeiData(mei.row, mei.mei, isValid, errorMsg);
             this.table.render();
-            this.meiTools.setResultStatus(isValid);
+            this.meiTools.setResultStatus();
           });
       });
     } else {
@@ -181,7 +181,7 @@ export class CressTable {
             .then(([isValid, errorMsg]) => {
               this.meiTools.updateMeiData(row, undefined, isValid, errorMsg);
               this.table.render();
-              this.meiTools.setResultStatus(isValid);
+              this.meiTools.setResultStatus();
             });
         }
       });
