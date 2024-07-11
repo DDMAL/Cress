@@ -7,7 +7,6 @@ export class MeiTools {
   private meiData: MeiData;
   public validationInProgress = false;
   public pendingValidations = 0;
-  public hasInvalid = false;
 
   constructor() {
     this.meiData = [];
@@ -70,13 +69,14 @@ export class MeiTools {
     if (value) this.pendingValidations++;
   }
 
-  public setResultStatus(isValid: boolean) {
-    if (!isValid) this.hasInvalid = true;
+  public setResultStatus() {
     this.pendingValidations--;
     if (this.pendingValidations === 0) {
       this.validationInProgress = false;
-      updateStatus('done', this.hasInvalid);
-      this.hasInvalid = false;
+      const hasInvalid = this.meiData.some(
+        (element) => element.isValid === false,
+      );
+      updateStatus('done', hasInvalid);
     }
   }
 
