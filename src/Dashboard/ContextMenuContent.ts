@@ -6,6 +6,10 @@ export const defaultOptions = `<div id="cm-upload-doc-btn" class="context-menu-i
     <div id="cm-new-folder-btn" class="context-menu-item-wrapper">
         <div class="context-menu-item">New folder</div>
         <img class="context-menu-item-icon" src="${__ASSET_PREFIX__}assets/img/new-folder.svg">
+    </div>
+    <div id="cm-new-file-btn" class="context-menu-item-wrapper">
+        <div class="context-menu-item">New Empty File</div>
+        <img class="context-menu-item-icon" src="${__ASSET_PREFIX__}assets/img/empty-file.svg">
     </div>`;
 
 // If a single file is selected

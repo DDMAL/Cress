@@ -2,6 +2,7 @@ import { ModalWindowInterface } from '../Interfaces';
 import { hotkeysModal } from '../Contents';
 import {
   newFolderHTML,
+  newFileHTML,
   renameHTML,
   uploadAreaHTML,
 } from '../Dashboard/DashboardContent';
@@ -17,6 +18,7 @@ export enum ModalWindowView {
   MOVE_TO,
   NEW_FOLDER,
   RENAME,
+  NEW_FILE,
 }
 
 enum ModalWindowState {
@@ -110,6 +112,8 @@ export class ModalWindow implements ModalWindowInterface {
       // break;
       case ModalWindowView.NEW_FOLDER:
 
+      case ModalWindowView.NEW_FILE:
+
       case ModalWindowView.RENAME:
 
       default:
@@ -132,6 +136,7 @@ export class ModalWindow implements ModalWindowInterface {
       case ModalWindowView.DOCUMENT_UPLOAD:
       case ModalWindowView.MOVE_TO:
       case ModalWindowView.NEW_FOLDER:
+      case ModalWindowView.NEW_FILE:
       case ModalWindowView.RENAME:
         document.getElementById(
           'cress-modal-window-content-container',
@@ -189,6 +194,11 @@ export class ModalWindow implements ModalWindowInterface {
       case ModalWindowView.NEW_FOLDER:
         title.innerText = 'NEW FOLDER';
         container.innerHTML = newFolderHTML;
+        break;
+
+      case ModalWindowView.NEW_FILE:
+        title.innerText = 'NEW FILE';
+        container.innerHTML = newFileHTML;
         break;
 
       case ModalWindowView.RENAME:
