@@ -46,6 +46,9 @@ export class ColumnTools {
    */
   convertMeiQuoteSign(body: any[]) {
     for (let i = 0; i < body.length; i++) {
+      if (body[i].mei === undefined) {
+        continue;
+      }
       body[i].mei = body[i].mei.replace(/“/g, '"').replace(/”/g, '"');
     }
   }
