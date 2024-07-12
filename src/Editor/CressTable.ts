@@ -153,7 +153,9 @@ export class CressTable {
       this.table.addHook(hook, (source) => {
         if (source != 'loadData') {
           if (hook === 'afterChange') {
-            if (source[0][2] !== source[0][3]) setSavedStatus(false);
+            const oldValue = source[0][2];
+            const newValue = source[0][3];
+            if (oldValue !== newValue) setSavedStatus(false);
           } else {
             setSavedStatus(false);
           }
