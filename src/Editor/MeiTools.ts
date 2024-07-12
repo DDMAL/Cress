@@ -83,15 +83,18 @@ export class MeiTools {
 
       case 'afterChange':
         changes?.forEach(([row, prop, oldValue, newValue]) => {
-          if (prop === 'mei' && oldValue !== newValue && newValue) {
-            // validate the new edited mei data and update the validation status
-            this.updateMeiData(row, newValue, undefined, undefined);
-            const validationPromise = this.validationTools
-              .meiValidator(newValue)
-              .then(([isValid, errorMsg]) => {
-                this.updateMeiData(row, undefined, isValid, errorMsg);
-              });
-            validationPromises.push(validationPromise);
+          if (prop === 'mei' && oldValue !== newValue) {
+            if (newValue) {
+              // validate the new edited mei data and update the validation status
+              const validationPromise = this.validationTools
+                .meiValidator(newValue)
+                .then(([isValid, errorMsg]) => {
+                  this.updateMeiData(row, newValue, isValid, errorMsg);
+                });
+              validationPromises.push(validationPromise);
+            } else {
+              this.updateMeiData(row, newValue, undefined, undefined);
+            }
           }
         });
     }
