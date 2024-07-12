@@ -150,7 +150,15 @@ export class CressTable {
   private initChangeListener() {
     changeHooks.forEach((hook) => {
       this.table.addHook(hook, (source) => {
-        if (source != 'loadData') setSavedStatus(false);
+        if (source != 'loadData') {
+          if (hook === 'afterChange') {
+            const oldValue = source[0][2];
+            const newValue = source[0][3];
+            if (oldValue !== newValue) setSavedStatus(false);
+          } else {
+            setSavedStatus(false);
+          }
+        }
       });
     });
   }
