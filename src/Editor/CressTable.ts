@@ -151,7 +151,13 @@ export class CressTable {
   private initChangeListener() {
     changeHooks.forEach((hook) => {
       this.table.addHook(hook, (source) => {
-        if (source != 'loadData') setSavedStatus(false);
+        if (source != 'loadData') {
+          if (hook === 'afterChange') {
+            if (source[0][2] !== source[0][3]) setSavedStatus(false);
+          } else {
+            setSavedStatus(false);
+          }
+        }
       });
     });
   }
