@@ -10,11 +10,11 @@ export class ImageTools {
   // Image Handler Functions
   storeImages(inputImgHeader: string, body: any[]) {
     body.forEach((row, rowIndex) => {
-      const base64Image = row[inputImgHeader];
-      if (base64Image) {
-        this.getImageDimensions(base64Image).then(([width, height]) => {
+      const value = row[inputImgHeader];
+      if (value && (value.includes('http') || value.includes('base64'))) {
+        this.getImageDimensions(value).then(([width, height]) => {
           this.images.push({
-            image: base64Image,
+            image: value,
             width,
             height,
             row: rowIndex,
