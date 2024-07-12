@@ -41,6 +41,11 @@ export class MeiTools {
   ) {
     const meiData = this.meiData.find((meiData) => meiData.row === row);
     if (meiData) {
+      // if the mei cell is empty, remove the row from meiData
+      if (mei === '') {
+        this.meiData = this.meiData.filter((meiData) => meiData.row !== row);
+        return;
+      }
       if (mei !== undefined) {
         meiData.mei = mei;
       }
@@ -52,10 +57,10 @@ export class MeiTools {
       }
     } else {
       this.meiData.push({
-        row,
-        mei: mei ?? meiData.mei,
-        isValid: isValid ?? meiData.isValid,
-        errorMsg: errorMsg ?? meiData.errorMsg,
+        row: row,
+        mei: mei ?? '',
+        isValid: isValid ?? null,
+        errorMsg: errorMsg ?? null,
       });
     }
   }

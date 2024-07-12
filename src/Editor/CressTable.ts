@@ -173,16 +173,18 @@ export class CressTable {
       changes?.forEach(([row, prop, oldValue, newValue]) => {
         if (prop === 'mei' && oldValue !== newValue) {
           // validate the new edited mei data and update the validation status
-          this.meiTools.setProcessStatus(newValue);
           this.meiTools.updateMeiData(row, newValue, undefined, undefined);
           this.table.render();
-          this.validationTools
-            .meiValidator(newValue)
-            .then(([isValid, errorMsg]) => {
-              this.meiTools.updateMeiData(row, undefined, isValid, errorMsg);
-              this.table.render();
-              this.meiTools.setResultStatus();
-            });
+          if (newValue !== '') {
+            this.meiTools.setProcessStatus(newValue);
+            this.validationTools
+              .meiValidator(newValue)
+              .then(([isValid, errorMsg]) => {
+                this.meiTools.updateMeiData(row, undefined, isValid, errorMsg);
+                this.table.render();
+                this.meiTools.setResultStatus();
+              });
+          }
         }
       });
     }
