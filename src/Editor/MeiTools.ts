@@ -1,5 +1,5 @@
 import Handsontable from 'handsontable';
-import { updateStatus } from './ValidationTools';
+import { updateStatus, ValidationTools } from './ValidationTools';
 import * as Notification from '../utils/Notification';
 import { MeiData } from '../Types';
 
@@ -7,8 +7,10 @@ export class MeiTools {
   private meiData: MeiData;
   public validationInProgress = false;
   public pendingValidations = 0;
+  private validationTools: ValidationTools;
 
   constructor() {
+    this.validationTools = new ValidationTools();
     this.meiData = [];
   }
 
@@ -60,24 +62,48 @@ export class MeiTools {
     }
   }
 
-  public setProcessStatus(value: any) {
-    if (!this.validationInProgress) {
-      this.validationInProgress = true;
-      updateStatus('processing');
-    }
-    // Update `pendingValidations` if value is not empty
-    if (value) this.pendingValidations++;
-  }
+  public validateMei(cressTable, hook, changes?) {
+    updateStatus('processing');
 
-  public setResultStatus() {
-    this.pendingValidations--;
-    if (this.pendingValidations === 0) {
-      this.validationInProgress = false;
+    let validationPromises = [];
+
+    switch (hook) {
+      case 'afterLoadData':
+        this.getMeiData().forEach((mei) => {
+          if (mei) {
+            const validationPromise = this.validationTools
+              .meiValidator(mei.mei)
+              .then(([isValid, errorMsg]) => {
+                this.updateMeiData(mei.row, mei.mei, isValid, errorMsg);
+              });
+            validationPromises.push(validationPromise);
+          }
+        });
+        break;
+
+      case 'afterChange':
+        changes?.forEach(([row, prop, oldValue, newValue]) => {
+          if (prop === 'mei' && oldValue !== newValue && newValue) {
+            // validate the new edited mei data and update the validation status
+            this.updateMeiData(row, newValue, undefined, undefined);
+            const validationPromise = this.validationTools
+              .meiValidator(newValue)
+              .then(([isValid, errorMsg]) => {
+                this.updateMeiData(row, undefined, isValid, errorMsg);
+              });
+            validationPromises.push(validationPromise);
+          }
+        });
+    }
+
+    Promise.all(validationPromises).then(() => {
+      cressTable.render();
+
       const hasInvalid = this.meiData.some(
         (element) => element.isValid === false,
       );
       updateStatus('done', hasInvalid);
-    }
+    });
   }
 
   // Mei Renderer Functions

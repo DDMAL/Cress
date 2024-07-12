@@ -1,7 +1,6 @@
 import Handsontable from 'handsontable';
 import { ImageTools } from './ImageTools';
 import { MeiTools } from './MeiTools';
-import { ValidationTools } from './ValidationTools';
 import { ExportTools } from './ExportTools';
 import { ColumnTools } from './ColumnTools';
 import { updateAttachment } from '../Dashboard/Storage';
@@ -27,7 +26,6 @@ export class CressTable {
   private images: any[] = []; // Array to store images
   private imageTools: ImageTools;
   private meiTools: MeiTools;
-  private validationTools: ValidationTools;
   private exportTools: ExportTools;
   private columnTools: ColumnTools;
 
@@ -37,7 +35,6 @@ export class CressTable {
     // Initialize Toolss
     this.imageTools = new ImageTools(this.images);
     this.meiTools = new MeiTools();
-    this.validationTools = new ValidationTools();
     this.exportTools = new ExportTools();
     this.columnTools = new ColumnTools(inputHeader);
 
@@ -94,7 +91,9 @@ export class CressTable {
       dropdownMenu: true,
       className: 'table-menu-btn',
       licenseKey: 'non-commercial-and-evaluation',
-      afterChange: (changes, source) => this.validateMei(changes, source),
+      afterLoadData: (_, initialLoad) => {
+        if (initialLoad) setTimeout(this.initValidationListener.bind(this), 0);
+      },
     });
 
     this.initFileListener(id, inputHeader, body, headers);
@@ -156,35 +155,10 @@ export class CressTable {
     });
   }
 
-  private validateMei(changes, source) {
-    if (source == 'loadData') {
-      // Validate mei data and update the validation status
-      this.meiTools.getMeiData().forEach((mei) => {
-        this.meiTools.setProcessStatus(mei);
-        this.validationTools
-          .meiValidator(mei.mei)
-          .then(([isValid, errorMsg]) => {
-            this.meiTools.updateMeiData(mei.row, mei.mei, isValid, errorMsg);
-            this.table.render();
-            this.meiTools.setResultStatus();
-          });
-      });
-    } else {
-      changes?.forEach(([row, prop, oldValue, newValue]) => {
-        if (prop === 'mei' && oldValue !== newValue) {
-          // validate the new edited mei data and update the validation status
-          this.meiTools.setProcessStatus(newValue);
-          this.meiTools.updateMeiData(row, newValue, undefined, undefined);
-          this.table.render();
-          this.validationTools
-            .meiValidator(newValue)
-            .then(([isValid, errorMsg]) => {
-              this.meiTools.updateMeiData(row, undefined, isValid, errorMsg);
-              this.table.render();
-              this.meiTools.setResultStatus();
-            });
-        }
-      });
-    }
+  private initValidationListener() {
+    this.meiTools.validateMei(this.table, 'afterLoadData');
+    this.table.addHook('afterChange', (changes, _) => {
+      this.meiTools.validateMei(this.table, 'afterChange', changes);
+    });
   }
 }
