@@ -28,6 +28,7 @@ export class CressTable {
   private meiTools: MeiTools;
   private exportTools: ExportTools;
   private columnTools: ColumnTools;
+  private defaultHeader = ['image', 'name', 'classification', 'mei'];
 
   constructor(id: string, inputHeader: string[], body: any[]) {
     const container = document.getElementById('hot-container');
@@ -54,9 +55,8 @@ export class CressTable {
     );
 
     // Prepare table configuration
-    const headers = ['image', 'name', 'classification', 'mei'];
-    const columns = this.columnTools.getColumns(headers);
-    const colWidths = this.columnTools.getColWidths(headers);
+    const columns = this.columnTools.getColumns(this.defaultHeader);
+    const colWidths = this.columnTools.getColWidths(this.defaultHeader);
     const indices = this.columnTools.getIndices(body).map(String);
 
     // Process images
@@ -82,7 +82,7 @@ export class CressTable {
       colWidths: colWidths,
       columns: columns,
       rowHeaders: indices,
-      colHeaders: headers,
+      colHeaders: this.defaultHeader,
       stretchH: 'all',
       minSpareRows: 0,
       autoWrapRow: true,
@@ -96,7 +96,7 @@ export class CressTable {
       },
     });
 
-    this.initFileListener(id, inputHeader, body, headers);
+    this.initFileListener(id, inputHeader, body, this.defaultHeader);
     this.initChangeListener();
   }
 
