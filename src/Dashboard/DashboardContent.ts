@@ -33,6 +33,17 @@ export const newFolderHTML = `
     </div>
   `;
 
+export const newFileHTML = `
+    <div id="rename_container">
+      <div id="dashboard_input_container">
+      </div>
+      <div id="rename_buttons_container">
+        <button id="cancel_dashboard">Cancel</button>
+        <button id="confirm_dashboard">Create</button>
+      </div>
+    </div>
+  `;
+
 export const renameHTML = `
     <div id="rename_container">
       <div id="dashboard_input_container">

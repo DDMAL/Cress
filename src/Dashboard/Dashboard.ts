@@ -1,10 +1,11 @@
 import { IEntry, IFile, IFolder, FileSystemTools } from './FileSystem';
-import { deleteDocument, updateDocName } from './Storage';
+import { deleteDocument, updateDocName, addDocument } from './Storage';
 import { FileSystemManager } from './FileSystem';
 import { ShiftSelectionManager, dashboardState } from './DashboardTools';
 import { InitUploadArea } from './UploadArea';
 import * as contextMenuContent from './ContextMenuContent';
 import { ModalWindow, ModalWindowView } from '../utils/ModalWindow';
+import { v4 as uuidv4 } from 'uuid';
 
 const documentsContainer: HTMLDivElement = document.querySelector(
   '#fs-content-container',
@@ -25,6 +26,8 @@ const uploadDocumentsButton: HTMLButtonElement = document.querySelector(
 );
 const newFolderButton: HTMLButtonElement =
   document.querySelector('#add-folder-button');
+const newFileButton: HTMLButtonElement =
+  document.querySelector('#add-file-button');
 
 const shiftSelection = new ShiftSelectionManager();
 const fsm = FileSystemManager();
@@ -49,6 +52,7 @@ openButton?.addEventListener('click', openDocsHandler);
 removeButton?.addEventListener('click', removeDocsHandler);
 uploadDocumentsButton?.addEventListener('click', openUploadAreaHandler);
 newFolderButton?.addEventListener('click', openNewFolderWindow);
+newFileButton?.addEventListener('click', openNewFileWindow);
 
 // Sorting algorithms
 // const sortByAlphanumerical = (a: IEntry, b: IEntry) => a.name.localeCompare(b.name);
@@ -517,6 +521,7 @@ function updateActionBarButtons() {
   ) {
     uploadDocumentsButton.classList.remove('active');
     newFolderButton.classList.remove('active');
+    newFileButton.classList.remove('active');
     removeButton.classList.remove('active');
     if (state.getSelectedEntries().length) {
       openButton.classList.add('active');
@@ -528,6 +533,7 @@ function updateActionBarButtons() {
   else if (state.isInTrash()) {
     uploadDocumentsButton.classList.remove('active');
     newFolderButton.classList.remove('active');
+    newFileButton.classList.remove('active');
     removeButton.classList.remove('active');
     openButton.classList.remove('active');
   }
@@ -537,6 +543,7 @@ function updateActionBarButtons() {
     removeButton.classList.remove('active');
     uploadDocumentsButton.classList.remove('active');
     newFolderButton.classList.remove('active');
+    newFileButton.classList.remove('active');
   }
   // selecting entries
   else if (state.getSelectedEntries().length) {
@@ -544,6 +551,7 @@ function updateActionBarButtons() {
     removeButton.classList.add('active');
     uploadDocumentsButton.classList.remove('active');
     newFolderButton.classList.remove('active');
+    newFileButton.classList.remove('active');
   }
   // nothing selected, not in ./Samples or ./Trash
   else {
@@ -551,6 +559,7 @@ function updateActionBarButtons() {
     removeButton.classList.remove('active');
     uploadDocumentsButton.classList.add('active');
     newFolderButton.classList.add('active');
+    newFileButton.classList.add('active');
   }
 }
 
@@ -719,6 +728,48 @@ function handleAddFolder(folderName: string) {
     return true;
   } else {
     newFolderTile.remove();
+    return false;
+  }
+}
+
+/**
+ * Add new File to current folder and refresh dashboard
+ */
+function handleAddFile(fileName: string, rowNum: number) {
+  // create new file element
+  const newFileTile = document.createElement('div');
+  newFileTile.classList.add('document-entry');
+  newFileTile.classList.add('file-entry');
+  newFileTile.setAttribute('id', 'new-file');
+
+  const newFileId = uuidv4();
+
+  // add new empty json file to db
+  const headers = ['image', 'name', 'classification', 'mei'];
+  const data = Array(rowNum).fill({});
+  data.forEach((row) => {
+    headers.forEach((header) => {
+      row[header] = '';
+    });
+  });
+  const jsonBlob = new Blob([JSON.stringify([headers, ...data], null, 2)], {
+    type: 'application/json',
+  });
+  addDocument(newFileId, fileName, jsonBlob);
+
+  // create new file object to dashboard
+  const datetime = new Date().toLocaleString();
+  const fileEntry = FileSystemTools.createFile(fileName, newFileId);
+  const docEntry = FileSystemTools.addMetadata(fileEntry, {
+    created_on: datetime,
+  });
+  const succeeded = FileSystemTools.addEntry(docEntry, state.getParentFolder());
+  if (succeeded) {
+    newFileTile.setAttribute('id', fileName);
+    updateDashboard();
+    return true;
+  } else {
+    newFileTile.remove();
     return false;
   }
 }
@@ -977,6 +1028,80 @@ function openNewFolderWindow() {
   });
 }
 
+/**
+ * Opens New Empty File menu modal window that prompts for a name.
+ * On clicking the Create button, closes modal window and creates a new empty file.
+ */
+function openNewFileWindow() {
+  if (!newFileButton.classList.contains('active')) return;
+
+  // generate modal window
+  const modalWindow = new ModalWindow();
+  modalWindow.setModalWindowView(ModalWindowView.NEW_FILE);
+  modalWindow.openModalWindow();
+
+  const inputContainer = document.getElementById(
+    'dashboard_input_container',
+  ) as HTMLDivElement;
+  const cancelButton = document.getElementById(
+    'cancel_dashboard',
+  ) as HTMLButtonElement;
+  const confirmButton = document.getElementById(
+    'confirm_dashboard',
+  ) as HTMLButtonElement;
+
+  // Create input field for file name
+  const fileNameInput = document.createElement('input');
+  fileNameInput.id = 'dashboard_input';
+  fileNameInput.type = 'text';
+  fileNameInput.placeholder = 'Untitled File';
+  fileNameInput.value = 'Untitled File';
+  // label for file name
+  const fileNameLabel = document.createElement('label');
+  fileNameLabel.htmlFor = 'dashboard_input';
+  fileNameLabel.innerText = 'File Name:';
+  inputContainer.appendChild(fileNameLabel);
+  inputContainer.appendChild(fileNameInput);
+
+  fileNameInput.select();
+  fileNameInput.focus();
+
+  // Create input field for number of rows
+  const rowNumInput = document.createElement('input');
+  rowNumInput.id = 'dashboard_input';
+  rowNumInput.type = 'number';
+  rowNumInput.min = '1';
+  rowNumInput.max = '100';
+  rowNumInput.value = '10';
+  // label for number of rows
+  const rowNumLabel = document.createElement('label');
+  rowNumLabel.htmlFor = 'dashboard_input';
+  rowNumLabel.innerText = 'Number of Rows:';
+  inputContainer.appendChild(rowNumLabel);
+  inputContainer.appendChild(rowNumInput);
+
+  cancelButton.addEventListener('click', () => modalWindow.hideModalWindow());
+  confirmButton.addEventListener('click', () =>
+    confirmNewFileAction(
+      modalWindow,
+      fileNameInput.value,
+      parseInt(rowNumInput.value),
+    ),
+  );
+
+  inputContainer.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      modalWindow.hideModalWindow();
+    } else if (event.key === 'Enter') {
+      confirmNewFileAction(
+        modalWindow,
+        fileNameInput.value,
+        parseInt(rowNumInput.value),
+      );
+    }
+  });
+}
+
 function confirmNewFolderAction(modalWindow: ModalWindow, folderName: string) {
   if (!nameExists(folderName)) {
     modalWindow.hideModalWindow();
@@ -984,6 +1109,20 @@ function confirmNewFolderAction(modalWindow: ModalWindow, folderName: string) {
   } else {
     window.alert('The folder name already exists in the current folder!');
     openNewFolderWindow();
+  }
+}
+
+function confirmNewFileAction(
+  modalWindow: ModalWindow,
+  fileName: string,
+  rowNum: number,
+) {
+  if (!nameExists(fileName)) {
+    modalWindow.hideModalWindow();
+    handleAddFile(fileName, rowNum);
+  } else {
+    window.alert('The file name already exists in the current folder!');
+    openNewFileWindow();
   }
 }
 
@@ -1261,6 +1400,7 @@ function showContextMenu(view: string, clientX: number, clientY: number) {
     const moveBtn = document.getElementById('cm-move-btn');
     const updateDocBtn = document.getElementById('cm-upload-doc-btn');
     const newFolderBtn = document.getElementById('cm-new-folder-btn');
+    const newFileBtn = document.getElementById('cm-new-file-btn');
 
     if (deleteBtn) {
       deleteBtn.classList.add('disabled');
@@ -1276,6 +1416,9 @@ function showContextMenu(view: string, clientX: number, clientY: number) {
     }
     if (newFolderBtn) {
       newFolderBtn.classList.add('disabled');
+    }
+    if (newFileBtn) {
+      newFileBtn.classList.add('disabled');
     }
   }
 
@@ -1477,6 +1620,14 @@ function setContextMenuItemsEventListeners(view: string) {
         .addEventListener('click', (_e) => {
           contextMenu.classList.add('hidden');
           openNewFolderWindow();
+        });
+
+      // "New file" menu item
+      document
+        .querySelector(`.${btnClassname}#cm-new-file-btn`)
+        .addEventListener('click', (_e) => {
+          contextMenu.classList.add('hidden');
+          openNewFileWindow();
         });
   }
 }
