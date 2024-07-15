@@ -60,12 +60,26 @@ export class CressTable {
     const indices = this.columnTools.getIndices(body).map(String);
 
     // Process images
-    let inputImgHeader = inputHeader.find((header) => header.includes('image'));
-    this.imageTools.storeImages(inputImgHeader, body);
+    let inputImgHeader = inputHeader.find(
+      (header) =>
+        header.toLowerCase().includes('image') ||
+        header.toLowerCase().includes('img'),
+    );
+    if (inputImgHeader) {
+      this.imageTools.storeImages(inputImgHeader, body);
+    } else {
+      Notification.queueNotification('Failed to extract image data', 'error');
+    }
 
     // Process mei data
-    let inputMeiHeader = inputHeader.find((header) => header.includes('mei'));
-    this.meiTools.initMeiData(inputMeiHeader, body);
+    let inputMeiHeader = inputHeader.find((header) =>
+      header.toLowerCase().includes('mei'),
+    );
+    if (inputMeiHeader) {
+      this.meiTools.initMeiData(inputMeiHeader, body);
+    } else {
+      Notification.queueNotification('Failed to extract MEI data', 'error');
+    }
 
     // Initialize table
     this.table = new Handsontable(container, {
