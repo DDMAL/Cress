@@ -43,21 +43,22 @@ export class MeiTools {
   ) {
     const meiData = this.meiData.find((meiData) => meiData.row === row);
     if (meiData) {
-      if (mei !== undefined) {
-        meiData.mei = mei;
+      // Update this.meiData if it exists
+      if (mei === '') {
+        // if the mei cell is empty, remove the row from meiData
+        this.meiData = this.meiData.filter((data) => data.row !== row);
+        return;
       }
-      if (isValid !== undefined) {
-        meiData.isValid = isValid;
-      }
-      if (errorMsg !== undefined) {
-        meiData.errorMsg = errorMsg;
-      }
+      if (mei !== undefined) meiData.mei = mei;
+      if (isValid !== undefined) meiData.isValid = isValid;
+      if (errorMsg !== undefined) meiData.errorMsg = errorMsg;
     } else {
+      // Add a new entry to this.meiData if it doesn't exist
       this.meiData.push({
         row,
-        mei: mei ?? meiData.mei,
-        isValid: isValid ?? meiData.isValid,
-        errorMsg: errorMsg ?? meiData.errorMsg,
+        mei: mei ?? '',
+        isValid: isValid ?? null,
+        errorMsg: errorMsg ?? null,
       });
     }
   }
