@@ -11,7 +11,7 @@
   "repository": "https://github.com/DDMAL/Cress.git",
   "author": {
     "name": "DDMAL",
-    "url": "https://ddmal.music.mcgill.ca"
+    "url": "https://ddmal.ca"
   },
   "contributors": [
     {
@@ -33,13 +33,12 @@
     "@types/papaparse": "^5.3.14",
     "@types/pouchdb": "^6.4.2",
     "@types/webpack": "^5.28.5",
-    "cache-loader": "^4.1.0",
     "csvtojson": "^2.0.10",
     "eslint": "^9.6.0",
     "node-polyfill-webpack-plugin": "^4.0.0",
     "papaparse": "^5.4.1",
     "pouchdb-core": "^9.0.0",
-    "prettier": "^3.3.2",
+    "prettier": "^3.5.3",
     "ts-loader": "9.5.1",
     "typescript": "^5.5.3",
     "webpack": "5.92.1",
