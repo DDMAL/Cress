@@ -33,7 +33,6 @@
     "@types/papaparse": "^5.3.14",
     "@types/pouchdb": "^6.4.2",
     "@types/webpack": "^5.28.5",
-    "cache-loader": "^4.1.0",
     "csvtojson": "^2.0.10",
     "eslint": "^9.6.0",
     "node-polyfill-webpack-plugin": "^4.0.0",

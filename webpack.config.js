@@ -15,11 +15,14 @@ module.exports = {
     filename: '[name].js',
   },
   devtool: 'inline-source-map',
+  cache: {
+    type: 'filesystem', // Enables persistent caching
+  },
   module: {
     rules: [
       {
         test: /\.tsx?$/,
-        use: ['cache-loader', 'ts-loader'],
+        use: ['ts-loader'],
         exclude: /node_modules/,
       },
       {
