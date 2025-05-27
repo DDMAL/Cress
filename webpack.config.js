@@ -3,14 +3,14 @@ const webpack = require('webpack');
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 
 module.exports = {
-  mode: 'production',
+  mode: 'development',
   entry: {
-    landing: './deployment/scripts/landing.ts',
-    dashboard: './deployment/scripts/dashboard.ts',
-    editor: './deployment/scripts/editor.ts',
+    landing: './dev/scripts/landing.ts',
+    dashboard: './dev/scripts/dashboard.ts',
+    editor: './dev/scripts/editor.ts',
   },
   output: {
-    path: path.resolve(__dirname, 'deployment', 'server', 'Cress-gh'),
+    path: path.resolve(__dirname, 'dev', 'server', 'Cress-gh'),
     publicPath: '/',
     filename: '[name].js',
   },
