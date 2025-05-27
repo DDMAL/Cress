@@ -15,7 +15,7 @@ if (sampleId) {
       const localFileSystem = JSON.parse(fs) as IFolder;
       const filename = findFileNameById(localFileSystem);
       if (filename) {
-        let filePath = `./Cress-gh/assets/samples/${filename}`;
+        let filePath = `${__ASSET_PREFIX__}assets/samples/${filename}`;
         window
           .fetch(filePath)
           .then((response) => {

@@ -3,8 +3,8 @@
 .awcache
 .vscode
 
-/deployment/server/Cress-gh
-/deployment/public
+/dev/server/Cress-gh
+/dev/public
 /dist
 
 /gh-pages/

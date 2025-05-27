@@ -5,9 +5,9 @@ const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 module.exports = {
   mode: 'production',
   entry: {
-    landing: './deployment/scripts/landing.ts',
-    editor: './deployment/scripts/editor.ts',
-    dashboard: './deployment/scripts/dashboard.ts',
+    landing: './dev/scripts/landing.ts',
+    editor: './dev/scripts/editor.ts',
+    dashboard: './dev/scripts/dashboard.ts',
   },
   output: {
     path: path.resolve(__dirname, 'gh-pages', 'Cress', 'Cress-gh'),
