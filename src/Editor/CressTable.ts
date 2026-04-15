@@ -1,4 +1,5 @@
 import Handsontable from 'handsontable';
+import { registerPlugin, Filters, DropdownMenu, ColumnSorting } from 'handsontable/plugins';
 import { ImageTools } from './ImageTools';
 import { MeiTools } from './MeiTools';
 import { ExportTools } from './ExportTools';
@@ -7,6 +8,11 @@ import { updateAttachment } from '../Dashboard/Storage';
 import { setSavedStatus } from '../utils/Unsaved';
 import * as Notification from '../utils/Notification';
 import { TableEvent } from '../Types';
+
+// Register Handsontable plugins
+registerPlugin(Filters);
+registerPlugin(DropdownMenu);
+registerPlugin(ColumnSorting);
 
 const changeHooks: TableEvent[] = [
   'afterChange',
@@ -102,7 +108,33 @@ export class CressTable {
       autoWrapRow: true,
       autoWrapCol: true,
       contextMenu: true,
-      dropdownMenu: true,
+      // Dropdown menu: only show filter items on classification (col 2)
+      dropdownMenu: {
+        items: {
+          col_left: {},
+          col_right: {},
+          remove_col: {},
+          clear_column: {},
+          make_read_only: {},
+          alignment: {},
+          sp1: { name: '---------' },
+          filter_by_value: {
+            hidden() {
+              const col = this.getSelectedRangeLast()?.from?.col;
+              return col !== 2;
+            },
+          },
+          filter_action_bar: {
+            hidden() {
+              const col = this.getSelectedRangeLast()?.from?.col;
+              return col !== 2;
+            },
+          },
+        },
+      },
+      filters: true,
+      // Sorting: only allow on name (col 1) and classification (col 2)
+      columnSorting: true,
       className: 'table-menu-btn',
       licenseKey: 'non-commercial-and-evaluation',
       afterLoadData: (_, initialLoad) => {
