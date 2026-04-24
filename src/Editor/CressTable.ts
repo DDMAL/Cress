@@ -105,6 +105,7 @@ export class CressTable {
       autoWrapCol: true,
       contextMenu: true,
       dropdownMenu: true,
+      filters: true,
       className: 'table-menu-btn',
       licenseKey: 'non-commercial-and-evaluation',
       afterLoadData: (_, initialLoad) => {
@@ -202,7 +203,7 @@ export class CressTable {
     const editorContainer = document.getElementById('editor-body-container');
     if (!editorContainer) return;
 
-    this.filterSidebar = new FilterSidebar(editorContainer);
+    this.filterSidebar = new FilterSidebar(editorContainer, this.table);
 
     this.filterSidebar.onToggle((isOpen: boolean) => {
       filterBtn.classList.toggle('active', isOpen);

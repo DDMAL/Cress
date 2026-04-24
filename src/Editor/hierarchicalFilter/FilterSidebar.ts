@@ -1,35 +1,38 @@
+import Handsontable from 'handsontable';
+import { FilterTree } from './FilterTree';
+
 /**
- * FilterSidebar — UI skeleton for the hierarchical classification filter.
+ * FilterSidebar — manages the sidebar panel for hierarchical classification
+ * filtering. Contains a FilterTree that renders checkboxes from the
+ * classification column data.
  *
- * This class creates and manages the sidebar DOM element. It does NOT
- * contain tree rendering or filter logic — those will be added in later
- * stages. Right now it provides:
- *
- *   - Sidebar DOM creation (header / body placeholder / footer)
- *   - toggle() to open/close
- *   - close() to close only
- *   - isOpen() to query state
- *   - onToggle callback so CressTable can call refreshDimensions
- *   - destroy() for cleanup
- *
- * The sidebar element is appended to a given container (expected to be
- * #editor-body-container). CSS class `.open` controls the width transition.
+ * Public API:
+ *   - toggle() / open() / close() / isOpen()
+ *   - onToggle(cb) — for CressTable to call refreshDimensions
+ *   - destroy()
  */
 export class FilterSidebar {
   private sidebar: HTMLDivElement;
+  private body: HTMLDivElement;
   private _isOpen = false;
   private onToggleCallback: ((isOpen: boolean) => void) | null = null;
+  private filterTree: FilterTree | null = null;
+  private table: Handsontable | null = null;
 
-  constructor(container: HTMLElement) {
+  constructor(container: HTMLElement, table?: Handsontable) {
+    this.table = table ?? null;
     this.sidebar = this.createSidebarDOM();
     container.appendChild(this.sidebar);
+
+    if (this.table) {
+      this.initTree();
+    }
   }
 
   /* ------------------------------------------------------------------ */
   /*  Public API                                                         */
   /* ------------------------------------------------------------------ */
 
-  /** Toggle sidebar open/closed. */
   toggle(): void {
     if (this._isOpen) {
       this.close();
@@ -38,7 +41,6 @@ export class FilterSidebar {
     }
   }
 
-  /** Open the sidebar. No-op if already open. */
   open(): void {
     if (this._isOpen) return;
     this._isOpen = true;
@@ -46,7 +48,6 @@ export class FilterSidebar {
     this.fireToggle();
   }
 
-  /** Close the sidebar. No-op if already closed. */
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
@@ -54,24 +55,70 @@ export class FilterSidebar {
     this.fireToggle();
   }
 
-  /** Whether the sidebar is currently open. */
   isOpen(): boolean {
     return this._isOpen;
   }
 
-  /**
-   * Register a callback that fires after every open/close.
-   * CressTable uses this to call refreshDimensions after the CSS
-   * transition finishes.
-   */
   onToggle(cb: (isOpen: boolean) => void): void {
     this.onToggleCallback = cb;
   }
 
-  /** Remove the sidebar from the DOM and clean up references. */
   destroy(): void {
     this.sidebar.remove();
     this.onToggleCallback = null;
+    this.filterTree = null;
+    this.table = null;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Tree Initialization                                                */
+  /* ------------------------------------------------------------------ */
+
+  private initTree(): void {
+    if (!this.table) return;
+
+    // Read classification column (col index 2) from Handsontable
+    const classifications = this.table.getDataAtCol(2) as (string | null)[];
+
+    // Create tree component inside sidebar body
+    this.filterTree = new FilterTree(this.body);
+    this.filterTree.buildFromData(classifications);
+
+    // Wire Apply callback → Handsontable filter
+    this.filterTree.onApply((rawValues: string[]) => {
+      this.applyFilter(rawValues);
+    });
+
+    // Wire Clear callback → clear Handsontable filter
+    this.filterTree.onClear(() => {
+      this.clearFilter();
+    });
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Handsontable Filter Integration                                    */
+  /* ------------------------------------------------------------------ */
+
+  private applyFilter(rawValues: string[]): void {
+    if (!this.table) return;
+
+    const fp = this.table.getPlugin('filters');
+    fp.clearConditions(2);
+
+    if (rawValues.length > 0) {
+      // by_value expects an array of allowed values
+      fp.addCondition(2, 'by_value', [rawValues]);
+    }
+
+    fp.filter();
+  }
+
+  private clearFilter(): void {
+    if (!this.table) return;
+
+    const fp = this.table.getPlugin('filters');
+    fp.clearConditions(2);
+    fp.filter();
   }
 
   /* ------------------------------------------------------------------ */
@@ -99,15 +146,9 @@ export class FilterSidebar {
     header.appendChild(title);
     header.appendChild(closeBtn);
 
-    // --- Body (placeholder for now — tree UI goes here in next stage) ---
-    const body = document.createElement('div');
-    body.className = 'filter-sidebar-body';
-
-    const placeholder = document.createElement('div');
-    placeholder.className = 'filter-sidebar-placeholder';
-    placeholder.textContent = 'Tree UI goes here';
-
-    body.appendChild(placeholder);
+    // --- Body ---
+    this.body = document.createElement('div');
+    this.body.className = 'filter-sidebar-body';
 
     // --- Footer ---
     const footer = document.createElement('div');
@@ -117,14 +158,18 @@ export class FilterSidebar {
     clearBtn.className = 'filter-sidebar-btn filter-sidebar-btn-clear';
     clearBtn.textContent = 'Clear';
     clearBtn.addEventListener('click', () => {
-      // Placeholder — will clear filter state in a later stage
+      if (this.filterTree) {
+        this.filterTree.clear();
+      }
     });
 
     const applyBtn = document.createElement('button');
     applyBtn.className = 'filter-sidebar-btn filter-sidebar-btn-apply';
     applyBtn.textContent = 'Apply';
     applyBtn.addEventListener('click', () => {
-      // Placeholder — will apply filter in a later stage
+      if (this.filterTree) {
+        this.filterTree.apply();
+      }
     });
 
     footer.appendChild(clearBtn);
@@ -132,7 +177,7 @@ export class FilterSidebar {
 
     // --- Assemble ---
     sidebar.appendChild(header);
-    sidebar.appendChild(body);
+    sidebar.appendChild(this.body);
     sidebar.appendChild(footer);
 
     return sidebar;
