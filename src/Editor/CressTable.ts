@@ -7,6 +7,7 @@ import { updateAttachment } from '../Dashboard/Storage';
 import { setSavedStatus } from '../utils/Unsaved';
 import * as Notification from '../utils/Notification';
 import { TableEvent } from '../Types';
+import { FilterSidebar } from './hierarchicalFilter/FilterSidebar';
 
 const changeHooks: TableEvent[] = [
   'afterChange',
@@ -29,6 +30,7 @@ export class CressTable {
   private exportTools: ExportTools;
   private columnTools: ColumnTools;
   private defaultHeader = ['image', 'name', 'classification', 'mei'];
+  private filterSidebar: FilterSidebar | null = null;
 
   constructor(id: string, inputHeader: string[], body: any[]) {
     const container = document.getElementById('hot-container');
@@ -112,6 +114,7 @@ export class CressTable {
 
     this.initFileListener(id, inputHeader, body, this.defaultHeader);
     this.initChangeListener();
+    this.initFilterSidebar();
   }
 
   private initFileListener(
@@ -181,6 +184,37 @@ export class CressTable {
     this.meiTools.validateMei(this.table, 'afterLoadData');
     this.table.addHook('afterChange', (changes, _) => {
       this.meiTools.validateMei(this.table, 'afterChange', changes);
+    });
+  }
+  // === HIERARCHICAL FILTER ===
+  private initFilterSidebar(): void {
+    const filterBtn = document.createElement('div');
+    filterBtn.className = 'filter-toolbar-btn';
+    filterBtn.id = 'filter-toolbar-btn';
+    filterBtn.innerHTML = '<span class="filter-toolbar-btn-icon">▼</span><span>Filter</span>';
+    filterBtn.title = 'Toggle classification filter panel';
+
+    const bottomRow = document.querySelector('.navbar-main-content-container-bottom');
+    if (bottomRow) {
+      bottomRow.appendChild(filterBtn);
+    }
+
+    const editorContainer = document.getElementById('editor-body-container');
+    if (!editorContainer) return;
+
+    this.filterSidebar = new FilterSidebar(editorContainer);
+
+    this.filterSidebar.onToggle((isOpen: boolean) => {
+      filterBtn.classList.toggle('active', isOpen);
+      setTimeout(() => {
+        this.table.refreshDimensions();
+      }, 260);
+    });
+
+    filterBtn.addEventListener('click', () => {
+      if (this.filterSidebar) {
+        this.filterSidebar.toggle();
+      }
     });
   }
 }
