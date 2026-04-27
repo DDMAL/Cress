@@ -104,8 +104,22 @@ export class CressTable {
       autoWrapRow: true,
       autoWrapCol: true,
       contextMenu: true,
-      dropdownMenu: true,
+      // === DROPDOWN MENU: custom items, NO filter_by_condition / filter_by_value ===
+      // Filter is handled by the hierarchical filter sidebar instead.
+      dropdownMenu: {
+        items: {
+          col_left: { name: 'Insert column left' },
+          col_right: { name: 'Insert column right' },
+          remove_col: { name: 'Remove column' },
+          separator1: { name: '---------' },
+          clear_column: { name: 'Clear column' },
+          separator2: { name: '---------' },
+          make_read_only: { name: 'Read only' },
+          alignment: {},
+        },
+      },
       filters: true,
+      columnSorting: true,
       className: 'table-menu-btn',
       licenseKey: 'non-commercial-and-evaluation',
       afterLoadData: (_, initialLoad) => {
@@ -187,15 +201,19 @@ export class CressTable {
       this.meiTools.validateMei(this.table, 'afterChange', changes);
     });
   }
+
   // === HIERARCHICAL FILTER ===
   private initFilterSidebar(): void {
+    // Plain text button — matches File / Help style (no arrow icon)
     const filterBtn = document.createElement('div');
     filterBtn.className = 'filter-toolbar-btn';
     filterBtn.id = 'filter-toolbar-btn';
-    filterBtn.innerHTML = '<span class="filter-toolbar-btn-icon">▼</span><span>Filter</span>';
+    filterBtn.textContent = 'Filter';
     filterBtn.title = 'Toggle classification filter panel';
 
-    const bottomRow = document.querySelector('.navbar-main-content-container-bottom');
+    const bottomRow = document.querySelector(
+      '.navbar-main-content-container-bottom',
+    );
     if (bottomRow) {
       bottomRow.appendChild(filterBtn);
     }

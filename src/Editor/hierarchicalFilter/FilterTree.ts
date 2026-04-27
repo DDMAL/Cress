@@ -43,7 +43,7 @@ export class FilterTree {
   buildFromData(classifications: (string | null | undefined)[]): void {
     this.root = parseClassifications(classifications);
     this.stateMap.clear();
-    this.initStates(this.root, '');
+    this.initStates(this.root, '', 0);
     this.render();
   }
 
@@ -78,8 +78,16 @@ export class FilterTree {
 
   /** Trigger apply with current selection. */
   apply(): void {
+    const selected = this.getSelectedRawValues();
+
+    // Empty selection = Clear (instead of showing 0 rows)
+    if (selected.length === 0) {
+      this.clear();
+      return;
+    }
+
     if (this.applyCallback) {
-      this.applyCallback(this.getSelectedRawValues());
+      this.applyCallback(selected);
     }
   }
 
@@ -94,16 +102,18 @@ export class FilterTree {
     return parentPath ? `${parentPath}.${node.label}` : node.label;
   }
 
-  private initStates(node: TreeNode, parentPath: string): void {
+  /** Initialize states. depth=0 is synthetic root, depth=1 = top-level children (expanded by default). */
+  private initStates(node: TreeNode, parentPath: string, depth: number): void {
     for (const [, child] of node.children) {
       const key = this.getStateKey(child, parentPath);
       if (!this.stateMap.has(key)) {
         this.stateMap.set(key, {
-          expanded: false,
+          // First-level nodes (depth 1, i.e. direct children of root) default expanded
+          expanded: depth === 0,
           checked: 'none',
         });
       }
-      this.initStates(child, key);
+      this.initStates(child, key, depth + 1);
     }
   }
 
@@ -133,7 +143,11 @@ export class FilterTree {
     this.render();
   }
 
-  private propagateDown(node: TreeNode, parentKey: string, checked: CheckState): void {
+  private propagateDown(
+    node: TreeNode,
+    parentKey: string,
+    checked: CheckState,
+  ): void {
     for (const [, child] of node.children) {
       const childKey = this.getStateKey(child, parentKey);
       const childState = this.getState(childKey);
@@ -161,14 +175,20 @@ export class FilterTree {
     // Find parent node and recompute its checked state from children
     const parentNode = this.findNode(parentKey);
     if (parentNode) {
-      parentState.checked = this.computeCheckFromChildren(parentNode, parentKey);
+      parentState.checked = this.computeCheckFromChildren(
+        parentNode,
+        parentKey,
+      );
     }
 
     // Continue up
     this.propagateUp(parentKey);
   }
 
-  private computeCheckFromChildren(node: TreeNode, nodeKey: string): CheckState {
+  private computeCheckFromChildren(
+    node: TreeNode,
+    nodeKey: string,
+  ): CheckState {
     let allChecked = true;
     let noneChecked = true;
 
@@ -202,7 +222,11 @@ export class FilterTree {
     return cursor;
   }
 
-  private collectSelected(node: TreeNode, parentKey: string, result: string[]): void {
+  private collectSelected(
+    node: TreeNode,
+    parentKey: string,
+    result: string[],
+  ): void {
     for (const [, child] of node.children) {
       const key = this.getStateKey(child, parentKey);
       const state = this.getState(key);
@@ -225,6 +249,29 @@ export class FilterTree {
     for (const [, child] of node.children) {
       this.collectAllLeafRawValues(child, result);
     }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Quality flag helpers                                               */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Decide whether to show a quality warning for this node.
+   * Only show for flags that represent real data issues (hasEnDash).
+   * hasNewline is a systemic parseWORD artifact — not a user error.
+   */
+  private shouldShowQuality(node: TreeNode): boolean {
+    if (!node.quality) return false;
+    return !!node.quality.hasEnDash;
+  }
+
+  private getQualityTooltip(node: TreeNode): string {
+    if (!node.quality) return '';
+    const flags: string[] = [];
+    if (node.quality.hasEnDash)
+      flags.push('contains en-dash (–) — possible typo');
+    if (node.quality.hasTrailingSpace) flags.push('has trailing whitespace');
+    return flags.join('; ');
   }
 
   /* ------------------------------------------------------------------ */
@@ -265,7 +312,7 @@ export class FilterTree {
     // --- Row ---
     const row = document.createElement('div');
     row.className = 'filter-tree-row';
-    row.style.paddingLeft = `${depth * 16}px`;
+    row.style.paddingLeft = `${8 + depth * 18}px`;
 
     // --- Expand/collapse arrow ---
     const arrow = document.createElement('span');
@@ -299,7 +346,6 @@ export class FilterTree {
     const label = document.createElement('span');
     label.className = 'filter-tree-label';
     label.textContent = node.label;
-    label.title = node.fullPath || node.label; // hover shows full path
     row.appendChild(label);
 
     // --- Count badge ---
@@ -308,13 +354,18 @@ export class FilterTree {
     count.textContent = `(${node.count})`;
     row.appendChild(count);
 
-    // --- Quality warning ---
-    if (node.quality) {
+    // --- Quality warning (only for real data issues, not systemic \n) ---
+    if (this.shouldShowQuality(node)) {
       const warn = document.createElement('span');
       warn.className = 'filter-tree-quality';
       warn.textContent = '⚠';
-      const flags = Object.keys(node.quality).join(', ');
-      warn.title = `Data quality: ${flags}`;
+
+      // Custom CSS tooltip (more reliable than title attr on small elements)
+      const tooltip = document.createElement('span');
+      tooltip.className = 'filter-tree-quality-tooltip';
+      tooltip.textContent = this.getQualityTooltip(node);
+      warn.appendChild(tooltip);
+
       row.appendChild(warn);
     }
 

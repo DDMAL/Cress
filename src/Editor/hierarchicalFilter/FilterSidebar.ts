@@ -19,6 +19,11 @@ export class FilterSidebar {
   private filterTree: FilterTree | null = null;
   private table: Handsontable | null = null;
 
+  // Resize state
+  private isResizing = false;
+  private boundMouseMove: ((e: MouseEvent) => void) | null = null;
+  private boundMouseUp: (() => void) | null = null;
+
   constructor(container: HTMLElement, table?: Handsontable) {
     this.table = table ?? null;
     this.sidebar = this.createSidebarDOM();
@@ -51,6 +56,7 @@ export class FilterSidebar {
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
+    this.sidebar.style.width = ''; // Clear inline width from resize drag
     this.sidebar.classList.remove('open');
     this.fireToggle();
   }
@@ -68,6 +74,13 @@ export class FilterSidebar {
     this.onToggleCallback = null;
     this.filterTree = null;
     this.table = null;
+    // Clean up resize listeners
+    if (this.boundMouseMove) {
+      document.removeEventListener('mousemove', this.boundMouseMove);
+    }
+    if (this.boundMouseUp) {
+      document.removeEventListener('mouseup', this.boundMouseUp);
+    }
   }
 
   /* ------------------------------------------------------------------ */
@@ -122,12 +135,64 @@ export class FilterSidebar {
   }
 
   /* ------------------------------------------------------------------ */
+  /*  Resize Logic                                                       */
+  /* ------------------------------------------------------------------ */
+
+  private initResize(handle: HTMLDivElement): void {
+    this.boundMouseMove = (e: MouseEvent) => {
+      if (!this.isResizing) return;
+      e.preventDefault();
+
+      // Sidebar is on the right edge. Width = viewport right edge - mouse X.
+      const newWidth = window.innerWidth - e.clientX;
+
+      // Clamp between 200px and 600px
+      const clamped = Math.max(200, Math.min(600, newWidth));
+      this.sidebar.style.width = `${clamped}px`;
+
+      // Refresh Handsontable dimensions live during drag
+      if (this.table) {
+        this.table.refreshDimensions();
+      }
+    };
+
+    this.boundMouseUp = () => {
+      // Always clean up — no isResizing guard, so cleanup is never skipped
+      this.isResizing = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      this.sidebar.style.transition = '';
+      handle.classList.remove('active');
+    };
+
+    handle.addEventListener('mousedown', (e: MouseEvent) => {
+      e.preventDefault();
+      this.isResizing = true;
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      handle.classList.add('active');
+
+      // Disable CSS transition during drag for smooth resizing
+      this.sidebar.style.transition = 'none';
+    });
+
+    document.addEventListener('mousemove', this.boundMouseMove);
+    document.addEventListener('mouseup', this.boundMouseUp);
+  }
+
+  /* ------------------------------------------------------------------ */
   /*  DOM Construction                                                   */
   /* ------------------------------------------------------------------ */
 
   private createSidebarDOM(): HTMLDivElement {
     const sidebar = document.createElement('div');
     sidebar.className = 'filter-sidebar';
+
+    // --- Resize handle (left edge of sidebar) ---
+    const resizeHandle = document.createElement('div');
+    resizeHandle.className = 'filter-sidebar-resize-handle';
+    sidebar.appendChild(resizeHandle);
+    this.initResize(resizeHandle);
 
     // --- Header ---
     const header = document.createElement('div');

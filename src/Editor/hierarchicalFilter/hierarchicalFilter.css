@@ -1,5 +1,7 @@
 /* ----------------------------------------- */
-/* Hierarchical Filter — Toolbar Button
+/* Hierarchical Filter — Toolbar Button      */
+/* Match File / Help style exactly           */
+/* Uses same classes pattern as .navbar-element */
 /* ----------------------------------------- */
 
 .filter-toolbar-btn {
@@ -15,7 +17,6 @@
   height: 100%;
   color: #8675a9;
   font-family: Montserrat, sans-serif;
-  gap: 6px;
 }
 
 .filter-toolbar-btn:hover {
@@ -28,20 +29,17 @@
   color: white;
 }
 
-.filter-toolbar-btn-icon {
-  font-size: 14px;
-  line-height: 1;
+/* Responsive: match .navbar-element media query from style.css */
+@media screen and (max-width: 1023px) {
+  .filter-toolbar-btn {
+    font-size: 10px;
+  }
 }
 
 /* ----------------------------------------- */
-/* Hierarchical Filter — Editor Layout
+/* Hierarchical Filter — Editor Layout       */
 /* ----------------------------------------- */
 
-/*
- * #editor-body-container becomes a flex row.
- * #hot-container takes remaining space (flex: 1).
- * .filter-sidebar sits on the right, width transitions from 0 to 280px.
- */
 #editor-body-container {
   display: flex;
   flex-direction: row;
@@ -49,11 +47,11 @@
 
 #hot-container {
   flex: 1;
-  min-width: 0; /* allow shrinking below content width */
+  min-width: 0;
 }
 
 /* ----------------------------------------- */
-/* Hierarchical Filter — Sidebar
+/* Hierarchical Filter — Sidebar             */
 /* ----------------------------------------- */
 
 .filter-sidebar {
@@ -67,11 +65,31 @@
   height: 91vh;
   background-color: #fff;
   flex-shrink: 0;
+  position: relative;
 }
 
 .filter-sidebar.open {
   width: 280px;
-  border-left: 1px solid #8675a9;
+  border-left: 1px solid #d4d4d4;
+}
+
+/* --- Resize Handle (left edge) --- */
+
+.filter-sidebar-resize-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 10;
+  transition: background-color 150ms ease;
+}
+
+.filter-sidebar-resize-handle:hover,
+.filter-sidebar-resize-handle.active {
+  background-color: #8675a9;
 }
 
 /* --- Header --- */
@@ -85,6 +103,7 @@
   flex-shrink: 0;
   min-height: 40px;
   box-sizing: border-box;
+  background-color: #f2f2f2;
 }
 
 .filter-sidebar-title {
@@ -101,9 +120,9 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background-color: #e6e6e6;
+  background-color: transparent;
   color: #888;
-  border: none;
+  border: 1px solid #d4d4d4;
   font-size: 13px;
   line-height: 1;
   display: flex;
@@ -112,10 +131,12 @@
   cursor: pointer;
   flex-shrink: 0;
   font-family: Montserrat, sans-serif;
+  transition: all 150ms ease;
 }
 
 .filter-sidebar-close:hover {
-  background-color: #c3aed6;
+  background-color: #8675a9;
+  border-color: #8675a9;
   color: white;
 }
 
@@ -124,7 +145,7 @@
 .filter-sidebar-body {
   flex: 1;
   overflow-y: auto;
-  padding: 14px;
+  padding: 10px 8px;
   box-sizing: border-box;
 }
 
@@ -141,32 +162,36 @@
 .filter-sidebar-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 10px 14px;
   border-top: 1px solid #e6e6e6;
   flex-shrink: 0;
   min-height: 44px;
   box-sizing: border-box;
   gap: 8px;
+  background-color: #f2f2f2;
 }
 
 .filter-sidebar-btn {
   font-family: Montserrat, sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 5px 16px;
+  padding: 6px 18px;
   border-radius: 4px;
   cursor: pointer;
   border: none;
+  transition: all 150ms ease;
 }
 
 .filter-sidebar-btn-clear {
-  background-color: #f2f2f2;
+  background-color: transparent;
   color: #666;
+  border: 1px solid #d4d4d4;
 }
 
 .filter-sidebar-btn-clear:hover {
   background-color: #e6e6e6;
+  border-color: #bbb;
   color: #333;
 }
 
@@ -176,38 +201,39 @@
 }
 
 .filter-sidebar-btn-apply:hover {
-  background-color: #c3aed6;
+  background-color: #715f96;
 }
 
 /* ----------------------------------------- */
-/* Hierarchical Filter — Tree UI
+/* Hierarchical Filter — Tree UI             */
 /* ----------------------------------------- */
 
 .filter-tree {
   font-family: Montserrat, sans-serif;
-  font-size: 13px;
-  line-height: 1.2;
+  font-size: 12px;
+  line-height: 1.3;
 }
 
 .filter-tree-row {
   display: flex;
   align-items: center;
-  padding: 3px 4px;
-  gap: 4px;
+  padding: 4px 6px;
+  gap: 5px;
   cursor: default;
   border-radius: 3px;
+  transition: background-color 100ms ease;
 }
 
 .filter-tree-row:hover {
-  background-color: #f5f3f8;
+  background-color: #f0f0f0;
 }
 
 .filter-tree-arrow {
   width: 14px;
   flex-shrink: 0;
   text-align: center;
-  font-size: 12px;
-  color: #888;
+  font-size: 11px;
+  color: #bbb;
   user-select: none;
 }
 
@@ -225,6 +251,8 @@
   margin: 0;
   cursor: pointer;
   accent-color: #8675a9;
+  width: 14px;
+  height: 14px;
 }
 
 .filter-tree-label {
@@ -243,9 +271,44 @@
   margin-left: 2px;
 }
 
+/* --- Quality warning with custom CSS tooltip --- */
+
 .filter-tree-quality {
   flex-shrink: 0;
-  font-size: 12px;
+  font-size: 11px;
   margin-left: 2px;
   cursor: help;
+  position: relative;
+  color: #c49000;
+}
+
+.filter-tree-quality-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  background-color: #333;
+  color: #f5f5f5;
+  font-size: 11px;
+  font-weight: 400;
+  padding: 5px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 100;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.filter-tree-quality-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 6px;
+  border-width: 4px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
+}
+
+.filter-tree-quality:hover .filter-tree-quality-tooltip {
+  display: block;
 }

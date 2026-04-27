@@ -1,8 +1,4 @@
-import {
-  TreeNode,
-  UNCATEGORIZED_KEY,
-  UNCATEGORIZED_LABEL,
-} from './types';
+import { TreeNode, UNCATEGORIZED_KEY, UNCATEGORIZED_LABEL } from './types';
 
 /**
  * Parse an array of classification strings (one per data row) into a tree.
@@ -37,10 +33,7 @@ export function parseClassifications(
   return root;
 }
 
-function insertOne(
-  root: TreeNode,
-  rawInput: string | null | undefined,
-): void {
+function insertOne(root: TreeNode, rawInput: string | null | undefined): void {
   // 1. Empty / null / whitespace-only → uncategorized
   if (rawInput == null || rawInput.trim() === '') {
     const bucket = ensureChild(root, UNCATEGORIZED_KEY, UNCATEGORIZED_LABEL);
@@ -83,11 +76,7 @@ function insertOne(
   propagateCount(root, tokens);
 }
 
-function ensureChild(
-  parent: TreeNode,
-  key: string,
-  label: string,
-): TreeNode {
+function ensureChild(parent: TreeNode, key: string, label: string): TreeNode {
   const existing = parent.children.get(key);
   if (existing) return existing;
 
@@ -114,7 +103,7 @@ function markAsLeaf(node: TreeNode, rawValue: string): void {
   // Set quality flags. Only set when true (absence = clean, per types.ts).
   const q: NonNullable<TreeNode['quality']> = node.quality ?? {};
   if (rawValue.includes('\n')) q.hasNewline = true;
-  if (rawValue.includes('–')) q.hasEnDash = true;       // U+2013 EN DASH
+  if (rawValue.includes('–')) q.hasEnDash = true; // U+2013 EN DASH
   if (rawValue !== rawValue.trim()) q.hasTrailingSpace = true;
   if (Object.keys(q).length > 0) node.quality = q;
 }
