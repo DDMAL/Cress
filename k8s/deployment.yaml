@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cress
+  namespace: cress
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cress
+  template:
+    metadata:
+      labels:
+        app: cress
+    spec:
+      containers:
+        - name: cress
+          image: ghcr.io/ddmal/cress:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi

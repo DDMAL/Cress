@@ -2,6 +2,7 @@
 .DS_Store
 .awcache
 .vscode
+.idea
 
 /dev/server/Cress-gh
 /dev/public
