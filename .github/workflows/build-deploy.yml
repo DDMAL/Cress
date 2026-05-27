@@ -53,10 +53,7 @@ jobs:
           echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
           chmod 600 ~/.kube/config
 
-      - name: Apply Kubernetes manifests
-        run: kubectl apply -f k8s/
-
-      - name: Roll out updated image
+      - name: Deploy
         run: |
           SHA_TAG="${{ env.IMAGE_NAME }}:sha-$(echo ${{ github.sha }} | cut -c1-7)"
           kubectl set image deployment/cress cress="${SHA_TAG}" -n cress

@@ -13,9 +13,12 @@ spec:
       labels:
         app: cress
     spec:
+      imagePullSecrets:
+        - name: ghcr-pull-secret
       containers:
         - name: cress
           image: ghcr.io/ddmal/cress:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           resources:
