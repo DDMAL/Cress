@@ -4,6 +4,7 @@ import { CressTable } from './Editor/CressTable';
 import { ModalWindowInterface } from './Interfaces';
 import { listenUnsavedChanges } from './utils/Unsaved';
 import { CressDoc } from './Types';
+import { initGithubAuth } from './Dashboard/cress-frontend-auth';
 
 /**
  * CressView class. Manages the other modules of Cress and communicates with
@@ -43,6 +44,8 @@ class CressView {
         listenUnsavedChanges();
 
         document.getElementById('loading').style.display = 'none';
+
+        initGithubAuth();
 
         this.table = new CressTable(this.id, this.header, this.body);
 
