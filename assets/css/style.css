@@ -71,12 +71,15 @@ a:hover {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  width: 85%;
+  flex: 1;
+  min-width: 0;
 }
 .navbar-end {
   display: flex;
   flex-direction: row;
   margin: 10px 0px 10px 0px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .navbar-main-content-container-top {
   display: flex;
@@ -201,16 +204,22 @@ a:hover {
   transform: scale(0.8);
 }
 /* Feedback form */
-#feedback-form-btn-container {
+#feedback-form-btn-container,
+#github-login-btn,
+#github-logout-btn,
+#github-auth-status {
   color: #8675a9;
 }
-#feedback-form-btn-container:hover {
+#feedback-form-btn-container:hover,
+#github-login-btn:hover,
+#github-logout-btn:hover {
   color: white;
 }
 /* Tov navbar styles styles for smaller devices */
 @media screen and (max-width: 1023px) {
   .navbar-start {
-    width: 90%;
+    flex: 1;
+    min-width: 0;
   }
   .navbar-main-content-container-bottom {
     height: 30%;
@@ -271,7 +280,9 @@ a:hover {
     font-size: 0.7rem;
     width: auto;
   }
-  #feedback-form-btn-container {
+  #feedback-form-btn-container,
+  #github-login-btn,
+  #github-logout-btn {
     margin: 0;
     border: none;
     border-radius: 0;

@@ -7,6 +7,7 @@ import { updateAttachment } from '../Dashboard/Storage';
 import { setSavedStatus } from '../utils/Unsaved';
 import * as Notification from '../utils/Notification';
 import { TableEvent } from '../Types';
+import { FilterSidebar } from './hierarchicalFilter/FilterSidebar';
 
 const changeHooks: TableEvent[] = [
   'afterChange',
@@ -29,6 +30,7 @@ export class CressTable {
   private exportTools: ExportTools;
   private columnTools: ColumnTools;
   private defaultHeader = ['image', 'name', 'classification', 'mei'];
+  private filterSidebar: FilterSidebar | null = null;
 
   constructor(id: string, inputHeader: string[], body: any[]) {
     const container = document.getElementById('hot-container');
@@ -102,7 +104,22 @@ export class CressTable {
       autoWrapRow: true,
       autoWrapCol: true,
       contextMenu: true,
-      dropdownMenu: true,
+      // === DROPDOWN MENU: custom items, NO filter_by_condition / filter_by_value ===
+      // Filter is handled by the hierarchical filter sidebar instead.
+      dropdownMenu: {
+        items: {
+          col_left: { name: 'Insert column left' },
+          col_right: { name: 'Insert column right' },
+          remove_col: { name: 'Remove column' },
+          separator1: { name: '---------' },
+          clear_column: { name: 'Clear column' },
+          separator2: { name: '---------' },
+          make_read_only: { name: 'Read only' },
+          alignment: {},
+        },
+      },
+      filters: true,
+      columnSorting: true,
       className: 'table-menu-btn',
       licenseKey: 'non-commercial-and-evaluation',
       afterLoadData: (_, initialLoad) => {
@@ -112,6 +129,7 @@ export class CressTable {
 
     this.initFileListener(id, inputHeader, body, this.defaultHeader);
     this.initChangeListener();
+    this.initFilterSidebar();
   }
 
   private initFileListener(
@@ -181,6 +199,41 @@ export class CressTable {
     this.meiTools.validateMei(this.table, 'afterLoadData');
     this.table.addHook('afterChange', (changes, _) => {
       this.meiTools.validateMei(this.table, 'afterChange', changes);
+    });
+  }
+
+  // === HIERARCHICAL FILTER ===
+  private initFilterSidebar(): void {
+    // Plain text button — matches File / Help style (no arrow icon)
+    const filterBtn = document.createElement('div');
+    filterBtn.className = 'filter-toolbar-btn';
+    filterBtn.id = 'filter-toolbar-btn';
+    filterBtn.textContent = 'Filter';
+    filterBtn.title = 'Toggle classification filter panel';
+
+    const bottomRow = document.querySelector(
+      '.navbar-main-content-container-bottom',
+    );
+    if (bottomRow) {
+      bottomRow.appendChild(filterBtn);
+    }
+
+    const editorContainer = document.getElementById('editor-body-container');
+    if (!editorContainer) return;
+
+    this.filterSidebar = new FilterSidebar(editorContainer, this.table);
+
+    this.filterSidebar.onToggle((isOpen: boolean) => {
+      filterBtn.classList.toggle('active', isOpen);
+      setTimeout(() => {
+        this.table.refreshDimensions();
+      }, 260);
+    });
+
+    filterBtn.addEventListener('click', () => {
+      if (this.filterSidebar) {
+        this.filterSidebar.toggle();
+      }
     });
   }
 }

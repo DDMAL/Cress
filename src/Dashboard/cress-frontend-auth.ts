@@ -98,7 +98,7 @@ function renderAuthState(): void {
 
   if (status) {
     if (loggedIn && username) {
-      status.textContent = `Logged in as ${username}`;
+      status.textContent = username;
       status.style.display = '';
     } else if (loggedIn) {
       status.textContent = 'Logged in';
