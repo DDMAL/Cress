@@ -1,13 +1,11 @@
-// githubUserRepoBackend.ts
+// GitHubUserRepoBackend.ts
 // Option 2 backend: reads/writes files in the user's OWN repo via the GitHub
 // contents API, using the logged-in user's token (from getGithubToken()).
 //
-// SCOPE OF THIS PROTOTYPE:
-//   - Assumes the target repo ALREADY EXISTS. The first-save auto-create step
-//     (POST /user/repos to make `cress-mappings`) is intentionally OUT of scope
-//     until the meeting picks Option 1 vs 2. ensureRepo() is a TODO stub below.
-//   - Everything else (read/write/list/delete + SHA conflict) is common logic
-//     that also applies to Option 1, just pointed at a different endpoint.
+// ensureRepo() creates the repo (POST /user/repos) on first use if it's
+// missing. Call it once before the first save; it is idempotent (no-op when the
+// repo already exists). All other ops (read/write/list/delete + SHA conflict)
+// are common logic shared with Option 1, just pointed at GitHub directly.
 
 import {
   StorageBackend,
@@ -67,13 +65,57 @@ export class GitHubUserRepoBackend implements StorageBackend {
     return `${this.base}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
   }
 
-  // TODO(Option 2, post-meeting): create the repo on first save if it's missing.
-  //   POST /user/repos { name: "cress-mappings", private: false, auto_init: true }
-  // Out of scope for this prototype on purpose.
+  /** True if the target repo already exists for this user (GET /repos/:owner/:repo). */
+  async repoExists(): Promise<boolean> {
+    const { owner, repo } = this.deps;
+    const res = await this.deps.fetch(`${this.base}/repos/${owner}/${repo}`, {
+      headers: this.authHeaders(),
+    });
+    if (res.status === 404) return false;
+    if (!res.ok) {
+      throw new Error(
+        `repoExists failed: ${res.status} ${await safeText(res)}`,
+      );
+    }
+    return true;
+  }
+
+  /**
+   * Create the target repo if it does not exist. Idempotent: a no-op when the
+   * repo is already present.
+   *
+   * auto_init: true creates an initial commit (a README) so the repo has a
+   * default branch immediately; without it the contents API has no branch to
+   * write the first file against.
+   *
+   * NOTE: this writes to the real GitHub account behind the token. It creates a
+   * public repo named `repo` (default "cress-mappings"). private:false because
+   * the OAuth scope is public_repo.
+   */
   async ensureRepo(): Promise<void> {
-    throw new Error(
-      'ensureRepo() not implemented yet (POST /user/repos deferred)',
-    );
+    if (await this.repoExists()) return;
+
+    const res = await this.deps.fetch(`${this.base}/user/repos`, {
+      method: 'POST',
+      headers: { ...this.authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: this.deps.repo,
+        private: false,
+        auto_init: true,
+        description: 'Cress mapping files (auto-created)',
+      }),
+    });
+
+    // 201 Created on success. 422 can mean "name already exists" (race with
+    // another tab) -- treat that as success since the repo is now present.
+    if (res.status === 422) {
+      if (await this.repoExists()) return;
+    }
+    if (!res.ok) {
+      throw new Error(
+        `ensureRepo failed: ${res.status} ${await safeText(res)}`,
+      );
+    }
   }
 
   async readFile(path: string): Promise<ReadResult | null> {

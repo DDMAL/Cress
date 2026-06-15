@@ -19,6 +19,9 @@ export type {
 export { GitHubUserRepoBackend } from './GitHubUserRepoBackend';
 export type { GitHubBackendDeps } from './GitHubUserRepoBackend';
 
+export { WorkerBackend } from './WorkerBackend';
+export type { WorkerBackendDeps } from './WorkerBackend';
+
 export { MappingStorage, InMemoryLocalStore } from './MappingStorage';
 export type {
   LocalStore,
