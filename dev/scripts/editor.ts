@@ -1,3 +1,5 @@
+import { getMappingStorage } from '../../src/Dashboard/githubStorage/createMappingStorage';
+
 import CressView from '../../src/CressView';
 import { parseWORD } from '../../src/Dashboard/Storage';
 import { IEntry, IFolder } from '../../src/Dashboard/FileSystem';
