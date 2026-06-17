@@ -38,15 +38,20 @@ const getOwner = (): string =>
  * - GitHub contents API treats '/' and '\' as directory separators, so they are
  *   replaced. Whitespace is collapsed. Unicode/spaces are otherwise preserved
  *   (contentsUrl() URL-encodes the path).
- * - listFiles() only returns *.csv, and listMappings() merges remote paths with
- *   local names by string equality, so the path must end in '.csv' on both ends.
+ * - No .csv suffix here: PouchDB docs are keyed by bare name. The GitHub
+ *   backend adds .csv at its own boundary (listFiles filters *.csv).
  */
 export function nameToPath(name: string): string {
-  const base = name
+  // Bare, sanitized name -- NO .csv suffix. PouchDB's existing docs are keyed
+  // by name without an extension (see Dashboard.ts handleAddFile -> addDocument),
+  // and PouchDbLocalStore.resolveId matches on that name, so adding .csv here
+  // makes the local lookup miss. The .csv suffix that GitHub needs (for
+  // listFiles' *.csv filter) is the GitHub backend's concern and will be added
+  // at that boundary when remote storage is wired, not here.
+  return name
     .trim()
     .replace(/[/\\]+/g, '-')
     .replace(/\s+/g, ' ');
-  return base.toLowerCase().endsWith('.csv') ? base : `${base}.csv`;
 }
 
 // Lazy singleton: assembled on first use, by which point the editor load flow

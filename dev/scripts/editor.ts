@@ -1,4 +1,8 @@
-import { getMappingStorage } from '../../src/Dashboard/githubStorage/createMappingStorage';
+import {
+  getMappingStorage,
+  nameToPath,
+} from '../../src/Dashboard/githubStorage/createMappingStorage';
+import { rowsToCressPayload } from '../../src/Dashboard/githubStorage';
 
 import CressView from '../../src/CressView';
 import { parseWORD } from '../../src/Dashboard/Storage';
@@ -75,25 +79,38 @@ if (sampleId) {
   }
 } else {
   const db = new PouchDB('Cress-User-Storage');
-  db.getAttachment(uploadId, 'table')
-    .then((blob) => {
-      return new window.Response(blob).json();
-    })
-    .then(async (table) => {
-      console.log(table);
+  (async () => {
+    try {
+      // Name comes from the PouchDB doc (dashboard entry point); the storage
+      // key is name-based so it matches the GitHub filename + the local store.
       const doc: Doc = await db.get(uploadId);
       const name = doc.name;
-      let cressDoc: CressDoc = {
+      const path = nameToPath(name);
+
+      // Remote when logged in (fall back to local if the file isn't on GitHub
+      // yet -> progressive migration of old PouchDB docs); local-only when
+      // logged out. Returns CsvRow[] (string[][]) or null.
+      const rows = await getMappingStorage().loadMapping(path);
+      if (!rows) {
+        console.error(`No mapping found for "${path}"`);
+        return;
+      }
+
+      // string[][] -> Cress internal [headers, ...rowObjects].
+      const payload = rowsToCressPayload(rows);
+      const cressDoc: CressDoc = {
         id: uploadId,
-        name: name,
-        header: table[0],
-        body: table.slice(1),
+        name,
+        header: payload[0],
+        body: payload.slice(1) as Record<string, unknown>[],
       };
       const view = new CressView(cressDoc);
       view.start();
-    });
+    } catch (e) {
+      console.error('Failed to load mapping:', e);
+    }
+  })();
 }
-
 function getGetParam(paramName): string {
   let result;
 
