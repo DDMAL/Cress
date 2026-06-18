@@ -27,8 +27,7 @@ const MAPPINGS_REPO = 'cress-mappings'; // Option 2 target repo name
 const getToken = (): string | null =>
   window.localStorage.getItem(TOKEN_KEY) || null;
 
-const getOwner = (): string =>
-  window.localStorage.getItem(USERNAME_KEY) || '';
+const getOwner = (): string => window.localStorage.getItem(USERNAME_KEY) || '';
 
 /**
  * Map a Cress document's display name to the storage path (the key used on both

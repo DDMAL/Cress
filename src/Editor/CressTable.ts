@@ -41,12 +41,7 @@ export class CressTable {
   private savePath: string;
 
   // constructor(id: string, inputHeader: string[], body: any[]) {
-  constructor(
-    id: string,
-    name: string,
-    inputHeader: string[],
-    body: any[],
-  ) {
+  constructor(id: string, name: string, inputHeader: string[], body: any[]) {
     // const container = document.getElementById('hot-container');
     const container = document.getElementById('hot-container');
     this.savePath = nameToPath(name);
@@ -171,47 +166,50 @@ export class CressTable {
       });
 
     document.getElementById('save').addEventListener('click', async () => {
-          await this.saveTable(inputHeader, body);
-        });
+      await this.saveTable(inputHeader, body);
+    });
 
     document.body.addEventListener('keydown', async (evt) => {
-          if (evt.key === 's') {
-            await this.saveTable(inputHeader, body);
-          }
-        });
+      if (evt.key === 's') {
+        await this.saveTable(inputHeader, body);
+      }
+    });
   }
   private async saveTable(inputHeader: string[], body: any[]): Promise<void> {
-      try {
-        // Create the user's mappings repo on first save (no-op if it exists or
-        // logged out). The Option-2 asymmetry is hidden in the wiring layer.
-        await ensureReady();
+    try {
+      // Create the user's mappings repo on first save (no-op if it exists or
+      // logged out). The Option-2 asymmetry is hidden in the wiring layer.
+      await ensureReady();
 
-        // Cress internal [headers, ...rowObjects] -> string[][] for the CSV layer.
-        const payload = [inputHeader, ...body] as [
-          string[],
-          ...Array<Record<string, unknown>>,
-        ];
-        const rows = cressPayloadToRows(payload);
+      // Cress internal [headers, ...rowObjects] -> string[][] for the CSV layer.
+      const payload = [inputHeader, ...body] as [
+        string[],
+        ...Array<Record<string, unknown>>,
+      ];
+      const rows = cressPayloadToRows(payload);
 
-        const outcome = await getMappingStorage().saveMapping(this.savePath, rows);
+      const outcome = await getMappingStorage().saveMapping(
+        this.savePath,
+        rows,
+      );
 
-        if (outcome.status === 'conflict') {
-          setSavedStatus(false);
-          Notification.queueNotification(
-            'Save conflict: the remote file changed',
-            'error',
-          );
-          return;
-        }
-
-        setSavedStatus(true);
-        Notification.queueNotification('Saved', 'success');
-      } catch (e) {
-        console.error('saveTable failed:', e);
+      if (outcome.status === 'conflict') {
         setSavedStatus(false);
-        Notification.queueNotification('Save failed', 'error');
+        Notification.queueNotification(
+          'Save conflict: the remote file changed',
+          'error',
+        );
+        return;
       }
+
+      setSavedStatus(true);
+      Notification.queueNotification('Saved', 'success');
+    } catch (e) {
+      console.error('saveTable failed:', e);
+      setSavedStatus(false);
+      Notification.queueNotification('Save failed', 'error');
     }
+  }
 
   private initChangeListener() {
     changeHooks.forEach((hook) => {
