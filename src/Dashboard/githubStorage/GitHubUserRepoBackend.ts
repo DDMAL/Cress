@@ -42,6 +42,20 @@ function fromBase64(b64: string): string {
   return decodeURIComponent(escape(atob(clean)));
 }
 
+// The .csv suffix lives at this backend boundary ONLY. Callers (MappingStorage,
+// PouchDbLocalStore, nameToPath in createMappingStorage) all use bare names, so
+// the logged-out PouchDB lookup keeps matching. GitHub, by contrast, needs the
+// extension: it is what listFiles' *.csv filter selects, and what Rodan's MEI
+// Conversion Job consumes. So we add .csv on the way INTO every GitHub path and
+// strip it on the way OUT of listFiles, keeping both ends keyed on bare names.
+const CSV_EXT = '.csv';
+function withCsv(path: string): string {
+  return path.endsWith(CSV_EXT) ? path : `${path}${CSV_EXT}`;
+}
+function stripCsv(path: string): string {
+  return path.endsWith(CSV_EXT) ? path.slice(0, -CSV_EXT.length) : path;
+}
+
 export class GitHubUserRepoBackend implements StorageBackend {
   readonly kind = 'user-repo';
   constructor(private deps: GitHubBackendDeps) {}
@@ -62,7 +76,7 @@ export class GitHubUserRepoBackend implements StorageBackend {
 
   private contentsUrl(path: string): string {
     const { owner, repo } = this.deps;
-    return `${this.base}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+    return `${this.base}/repos/${owner}/${repo}/contents/${encodeURIComponent(withCsv(path))}`;
   }
 
   /** True if the target repo already exists for this user (GET /repos/:owner/:repo). */
@@ -143,7 +157,7 @@ export class GitHubUserRepoBackend implements StorageBackend {
     sha?: string | null,
   ): Promise<WriteResult> {
     const body: Record<string, unknown> = {
-      message: `cress: save ${path}`,
+      message: `cress: save ${withCsv(path)}`,
       content: toBase64(content),
     };
     if (this.deps.branch) body.branch = this.deps.branch;
@@ -177,7 +191,7 @@ export class GitHubUserRepoBackend implements StorageBackend {
     const url = new URL(this.contentsUrl(''));
     if (this.deps.branch) url.searchParams.set('ref', this.deps.branch);
     const res = await this.deps.fetch(
-      url.toString().replace(/contents\/$/, 'contents'),
+      url.toString().replace(/contents\/[^/?]*$/, 'contents'),
       {
         headers: this.authHeaders(),
       },
@@ -192,13 +206,13 @@ export class GitHubUserRepoBackend implements StorageBackend {
       type: string;
     }>;
     return json
-      .filter((e) => e.type === 'file' && e.name.endsWith('.csv'))
-      .map((e) => ({ path: e.name, sha: e.sha }));
+      .filter((e) => e.type === 'file' && e.name.endsWith(CSV_EXT))
+      .map((e) => ({ path: stripCsv(e.name), sha: e.sha }));
   }
 
   async deleteFile(path: string, sha: string): Promise<void> {
     const body: Record<string, unknown> = {
-      message: `cress: delete ${path}`,
+      message: `cress: delete ${withCsv(path)}`,
       sha,
     };
     if (this.deps.branch) body.branch = this.deps.branch;
