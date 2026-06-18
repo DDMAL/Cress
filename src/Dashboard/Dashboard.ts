@@ -6,6 +6,10 @@ import { InitUploadArea } from './UploadArea';
 import * as contextMenuContent from './ContextMenuContent';
 import { ModalWindow, ModalWindowView } from '../utils/ModalWindow';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  getMappingStorage,
+  nameToPath,
+} from './githubStorage/createMappingStorage';
 
 const documentsContainer: HTMLDivElement = document.querySelector(
   '#fs-content-container',
@@ -47,6 +51,9 @@ let metaKeyIsPressed = false;
 let shiftKeyIsPressed = false;
 let currentDragTarget = null;
 let rightClicked = false;
+
+const TRASH_SUFFIX =
+  / - \d{1,2}\/\d{1,2}\/\d{4}, \d{1,2}:\d{2}:\d{2} [APMapm]{2}$/;
 
 openButton?.addEventListener('click', openDocsHandler);
 removeButton?.addEventListener('click', removeDocsHandler);
@@ -396,15 +403,23 @@ function putBackDocsHandler() {
  * @param parentFolder
  * @returns
  */
-function deleteFileEntry(file: IFile, parentFolder: IFolder): Promise<boolean> {
-  return new Promise((resolve, reject) => {
-    deleteDocument(file.id)
-      .then(() => {
-        FileSystemTools.removeEntry(file, parentFolder);
-        resolve(true);
-      })
-      .catch(() => reject(false));
-  });
+
+async function deleteFileEntry(
+  file: IFile,
+  parentFolder: IFolder,
+): Promise<boolean> {
+  try {
+    // Trash appends " - <datetime>" on name collisions, but the remote file
+    // keeps its original name. Strip the suffix before resolving the GitHub path.
+    const remoteName = file.name.replace(TRASH_SUFFIX, '');
+    await getMappingStorage().deleteRemoteOnly(nameToPath(remoteName));
+    await deleteDocument(file.id);
+    FileSystemTools.removeEntry(file, parentFolder);
+    return true;
+  } catch (err) {
+    console.error('deleteFileEntry failed:', err);
+    return false;
+  }
 }
 
 /**

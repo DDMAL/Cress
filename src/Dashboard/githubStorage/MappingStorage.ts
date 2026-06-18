@@ -131,8 +131,16 @@ export class MappingStorage {
 
   async deleteMapping(path: string): Promise<void> {
     await this.deps.local.remove(path);
+    await this.deleteRemoteOnly(path);
+  }
+
+  async deleteRemoteOnly(path: string): Promise<void> {
     if (!this.isLoggedIn()) return;
-    const sha = this.shaCache.get(path);
+    let sha = this.shaCache.get(path);
+    if (!sha) {
+      const remote = await this.deps.backend.readFile(path);
+      sha = remote?.sha ?? undefined;
+    }
     if (sha) {
       await this.deps.backend.deleteFile(path, sha);
       this.shaCache.delete(path);
