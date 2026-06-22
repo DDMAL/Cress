@@ -1,4 +1,10 @@
-import { IEntry, IFile, IFolder, FileSystemTools, EntryType } from './FileSystem';
+import {
+  IEntry,
+  IFile,
+  IFolder,
+  FileSystemTools,
+  EntryType,
+} from './FileSystem';
 import { deleteDocument, updateDocName, addDocument } from './Storage';
 import { FileSystemManager } from './FileSystem';
 import { ShiftSelectionManager, dashboardState } from './DashboardTools';
