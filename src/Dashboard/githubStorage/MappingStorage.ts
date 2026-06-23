@@ -207,11 +207,30 @@ export class MappingStorage {
     }
     // dest absent -> create (null); dest present with same content -> overwrite
     // using its sha (idempotent, self-healing if a prior move half-completed).
-    const { sha: newSha } = await this.deps.backend.writeFile(
-      to,
-      src.content,
-      dest?.sha ?? null,
-    );
+    //
+    // Write with 409 retry. GitHub's contents API is eventually consistent: in
+    // rapid back-to-back moves, a destination path touched by the previous move
+    // can briefly report a stale sha, so a write that just probed it may 409.
+    // On conflict, wait (letting GitHub settle), re-probe the destination sha,
+    // and retry with backoff. A single move never enters the retry path (the
+    // loop breaks on first success).
+    let newSha = '';
+    let probeSha = dest?.sha ?? null;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        ({ sha: newSha } = await this.deps.backend.writeFile(
+          to,
+          src.content,
+          probeSha,
+        ));
+        break;
+      } catch (err) {
+        if (!(err instanceof ConflictError) || attempt >= 3) throw err;
+        await new Promise((r) => setTimeout(r, 200 * (attempt + 1)));
+        const reprobe = await this.deps.backend.readFile(to);
+        probeSha = reprobe?.sha ?? null;
+      }
+    }
     this.shaCache.set(to, newSha);
 
     if (src.sha) {
