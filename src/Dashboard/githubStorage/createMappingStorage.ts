@@ -1,5 +1,5 @@
 // createMappingStorage.ts
-// App-wiring assembly point for #3. The barrel (index.ts) only exports classes;
+// App-wiring assembly point. The barrel (index.ts) only exports classes;
 // this is where they are composed into a ready-to-use MappingStorage instance.
 //
 // Importing this file from an entry (editor.ts) is what finally pulls the whole
@@ -17,7 +17,7 @@
 import { MappingStorage } from './MappingStorage';
 import { GitHubUserRepoBackend } from './GitHubUserRepoBackend';
 import { PouchDbLocalStore } from './PouchDbLocalStore';
-// Option 1 (Worker) -- swap in at the assembly line below if the meeting picks it.
+// Option 1 (Worker) -- swap in at the assembly line below if chosen.
 // import { WorkerBackend } from './WorkerBackend';
 
 const TOKEN_KEY = 'cress_github_token';

@@ -26,8 +26,8 @@
 //
 // STATUS: frontend side is complete and mock-tested. The Worker endpoints above
 // do NOT exist yet -- the current Worker only does OAuth token exchange. Wiring
-// this end-to-end requires extending the Worker, which is deferred until the
-// meeting confirms Option 1 is the chosen direction.
+// this end-to-end requires extending the Worker, which is deferred until
+// Option 1 is confirmed as the chosen direction.
 
 import {
   StorageBackend,

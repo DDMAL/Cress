@@ -1,7 +1,7 @@
 // PouchDbLocalStore.ts
 // Adapter that implements the LocalStore interface (from MappingStorage.ts) on
 // top of Cress's existing PouchDB layer in ../Storage.ts. This is the
-// logged-out / offline fallback store (#138): Storage.ts itself is NOT changed,
+// logged-out / offline fallback store: Storage.ts itself is NOT changed,
 // we only call its existing exported functions.
 //
 // Two seams that were previously TODO are now resolved against the real
