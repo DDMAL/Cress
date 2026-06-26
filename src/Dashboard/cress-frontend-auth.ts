@@ -158,8 +158,9 @@ function startLogin(): void {
   const height = 700;
   const left = window.screenX + (window.outerWidth - width) / 2;
   const top = window.screenY + (window.outerHeight - height) / 2;
+  const loginUrl = `${WORKER_URL}?origin=${encodeURIComponent(window.location.origin)}`;
   authPopup = window.open(
-    WORKER_URL,
+    loginUrl,
     'cress-github-login',
     `width=${width},height=${height},left=${left},top=${top}`,
   );
