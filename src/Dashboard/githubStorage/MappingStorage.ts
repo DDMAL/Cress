@@ -221,6 +221,76 @@ export class MappingStorage {
     return this.saveMapping(destPath, rows);
   }
 
+  /**
+   * Copy a foreign mapping, overwriting the current user's OWN same-named file
+   * if one exists. This is the "Replace" branch of the same-name dialog:
+   * copyForeignMapping throws ConflictError on a name clash and leaves the
+   * decision to the caller; this method is what the caller invokes once the
+   * user has chosen to replace.
+   *
+   * Only ever writes the current user's own repo -- the foreign source is read
+   * through ForeignReader (which has no write methods), so "replace" can never
+   * touch anyone else's file, only the caller's own destination. The overwrite
+   * follows resolveConflictKeepLocal's shape: re-read the destination's current
+   * sha, then write past it so the PUT is accepted regardless of the (possibly
+   * empty) sha cache.
+   */
+  async copyForeignMappingReplacing(
+    fromOwner: string,
+    path: string,
+    newName?: string,
+  ): Promise<SaveOutcome> {
+    const reader = this.deps.foreignReader;
+    if (!reader) {
+      throw new Error(
+        'copyForeignMappingReplacing: no foreignReader configured',
+      );
+    }
+    if (!this.isLoggedIn()) {
+      throw new NotAuthenticatedError(
+        'copyForeignMappingReplacing requires login',
+      );
+    }
+
+    const src = await reader.readForeignFile(fromOwner, path);
+    if (!src) {
+      throw new Error(
+        `copyForeignMappingReplacing: "${path}" not found in ${fromOwner}'s mappings`,
+      );
+    }
+
+    const rows = csvToRows(src.content); // parse = validation gate
+    const destPath = newName ?? path;
+    const csv = rowsToCsv(rows);
+
+    // Re-read the destination's current sha so the overwrite PUT is accepted
+    // even when this session never touched the file (empty shaCache). Mirrors
+    // resolveConflictKeepLocal: current sha may be null (destination absent),
+    // which writeFile treats as a create.
+    const current = await this.deps.backend.readFile(destPath);
+    const { sha } = await this.deps.backend.writeFile(
+      destPath,
+      csv,
+      current?.sha ?? null,
+    );
+    this.shaCache.set(destPath, sha);
+    await this.deps.local.set(destPath, csv);
+    return { status: 'saved-remote', path: destPath, sha };
+  }
+
+  /**
+   * List another user's mappings for the view-all UI. Thin passthrough to the
+   * ForeignReader so callers depend only on MappingStorage, never on the
+   * backend directly. Returns [] when no foreignReader is configured (e.g.
+   * Worker wiring), so the UI can render "nothing foreign" without special-
+   * casing.
+   */
+  async listForeignMappings(owner: string): Promise<StoredFileMeta[]> {
+    const reader = this.deps.foreignReader;
+    if (!reader) return [];
+    return reader.listForeignFiles(owner);
+  }
+
   async deleteMapping(path: string): Promise<void> {
     await this.deps.local.remove(path);
     await this.trashRemote(path);
