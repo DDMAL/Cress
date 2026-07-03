@@ -15,7 +15,9 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   getMappingStorage,
   nameToPath,
+  listIndexedForeignUsers,
 } from './githubStorage/createMappingStorage';
+import { ConflictError } from './githubStorage/backend';
 
 const documentsContainer: HTMLDivElement = document.querySelector(
   '#fs-content-container',
@@ -881,6 +883,14 @@ export async function updateDashboard(newPath?: IFolder[]): Promise<void> {
   });
 
   fsm.setFileSystem(state.getFolderPath().at(0));
+
+  // View-all entry point: only at the root level, alongside the top-level
+  // folders. Opens a self-managed overlay (see openAllMappings) rather than
+  // navigating the FileSystem tree, because foreign mappings come from GitHub
+  // storage and are not nodes in the IFolder tree.
+  if (state.getFolderPath().length === 1) {
+    appendAllMappingsEntry();
+  }
 }
 
 function addDragStartListener(elem: Element) {
@@ -1827,3 +1837,387 @@ export const loadDashboard = async (): Promise<void> => {
   updateDashboard([root]);
   initializeDefaultContextMenu();
 };
+
+/* ==========================================================================
+ * View-all ("All Mappings") — Version C
+ *
+ * A self-managed overlay panel, deliberately isolated from the FileSystem
+ * navigation tree (state.getFolderPath()). Foreign mappings come from GitHub
+ * storage, not from the IFolder tree, so wiring them into folderPath / the
+ * breadcrumb / Back would mean threading a "is this node foreign?" exception
+ * through the whole navigation core. Instead this panel shows/hides itself over
+ * the normal dashboard (the same idea as the trash info-badge, scaled up to a
+ * whole view) and has its own Back button.
+ *
+ * Your own files render as normal editable tiles at the top. Each other user is
+ * a row that expands/collapses in place to reveal their files as read-only
+ * tiles with a "Copy to my mappings" action.
+ * ======================================================================== */
+
+const ALL_MAPPINGS_ENTRY_ID = 'all-mappings-entry';
+const ALL_MAPPINGS_PANEL_ID = 'all-mappings-panel';
+
+/**
+ * Append the "All Mappings" entry tile to the root view, styled like the other
+ * top-level folder cards. Idempotent: removes any prior copy first so repeated
+ * updateDashboard calls don't stack duplicates.
+ */
+function appendAllMappingsEntry(): void {
+  document.getElementById(ALL_MAPPINGS_ENTRY_ID)?.remove();
+
+  const tile = document.createElement('div');
+  tile.classList.add('document-entry', 'folder-entry');
+  tile.setAttribute('id', ALL_MAPPINGS_ENTRY_ID);
+
+  const icon = document.createElement('img');
+  icon.classList.add('document-icon');
+  icon.src = './Cress-gh/assets/img/folder-icon.svg';
+
+  const name = document.createElement('div');
+  name.innerText = 'All Mappings';
+
+  tile.appendChild(icon);
+  tile.appendChild(name);
+  tile.addEventListener('dblclick', openAllMappings, false);
+
+  documentsContainer.appendChild(tile);
+}
+
+/**
+ * Show the view-all panel over the dashboard. Builds the panel lazily on first
+ * open, then repopulates it each time so the list reflects the latest login /
+ * remote state.
+ */
+async function openAllMappings(): Promise<void> {
+  let panel = document.getElementById(ALL_MAPPINGS_PANEL_ID);
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.setAttribute('id', ALL_MAPPINGS_PANEL_ID);
+    // Sit on top of the normal dashboard content area.
+    backgroundArea.appendChild(panel);
+  }
+  panel.innerHTML = '';
+  panel.style.display = 'block';
+  // Hide the normal file grid while the panel is open.
+  documentsContainer.style.display = 'none';
+
+  // Header: Back + title
+  const header = document.createElement('div');
+  header.classList.add('all-mappings-header');
+
+  const back = document.createElement('button');
+  back.classList.add('all-mappings-back');
+  back.innerText = 'Back';
+  back.addEventListener('click', closeAllMappings);
+
+  const title = document.createElement('div');
+  title.classList.add('all-mappings-title');
+  title.innerText = 'All Mappings';
+
+  header.appendChild(back);
+  header.appendChild(title);
+  panel.appendChild(header);
+
+  const body = document.createElement('div');
+  body.classList.add('all-mappings-body');
+  panel.appendChild(body);
+
+  await populateAllMappings(body);
+}
+
+/** Hide the panel and restore the normal dashboard file grid. */
+function closeAllMappings(): void {
+  const panel = document.getElementById(ALL_MAPPINGS_PANEL_ID);
+  if (panel) panel.style.display = 'none';
+  documentsContainer.style.display = '';
+}
+
+/**
+ * Fill the panel body: the current user's own files (editable) up top, then a
+ * row per foreign user that expands in place. Failures degrade to a message
+ * rather than throwing, so a missing index / logged-out state just shows less.
+ */
+async function populateAllMappings(body: HTMLElement): Promise<void> {
+  const loading = document.createElement('div');
+  loading.classList.add('all-mappings-hint');
+  loading.innerText = 'Loading…';
+  body.appendChild(loading);
+
+  let foreignUsers: string[] = [];
+  try {
+    foreignUsers = await listIndexedForeignUsers();
+  } catch (err) {
+    console.error('listIndexedForeignUsers failed:', err);
+  }
+
+  loading.remove();
+
+  // Section: your own files (editable), pulled from the FileSystem root so it
+  // matches exactly what "My Mappings" shows.
+  const ownHint = document.createElement('div');
+  ownHint.classList.add('all-mappings-hint');
+  ownHint.innerText = 'Your files — click any file to open and edit.';
+  body.appendChild(ownHint);
+
+  const ownGrid = document.createElement('div');
+  ownGrid.classList.add('all-mappings-grid');
+  body.appendChild(ownGrid);
+  renderOwnFilesInto(ownGrid);
+
+  // Section: other people's mappings.
+  const foreignHint = document.createElement('div');
+  foreignHint.classList.add('all-mappings-hint');
+  foreignHint.innerText = foreignUsers.length
+    ? "Other people's mappings — open a user to view (read only):"
+    : 'No other users found.';
+  body.appendChild(foreignHint);
+
+  foreignUsers.forEach((user) => body.appendChild(createForeignUserRow(user)));
+}
+
+/**
+ * Render the current user's own files as normal editable tiles into a grid.
+ * Reads the FileSystem root's file children directly (same source as the main
+ * dashboard) so behaviour and appearance match "My Mappings".
+ */
+function renderOwnFilesInto(grid: HTMLElement): void {
+  const root = state.getFolderPath().at(0);
+  if (!root) return;
+  root.children
+    .filter((entry: IEntry) => entry.type === EntryType.File)
+    .forEach((entry: IEntry) => {
+      const tile = createTile(entry);
+      // In the panel we don't want drag/selection semantics; a double-click to
+      // open is enough and matches My Mappings.
+      tile.setAttribute('draggable', 'false');
+      tile.addEventListener('dblclick', () => openFile(entry as IFile), false);
+      grid.appendChild(tile);
+    });
+}
+
+/**
+ * A collapsible row for one foreign user. Collapsed by default; expanding it
+ * lazily fetches that user's files and renders them as read-only tiles. This is
+ * pure show/hide — no navigation state changes.
+ */
+function createForeignUserRow(user: string): HTMLElement {
+  const row = document.createElement('div');
+  row.classList.add('foreign-user-row');
+
+  const header = document.createElement('div');
+  header.classList.add('foreign-user-header');
+
+  const chevron = document.createElement('span');
+  chevron.classList.add('foreign-user-chevron');
+  chevron.innerText = '▸';
+
+  const label = document.createElement('span');
+  label.classList.add('foreign-user-name');
+  label.innerText = user;
+
+  header.appendChild(chevron);
+  header.appendChild(label);
+  row.appendChild(header);
+
+  const filesWrap = document.createElement('div');
+  filesWrap.classList.add('foreign-user-files');
+  filesWrap.style.display = 'none';
+  row.appendChild(filesWrap);
+
+  let loaded = false;
+  header.addEventListener('click', async () => {
+    const isOpen = filesWrap.style.display !== 'none';
+    if (isOpen) {
+      filesWrap.style.display = 'none';
+      chevron.innerText = '▸';
+      return;
+    }
+    filesWrap.style.display = 'block';
+    chevron.innerText = '▾';
+    if (!loaded) {
+      loaded = true;
+      await loadForeignUserFiles(user, filesWrap);
+    }
+  });
+
+  return row;
+}
+
+/** Fetch and render one user's files as read-only tiles. */
+async function loadForeignUserFiles(
+  user: string,
+  wrap: HTMLElement,
+): Promise<void> {
+  wrap.innerHTML = '';
+  const loading = document.createElement('div');
+  loading.classList.add('all-mappings-hint');
+  loading.innerText = 'Loading…';
+  wrap.appendChild(loading);
+
+  let files: { path: string }[] = [];
+  try {
+    files = await getMappingStorage().listForeignMappings(user);
+  } catch (err) {
+    console.error(`listForeignMappings failed for "${user}":`, err);
+  }
+
+  loading.remove();
+
+  if (!files.length) {
+    const empty = document.createElement('div');
+    empty.classList.add('all-mappings-hint');
+    empty.innerText = 'No files.';
+    wrap.appendChild(empty);
+    return;
+  }
+
+  const grid = document.createElement('div');
+  grid.classList.add('all-mappings-grid');
+  files.forEach((meta) => grid.appendChild(createForeignTile(user, meta.path)));
+  wrap.appendChild(grid);
+}
+
+/**
+ * A read-only tile for a foreign file: white card like your own files (open but
+ * not edit — never greyed out), plus a "Copy to my mappings" action.
+ * Deliberately has no drag / selection / context-menu behaviour — foreign files
+ * are not entries in the FileSystem tree. Read-only is conveyed by context (the
+ * file sits inside another user's row, and only offers a copy action), matching
+ * how Drive/Finder present others' files without a per-file badge.
+ */
+function createForeignTile(owner: string, path: string): HTMLElement {
+  const tile = document.createElement('div');
+  tile.classList.add('document-entry', 'file-entry', 'foreign-tile');
+  tile.setAttribute('draggable', 'false');
+
+  const icon = document.createElement('img');
+  icon.classList.add('document-icon');
+  icon.src = './Cress-gh/assets/img/folio-icon.svg';
+
+  const name = document.createElement('div');
+  name.classList.add('foreign-tile-name');
+  name.innerText = path;
+
+  const copyBtn = document.createElement('button');
+  copyBtn.classList.add('foreign-tile-copy');
+  copyBtn.innerText = 'Copy to my mappings';
+  copyBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    void handleCopyForeign(owner, path);
+  });
+
+  tile.appendChild(icon);
+  tile.appendChild(name);
+  tile.appendChild(copyBtn);
+
+  return tile;
+}
+
+/**
+ * Copy a foreign mapping into the current user's own storage. On a same-name
+ * clash the storage layer throws ConflictError; we then offer the Finder-style
+ * choice (Replace / Keep both / Cancel). Keep both re-issues the copy with a
+ * suggested new name; Replace uses the dedicated overwrite path.
+ */
+async function handleCopyForeign(owner: string, path: string): Promise<void> {
+  const storage = getMappingStorage();
+  try {
+    await storage.copyForeignMapping(owner, path);
+    refreshAllMappingsOwnFiles();
+  } catch (err) {
+    if (err instanceof ConflictError) {
+      showCopyConflictDialog(owner, path);
+      return;
+    }
+    console.error(`copyForeignMapping failed for "${owner}/${path}":`, err);
+    window.alert(`Could not copy "${path}".`);
+  }
+}
+
+/** Suggest a non-colliding name, e.g. "foo" -> "foo copy". */
+function suggestCopyName(path: string): string {
+  return `${path} copy`;
+}
+
+/**
+ * Finder-style same-name conflict dialog: Replace / Keep both / Cancel. Built
+ * as a lightweight self-contained overlay rather than going through the
+ * enum-based ModalWindow (which binds fixed views to fixed template HTML).
+ */
+function showCopyConflictDialog(owner: string, path: string): void {
+  const overlay = document.createElement('div');
+  overlay.classList.add('copy-conflict-overlay');
+
+  const box = document.createElement('div');
+  box.classList.add('copy-conflict-box');
+
+  const msg = document.createElement('div');
+  msg.classList.add('copy-conflict-msg');
+  msg.innerText = `You already have a mapping named "${path}". What would you like to do?`;
+  box.appendChild(msg);
+
+  const actions = document.createElement('div');
+  actions.classList.add('copy-conflict-actions');
+
+  const close = () => overlay.remove();
+
+  const replaceBtn = document.createElement('button');
+  replaceBtn.innerText = 'Replace';
+  replaceBtn.addEventListener('click', async () => {
+    close();
+    try {
+      await getMappingStorage().copyForeignMappingReplacing(owner, path);
+      refreshAllMappingsOwnFiles();
+    } catch (err) {
+      console.error('Replace copy failed:', err);
+      window.alert(`Could not replace "${path}".`);
+    }
+  });
+
+  const keepBothBtn = document.createElement('button');
+  keepBothBtn.innerText = 'Keep both';
+  keepBothBtn.addEventListener('click', async () => {
+    close();
+    const newName = suggestCopyName(path);
+    try {
+      await getMappingStorage().copyForeignMapping(owner, path, newName);
+      refreshAllMappingsOwnFiles();
+    } catch (err) {
+      if (err instanceof ConflictError) {
+        // The suggested name also exists; let the user try again.
+        showCopyConflictDialog(owner, path);
+        return;
+      }
+      console.error('Keep-both copy failed:', err);
+      window.alert(`Could not copy "${path}".`);
+    }
+  });
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.innerText = 'Cancel';
+  cancelBtn.addEventListener('click', close);
+
+  actions.appendChild(replaceBtn);
+  actions.appendChild(keepBothBtn);
+  actions.appendChild(cancelBtn);
+  box.appendChild(actions);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
+
+/**
+ * A copied file lands in the user's own GitHub/local storage, which is a
+ * different source of truth from the FileSystem tree the dashboard renders, so
+ * the copy won't appear in the panel's "your files" section without a refresh.
+ * For now we just re-render that section's grid from the current tree; a full
+ * reconciliation of remote-only files into the tree is a separate concern.
+ */
+function refreshAllMappingsOwnFiles(): void {
+  const panel = document.getElementById(ALL_MAPPINGS_PANEL_ID);
+  if (!panel) return;
+  const grid = panel.querySelector('.all-mappings-grid');
+  if (grid instanceof HTMLElement) {
+    grid.innerHTML = '';
+    renderOwnFilesInto(grid);
+  }
+}
