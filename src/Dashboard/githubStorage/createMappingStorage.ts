@@ -77,6 +77,10 @@ export function getMappingStorage(): MappingStorage {
     backend: _backend,
     local: new PouchDbLocalStore(),
     getToken,
+    // The GitHub backend doubles as the read-only foreign reader (it already
+    // implements readForeignFile/listForeignFiles). Worker wiring would omit
+    // this line: no foreignReader, no copy feature.
+    foreignReader: _backend,
   });
   return _instance;
 }

@@ -26,11 +26,29 @@ export interface LocalStore {
   remove(path: string): Promise<void>;
 }
 
+/**
+ * Read-only view of ANOTHER user's mappings. Deliberately has no write or
+ * delete methods: "foreign files are read-only" is enforced at compile time
+ * by the missing methods, not by relying on GitHub's runtime 403.
+ * GitHubUserRepoBackend implements this; the Worker backend does not, so
+ * wiring that omits `foreignReader` simply has no copy feature.
+ */
+export interface ForeignReader {
+  readForeignFile(
+    owner: string,
+    path: string,
+  ): Promise<{ content: string; sha: string } | null>;
+  listForeignFiles(owner: string): Promise<StoredFileMeta[]>;
+}
+
 export interface MappingStorageDeps {
   backend: StorageBackend;
   local: LocalStore;
   /** Returns the current token, or null if logged out. Wraps getGithubToken(). */
   getToken: () => string | null;
+  /** Optional read-only access to other users' mappings. When absent, the
+   *  copy-foreign feature is unavailable (e.g. Worker backend wiring). */
+  foreignReader?: ForeignReader;
 }
 
 /**
@@ -135,6 +153,72 @@ export class MappingStorage {
     remote.forEach((m) => this.shaCache.set(m.path, m.sha ?? ''));
     const set = new Set<string>([...localNames, ...remote.map((m) => m.path)]);
     return [...set].sort();
+  }
+
+  /**
+   * Copy another user's mapping into the current user's own storage.
+   * Read foreign -> parse (csvToRows doubles as a bad-file gate) -> same-name
+   * check -> saveMapping through the single write path (sha cache + local
+   * mirror come for free).
+   *
+   * Same-name handling (Finder/Windows model, matching moveRemote):
+   *   - destination exists with SAME content -> idempotent no-op, returns the
+   *     existing state as 'saved-remote'.
+   *   - destination exists with DIFFERENT content -> throw ConflictError; the
+   *     UI decides (replace / rename / cancel). "Keep both" is the UI calling
+   *     again with `newName`.
+   * Equality is compared on normalized csv (rowsToCsv(csvToRows(x))) so
+   * hand-edited-but-equivalent files still count as identical.
+   *
+   * Authz note: read source repo + write own repo passes GitHub-native
+   * permissions with zero Worker involvement.
+   */
+  async copyForeignMapping(
+    fromOwner: string,
+    path: string,
+    newName?: string,
+  ): Promise<SaveOutcome> {
+    const reader = this.deps.foreignReader;
+    if (!reader) {
+      throw new Error('copyForeignMapping: no foreignReader configured');
+    }
+    if (!this.isLoggedIn()) {
+      // Reading a foreign repo needs a token, and the copy must land in the
+      // user's own remote repo; a local-only copy of someone else's file has
+      // no meaning here.
+      throw new NotAuthenticatedError('copyForeignMapping requires login');
+    }
+
+    const src = await reader.readForeignFile(fromOwner, path);
+    if (!src) {
+      throw new Error(
+        `copyForeignMapping: "${path}" not found in ${fromOwner}'s mappings`,
+      );
+    }
+
+    const rows = csvToRows(src.content); // parse = validation gate
+    const destPath = newName ?? path;
+    const normalized = rowsToCsv(rows);
+
+    // Explicit destination probe: shaCache is empty for files this session
+    // never touched, so a bare saveMapping could not tell "identical copy"
+    // apart from a real conflict.
+    const existing = await this.deps.backend.readFile(destPath);
+    if (existing) {
+      const existingNormalized = rowsToCsv(csvToRows(existing.content));
+      if (existingNormalized === normalized) {
+        // Already have an identical copy: refresh caches, done.
+        if (existing.sha) this.shaCache.set(destPath, existing.sha);
+        await this.deps.local.set(destPath, existing.content);
+        return { status: 'saved-remote', path: destPath, sha: existing.sha };
+      }
+      throw new ConflictError(
+        `copyForeignMapping: "${destPath}" exists with different content`,
+        destPath,
+      );
+    }
+
+    return this.saveMapping(destPath, rows);
   }
 
   async deleteMapping(path: string): Promise<void> {
