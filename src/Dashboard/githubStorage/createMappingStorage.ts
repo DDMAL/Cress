@@ -17,6 +17,7 @@
 import { MappingStorage } from './MappingStorage';
 import { GitHubUserRepoBackend } from './GitHubUserRepoBackend';
 import { PouchDbLocalStore } from './PouchDbLocalStore';
+import { fetchIndexedUsers } from './mappingsIndex';
 // Option 1 (Worker) -- swap in at the assembly line below if chosen.
 // import { WorkerBackend } from './WorkerBackend';
 
@@ -108,4 +109,25 @@ export async function ensureReady(): Promise<void> {
 export function resetMappingStorage(): void {
   _instance = null;
   _backend = null;
+}
+
+// Central index host during testing (personal account; see mappingsIndex.ts
+// for the ownership caveat and long-term plan).
+const INDEX_OWNER = 'kyuchia';
+
+/**
+ * Usernames known to the mappings index, excluding the logged-in user (their
+ * own files come from listMappings, not the foreign path). Empty when logged
+ * out or when the index is unreachable, so callers can render "no foreign
+ * users" without special-casing.
+ */
+export async function listIndexedForeignUsers(): Promise<string[]> {
+  if (!getToken()) return [];
+  const users = await fetchIndexedUsers({
+    fetch: window.fetch.bind(window),
+    getToken,
+    indexOwner: INDEX_OWNER,
+  });
+  const self = getOwner();
+  return users.filter((u) => u !== self);
 }
