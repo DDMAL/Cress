@@ -738,36 +738,6 @@ textarea.file-input {
   animation: settle 0.5s ease-in-out forwards;
 }
 
-.all-mappings-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 20px 0;
-}
-
-.all-mappings-back {
-  font-size: 14px;
-  font-weight: 900;
-  letter-spacing: 3px;
-  padding: 6px 8px;
-  border: 2px solid #c3aed6;
-  border-radius: 5px;
-  color: #c3aed6;
-  background-color: transparent;
-  cursor: pointer;
-}
-
-.all-mappings-back:hover {
-  color: #8675a9;
-  border-color: #8675a9;
-}
-
-.all-mappings-title {
-  font-size: calc(15px + 1vw);
-  color: #8675a9;
-  font-weight: 500;
-}
-
 .all-mappings-hint {
   color: #696969;
   font-size: 0.9rem;

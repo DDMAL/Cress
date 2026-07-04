@@ -1884,52 +1884,92 @@ function appendAllMappingsEntry(): void {
 }
 
 /**
- * Show the view-all panel over the dashboard. Builds the panel lazily on first
- * open, then repopulates it each time so the list reflects the latest login /
- * remote state.
+ * Show the view-all panel over the dashboard. Reuses the dashboard's own Back
+ * button (#fs-back-btn) and breadcrumb (#nav-path-container) rather than drawing
+ * its own, so navigation looks identical to the rest of the app. The panel
+ * itself only renders the file lists. Built lazily on first open, then
+ * repopulated each time so the list reflects the latest login / remote state.
  */
 async function openAllMappings(): Promise<void> {
   let panel = document.getElementById(ALL_MAPPINGS_PANEL_ID);
   if (!panel) {
     panel = document.createElement('div');
     panel.setAttribute('id', ALL_MAPPINGS_PANEL_ID);
+    // Stop clicks inside the panel from bubbling to backgroundArea's click
+    // handler, which calls updateFSButtons() and would reset our borrowed Back
+    // button (leaving the user stranded with a disabled Back).
+    panel.addEventListener('click', (e) => e.stopPropagation());
     // Sit on top of the normal dashboard content area.
     backgroundArea.appendChild(panel);
   }
   panel.innerHTML = '';
   panel.style.display = 'block';
-  // Hide the normal file grid while the panel is open.
+  // Hide the normal file grid while the panel is open; keep the breadcrumb
+  // (#fs-top-zone) and Back button (#fs-middle-zone) visible and reuse them.
   documentsContainer.style.display = 'none';
 
-  // Header: Back + title
-  const header = document.createElement('div');
-  header.classList.add('all-mappings-header');
-
-  const back = document.createElement('button');
-  back.classList.add('all-mappings-back');
-  back.innerText = 'Back';
-  back.addEventListener('click', closeAllMappings);
-
-  const title = document.createElement('div');
-  title.classList.add('all-mappings-title');
-  title.innerText = 'All Mappings';
-
-  header.appendChild(back);
-  header.appendChild(title);
-  panel.appendChild(header);
+  // Extend the breadcrumb to read "Home / All Mappings" (folderPath is still
+  // [root] since we didn't navigate the tree).
+  const crumb = document.getElementById('nav-path-container');
+  if (crumb && !document.getElementById('all-mappings-crumb')) {
+    const sep = document.createElement('div');
+    sep.classList.add('nav-path-seperator');
+    sep.innerHTML = ' / ';
+    sep.setAttribute('id', 'all-mappings-crumb-sep');
+    const seg = document.createElement('div');
+    seg.classList.add('nav-path-section');
+    seg.setAttribute('id', 'all-mappings-crumb');
+    seg.innerText = 'All Mappings';
+    crumb.appendChild(sep);
+    crumb.appendChild(seg);
+  }
 
   const body = document.createElement('div');
   body.classList.add('all-mappings-body');
   panel.appendChild(body);
 
   await populateAllMappings(body);
+
+  // Activate the Back button LAST, after any rendering that might have rebuilt
+  // it, so nothing overwrites the active state. We keep the same node (no
+  // clone/replace) to avoid dangling the dashboard's own backButton reference.
+  activatePanelBackButton();
 }
 
-/** Hide the panel and restore the normal dashboard file grid. */
+/**
+ * Turn the dashboard's Back button into the panel's close control: active
+ * colour (opacity 100%, like entering Samples), clickable, and wired to
+ * closeAllMappings. Idempotent — safe to call repeatedly.
+ */
+function activatePanelBackButton(): void {
+  const back = document.getElementById('fs-back-btn') as HTMLButtonElement;
+  if (!back) return;
+  back.classList.add('active');
+  back.removeAttribute('disabled');
+  back.removeEventListener('click', closeAllMappings);
+  back.addEventListener('click', closeAllMappings);
+}
+
+/**
+ * Hide the panel and restore the normal dashboard: show the file grid again,
+ * strip the "All Mappings" breadcrumb segment, detach our Back listener, and
+ * rebuild the dashboard. updateDashboard -> updateBackButton fully owns the
+ * Back button's colour/disabled state afterwards (it disables + greys it at the
+ * root), so we must NOT set those here or we'd fight that logic.
+ */
 function closeAllMappings(): void {
   const panel = document.getElementById(ALL_MAPPINGS_PANEL_ID);
   if (panel) panel.style.display = 'none';
   documentsContainer.style.display = '';
+  document.getElementById('all-mappings-crumb-sep')?.remove();
+  document.getElementById('all-mappings-crumb')?.remove();
+
+  const back = document.getElementById('fs-back-btn') as HTMLButtonElement;
+  if (back) back.removeEventListener('click', closeAllMappings);
+
+  // Rebuild at the current (root) path; updateBackButton resets the Back button
+  // to its correct root state (disabled, grey) and re-appends the entry tile.
+  void updateDashboard(state.getFolderPath());
 }
 
 /**
@@ -2025,11 +2065,15 @@ function createForeignUserRow(user: string): HTMLElement {
   row.appendChild(filesWrap);
 
   let loaded = false;
-  header.addEventListener('click', async () => {
+  header.addEventListener('click', async (e) => {
+    // Stop the click bubbling to backgroundArea's handler, which calls
+    // updateFSButtons() and would reset our borrowed Back button.
+    e.stopPropagation();
     const isOpen = filesWrap.style.display !== 'none';
     if (isOpen) {
       filesWrap.style.display = 'none';
       chevron.innerText = '▸';
+      activatePanelBackButton();
       return;
     }
     filesWrap.style.display = 'block';
@@ -2038,6 +2082,10 @@ function createForeignUserRow(user: string): HTMLElement {
       loaded = true;
       await loadForeignUserFiles(user, filesWrap);
     }
+    // Re-assert the panel's Back state: rendering foreign tiles can trigger the
+    // dashboard to rebuild its Back button (dropping our active state + close
+    // listener), which would otherwise strand the user in the panel.
+    activatePanelBackButton();
   });
 
   return row;
