@@ -5,7 +5,12 @@ import {
   FileSystemTools,
   EntryType,
 } from './FileSystem';
-import { deleteDocument, updateDocName, addDocument } from './Storage';
+import {
+  deleteDocument,
+  updateDocName,
+  addDocument,
+  updateAttachment,
+} from './Storage';
 import { FileSystemManager } from './FileSystem';
 import { ShiftSelectionManager, dashboardState } from './DashboardTools';
 import { InitUploadArea } from './UploadArea';
@@ -2170,7 +2175,10 @@ function createForeignTile(owner: string, path: string): HTMLElement {
 async function handleCopyForeign(owner: string, path: string): Promise<void> {
   const storage = getMappingStorage();
   try {
-    await storage.copyForeignMapping(owner, path);
+    const outcome = await storage.copyForeignMapping(owner, path);
+    if (outcome.status !== 'conflict') {
+      await materializeCopyInTree(outcome.path);
+    }
     refreshAllMappingsOwnFiles();
   } catch (err) {
     if (err instanceof ConflictError) {
@@ -2214,7 +2222,13 @@ function showCopyConflictDialog(owner: string, path: string): void {
   replaceBtn.addEventListener('click', async () => {
     close();
     try {
-      await getMappingStorage().copyForeignMappingReplacing(owner, path);
+      const outcome = await getMappingStorage().copyForeignMappingReplacing(
+        owner,
+        path,
+      );
+      if (outcome.status !== 'conflict') {
+        await materializeCopyInTree(outcome.path);
+      }
       refreshAllMappingsOwnFiles();
     } catch (err) {
       console.error('Replace copy failed:', err);
@@ -2228,7 +2242,14 @@ function showCopyConflictDialog(owner: string, path: string): void {
     close();
     const newName = suggestCopyName(path);
     try {
-      await getMappingStorage().copyForeignMapping(owner, path, newName);
+      const outcome = await getMappingStorage().copyForeignMapping(
+        owner,
+        path,
+        newName,
+      );
+      if (outcome.status !== 'conflict') {
+        await materializeCopyInTree(outcome.path);
+      }
       refreshAllMappingsOwnFiles();
     } catch (err) {
       if (err instanceof ConflictError) {
@@ -2251,6 +2272,72 @@ function showCopyConflictDialog(owner: string, path: string): void {
   box.appendChild(actions);
   overlay.appendChild(box);
   document.body.appendChild(overlay);
+}
+
+/**
+ * Materialize a just-copied mapping as a real FileSystem tree node so it appears
+ * in "Your files" / My Mappings and opens in the editor.
+ *
+ * Copying writes GitHub (source of truth) plus a name-keyed local mirror via
+ * MappingStorage, but the dashboard renders UUID-keyed canonical docs from the
+ * FileSystem tree (see handleAddFile -> addDocument). Without this step a copy
+ * lands on GitHub yet never shows up in the tree. Here we pull the copied
+ * content back (remote-first via loadMapping), convert csv.ts's positional
+ * string grid into Cress's canonical [headers, ...rowObjects] attachment shape
+ * (identical to createJson()'s output, so a copied file reads exactly like an
+ * uploaded one), then either update an existing same-named node in place
+ * (Replace, or an idempotent re-copy) or create a fresh UUID doc + tree node.
+ *
+ * Added to the FileSystem ROOT because renderOwnFilesInto / My Mappings read
+ * root's file children; a copy dropped into some nested nav folder would not
+ * surface in the panel.
+ */
+async function materializeCopyInTree(destName: string): Promise<void> {
+  const root = state.getFolderPath().at(0);
+  if (!root) return;
+
+  // Copied content as a 2D string grid (row 0 = headers). loadMapping is
+  // remote-first (a copy is always logged in) with the local mirror as fallback.
+  const grid = await getMappingStorage().loadMapping(destName);
+  if (!grid || grid.length === 0) return;
+
+  // csv.ts grid (string[][]) -> Storage.ts canonical shape:
+  // [ headerArray, ...{ [header]: value } ]. Build the row objects with an
+  // explicit loop (no Object.fromEntries) to stay lib-target agnostic.
+  const [headers, ...dataRows] = grid;
+  const data = dataRows.map((cells) => {
+    const obj: Record<string, string> = {};
+    headers.forEach((h, i) => {
+      obj[h] = cells[i] ?? '';
+    });
+    return obj;
+  });
+  const body = [headers, ...data];
+
+  // Reuse an existing same-named root node (Replace / identical re-copy): update
+  // its content in place so the node isn't duplicated and doesn't go stale.
+  const existing = root.children.find(
+    (e: IEntry) => e.type === EntryType.File && e.name === destName,
+  ) as IFile | undefined;
+
+  if (existing) {
+    await updateAttachment(existing.id, body);
+    updateDashboard();
+    return;
+  }
+
+  const id = uuidv4();
+  const blob = new Blob([JSON.stringify(body, null, 2)], {
+    type: 'application/json',
+  });
+  await addDocument(id, destName, blob);
+
+  const fileEntry = FileSystemTools.createFile(destName, id);
+  const docEntry = FileSystemTools.addMetadata(fileEntry, {
+    created_on: new Date().toLocaleString(),
+  });
+  FileSystemTools.addEntry(docEntry, root);
+  updateDashboard();
 }
 
 /**
