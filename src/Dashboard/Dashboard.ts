@@ -2201,7 +2201,7 @@ function showCopyConflictDialog(owner: string, path: string): void {
 
   const msg = document.createElement('div');
   msg.classList.add('copy-conflict-msg');
-  msg.innerText = `You already have a mapping named "${path}". What would you like to do?`;
+  msg.innerText = `An item named "${path}" already exists in your mappings. Do you want to replace it with the one you're copying?`;
   box.appendChild(msg);
 
   const actions = document.createElement('div');
