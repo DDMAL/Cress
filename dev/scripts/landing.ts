@@ -1,3 +1,5 @@
+import { initGithubAuth } from '../../src/Dashboard/cress-frontend-auth';
+
 document
   .querySelector('#access-files-btn')
   ?.addEventListener('mousedown', () => {
@@ -13,3 +15,5 @@ document
       document.querySelector('#access-files-btn')
     ))!.style.boxShadow = '0px 0px 30px 3px #589fd592';
   });
+
+initGithubAuth();
