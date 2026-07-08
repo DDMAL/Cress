@@ -390,7 +390,9 @@ function putBackDocsHandler() {
 
   for (let entry of selectedEntries) {
     const folderPathNames = entry.metadata['recover_folder'] as string[];
-    const targetFolder = state.getFolderPathByNames(folderPathNames);
+    const targetFolder = folderPathNames
+      ? state.getFolderPathByNames(folderPathNames)
+      : state.getFolderPath().at(0); // fallback: Home (e.g. trashed via drag, no recover_folder)
     if (targetFolder) {
       entry = FileSystemTools.removeMetadata(entry, [
         'removed_on',
@@ -1765,6 +1767,7 @@ function addSpecificContextMenuListeners(tile, index) {
 
     // select
     select(index);
+    updateActionBarButtons();
 
     showContextMenu(
       'selection-options',
@@ -1779,7 +1782,7 @@ function addSpecificContextMenuListeners(tile, index) {
   mainSection.addEventListener('click', (e) => {
     if (rightClicked) {
       let clickedElement = e.target as HTMLElement;
-      if (clickedElement.parentElement.classList.contains('document-entry')) {
+      if (clickedElement.parentElement?.classList.contains('document-entry')) {
         clickedElement = clickedElement.parentElement;
       }
 
