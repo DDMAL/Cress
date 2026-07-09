@@ -25,11 +25,11 @@ Demo site: https://integration-golive-pagesdev.cress-test.pages.dev
 
 ### C. Delete and restore
 
-- [ ] Delete a file: either right-click and choose Move to Trash, or drag it into Trash.
+- [x] Delete a file: either right-click and choose Move to Trash, or drag it into Trash.
 
-- [ ] (Cross-check) The file should appear under the .trash/ folder in your GitHub repo.
+- [x] (Cross-check) The file should appear under the .trash/ folder in your GitHub repo.
 
-- [ ] Restore it from the Trash panel (right-click Put Back, or drag it out). The file returns to Your files and moves back to the repo root on GitHub.
+- [x] Restore it from the Trash panel (right-click Put Back, or drag it out). The file returns to Your files and moves back to the repo root on GitHub.
 
 ### D. Viewing others' files (All Mappings)
  
