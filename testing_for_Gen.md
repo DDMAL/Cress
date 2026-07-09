@@ -23,6 +23,8 @@ Demo site: https://integration-golive-pagesdev.cress-test.pages.dev
 
 - [ ] MEI validation in the editor shows VALID (sample data is fine).
 
+Related issue: https://github.com/DDMAL/Cress/issues/154
+
 ### C. Delete and restore
 
 - [x] Delete a file: either right-click and choose Move to Trash, or drag it into Trash.
@@ -42,6 +44,8 @@ Demo site: https://integration-golive-pagesdev.cress-test.pages.dev
 - [x] Click "Copy to my mappings" on someone else's file. It should appear in your Your files and in your GitHub repo.
  
 - [ ] Name-collision test: copy a file whose name matches one you already have. A dialog with Replace / Keep both / Cancel should appear, and Keep both creates "<name> copy".
+
+Related issue: https://github.com/DDMAL/Cress/issues/153
 
 ### F. (Bonus) Cross-device
 
