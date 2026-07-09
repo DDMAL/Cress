@@ -15,6 +15,8 @@ Demo site: https://integration-golive-pagesdev.cress-test.pages.dev
 
 - [ ] Open the demo site, click Log in, and authorize in the GitHub popup (shown below; first login only). The page should then show you as logged in.
 
+Related issue: https://github.com/DDMAL/Cress/issues/155
+
 ### B. Create / edit / save
 
 - [x] Create a new file from the dashboard, open it in the editor, edit, and save.
