@@ -33,13 +33,13 @@ Demo site: https://integration-golive-pagesdev.cress-test.pages.dev
 
 ### D. Viewing others' files (All Mappings)
  
-- [ ] The All Mappings panel lists other users' files.
+- [x] The All Mappings panel lists other users' files.
  
-- [ ] Other people's files are read-only: you can't edit, delete, or drag them.
+- [x] Other people's files are read-only: you can't edit, delete, or drag them.
 
 ### E. Copy
  
-- [ ] Click "Copy to my mappings" on someone else's file. It should appear in your Your files and in your GitHub repo.
+- [x] Click "Copy to my mappings" on someone else's file. It should appear in your Your files and in your GitHub repo.
  
 - [ ] Name-collision test: copy a file whose name matches one you already have. A dialog with Replace / Keep both / Cancel should appear, and Keep both creates "<name> copy".
 
