@@ -17,9 +17,9 @@ Demo site: https://integration-golive-pagesdev.cress-test.pages.dev
 
 ### B. Create / edit / save
 
-- [ ] Create a new file from the dashboard, open it in the editor, edit, and save.
+- [x] Create a new file from the dashboard, open it in the editor, edit, and save.
 
-- [ ] (Cross-check) Look at <your-username>/cress-mappings on GitHub. A matching <filename>.csv should appear.
+- [x] (Cross-check) Look at <your-username>/cress-mappings on GitHub. A matching <filename>.csv should appear.
 
 - [ ] MEI validation in the editor shows VALID (sample data is fine).
 
