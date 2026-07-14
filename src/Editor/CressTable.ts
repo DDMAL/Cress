@@ -39,15 +39,24 @@ export class CressTable {
   private defaultHeader = ['image', 'name', 'classification', 'mei'];
   private filterSidebar: FilterSidebar | null = null;
   private savePath: string;
+  private readOnly: boolean;
 
   // constructor(id: string, inputHeader: string[], body: any[]) {
-  constructor(id: string, name: string, inputHeader: string[], body: any[]) {
+  constructor(
+    id: string,
+    name: string,
+    inputHeader: string[],
+    body: any[],
+    readOnly = false,
+    owner?: string,
+  ) {
     // const container = document.getElementById('hot-container');
     const container = document.getElementById('hot-container');
     this.savePath = nameToPath(name);
+    this.readOnly = readOnly;
 
     // Initialize Toolss
-    this.imageTools = new ImageTools(this.images);
+    this.imageTools = new ImageTools(this.images, readOnly);
     this.meiTools = new MeiTools();
     this.exportTools = new ExportTools();
     this.columnTools = new ColumnTools(inputHeader);
@@ -114,21 +123,27 @@ export class CressTable {
       minSpareRows: 0,
       autoWrapRow: true,
       autoWrapCol: true,
-      contextMenu: true,
+      // Read-only foreign view (#151): block cell editing and hide the
+      // row/column mutation menus. Sorting (columnSorting) and the filter
+      // sidebar stay available for inspection.
+      readOnly: this.readOnly,
+      contextMenu: !this.readOnly,
       // === DROPDOWN MENU: custom items, NO filter_by_condition / filter_by_value ===
       // Filter is handled by the hierarchical filter sidebar instead.
-      dropdownMenu: {
-        items: {
-          col_left: { name: 'Insert column left' },
-          col_right: { name: 'Insert column right' },
-          remove_col: { name: 'Remove column' },
-          separator1: { name: '---------' },
-          clear_column: { name: 'Clear column' },
-          separator2: { name: '---------' },
-          make_read_only: { name: 'Read only' },
-          alignment: {},
-        },
-      },
+      dropdownMenu: this.readOnly
+        ? false
+        : {
+            items: {
+              col_left: { name: 'Insert column left' },
+              col_right: { name: 'Insert column right' },
+              remove_col: { name: 'Remove column' },
+              separator1: { name: '---------' },
+              clear_column: { name: 'Clear column' },
+              separator2: { name: '---------' },
+              make_read_only: { name: 'Read only' },
+              alignment: {},
+            },
+          },
       filters: true,
       columnSorting: true,
       className: 'table-menu-btn',
@@ -139,8 +154,55 @@ export class CressTable {
     });
 
     this.initFileListener(id, inputHeader, body, this.defaultHeader);
-    this.initChangeListener();
+    // No change tracking in read-only mode: there are no edits to track, and
+    // setSavedStatus(false) would wrongly flag an untouched foreign file dirty.
+    if (!this.readOnly) {
+      this.initChangeListener();
+    }
     this.initFilterSidebar();
+
+    if (this.readOnly) {
+      this.applyReadOnlyUI();
+    }
+  }
+
+  /**
+   * Read-only foreign view (#151): remove every path that could write the file
+   * back into the current user's repo, and signal the mode in the UI. The
+   * cell-level block is handled by Handsontable's readOnly option; this hides
+   * the Save control (so the save chain is unreachable) and adds a read-only
+   * label in the top status row, next to "MEI Status" (both describe the file's
+   * state). Which user's file it is is already conveyed by context (the tile was
+   * opened from that user's row), so the label stays minimal. The 's' hotkey and
+   * save-button listeners are never wired in this mode (see initFileListener).
+   */
+  private applyReadOnlyUI(): void {
+    const saveBtn = document.getElementById('save');
+    if (saveBtn) saveBtn.style.display = 'none';
+
+    const statusRow = document.querySelector(
+      '.navbar-main-content-container-top',
+    );
+    if (statusRow && !document.getElementById('readonly-banner')) {
+      const banner = document.createElement('div');
+      banner.id = 'readonly-banner';
+      // navbar-element matches the height/padding/font of the sibling status
+      // items; readonly-banner adds the muted grey + icon gap (see style.css).
+      banner.className = 'navbar-element readonly-banner';
+      banner.title = 'Read-only view. Copy this file to your mappings to edit.';
+      // Eye icon as an <img> (same pattern as the other icons in assets/img).
+      // Source: svgrepo.com/svg/524043/eye (CC0 / public domain). The file's
+      // stroke is set to the label grey (#818181) so it matches without CSS.
+      const eyeIcon = document.createElement('img');
+      eyeIcon.src = './Cress-gh/assets/img/eye-icon.svg';
+      eyeIcon.alt = '';
+      eyeIcon.setAttribute('aria-hidden', 'true');
+      const label = document.createElement('span');
+      label.textContent = 'Read-only';
+      banner.appendChild(eyeIcon);
+      banner.appendChild(label);
+      statusRow.appendChild(banner);
+    }
   }
 
   private initFileListener(
@@ -165,15 +227,21 @@ export class CressTable {
         );
       });
 
-    document.getElementById('save').addEventListener('click', async () => {
-      await this.saveTable(inputHeader, body);
-    });
-
-    document.body.addEventListener('keydown', async (evt) => {
-      if (evt.key === 's') {
+    // Save chain (button + 's' hotkey) is the only way a file is written back
+    // to the user's repo. In read-only foreign view (#151) it must never be
+    // wired, or an autosave-like path could push another user's file into the
+    // current user's mappings. Export stays available (read-only safe).
+    if (!this.readOnly) {
+      document.getElementById('save').addEventListener('click', async () => {
         await this.saveTable(inputHeader, body);
-      }
-    });
+      });
+
+      document.body.addEventListener('keydown', async (evt) => {
+        if (evt.key === 's') {
+          await this.saveTable(inputHeader, body);
+        }
+      });
+    }
   }
   private async saveTable(inputHeader: string[], body: any[]): Promise<void> {
     try {

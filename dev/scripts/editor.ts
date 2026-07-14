@@ -13,8 +13,43 @@ import * as Papa from 'papaparse';
 
 const sampleId = getGetParam('sample');
 const uploadId = getGetParam('upload');
+const isForeign = getGetParam('foreign');
+const foreignOwner = getGetParam('owner');
+const foreignPath = getGetParam('path');
 
-if (sampleId) {
+if (isForeign && foreignOwner && foreignPath) {
+  // Read-only foreign view (#151): load another user's file straight from
+  // their GitHub repo, never touching PouchDB. readForeignMapping is a pure
+  // read; CressTable's readOnly flag blocks every write path so the file can
+  // never be saved back into the current user's repo.
+  (async () => {
+    try {
+      const rows = await getMappingStorage().readForeignMapping(
+        foreignOwner,
+        foreignPath,
+      );
+      if (!rows) {
+        console.error(
+          `No foreign mapping found for "${foreignOwner}/${foreignPath}"`,
+        );
+        return;
+      }
+      const payload = rowsToCressPayload(rows);
+      const cressDoc: CressDoc = {
+        id: `foreign:${foreignOwner}/${foreignPath}`,
+        name: foreignPath,
+        header: payload[0],
+        body: payload.slice(1) as Record<string, unknown>[],
+        readOnly: true,
+        owner: foreignOwner,
+      };
+      const view = new CressView(cressDoc);
+      view.start();
+    } catch (e) {
+      console.error('Failed to load foreign mapping:', e);
+    }
+  })();
+} else if (sampleId) {
   const fs = window.localStorage.getItem('cress-fs');
   if (fs) {
     try {

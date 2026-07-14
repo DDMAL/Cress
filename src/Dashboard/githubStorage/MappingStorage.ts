@@ -311,6 +311,27 @@ export class MappingStorage {
     return reader.listForeignFiles(owner);
   }
 
+  /**
+   * Read another user's mapping file as parsed rows, for read-only viewing in
+   * the editor (issue #151). Pure read: unlike copyForeignMapping it never
+   * writes to the current user's repo or local store. Thin passthrough to the
+   * ForeignReader + the same csvToRows parse gate copyForeignMapping uses.
+   * Returns null when no foreignReader is configured or the file is absent.
+   */
+  async readForeignMapping(
+    owner: string,
+    path: string,
+  ): Promise<CsvRow[] | null> {
+    const reader = this.deps.foreignReader;
+    if (!reader) return null;
+    if (!this.isLoggedIn()) {
+      throw new NotAuthenticatedError('readForeignMapping requires login');
+    }
+    const src = await reader.readForeignFile(owner, path);
+    if (!src) return null;
+    return csvToRows(src.content);
+  }
+
   async deleteMapping(path: string): Promise<void> {
     await this.deps.local.remove(path);
     await this.trashRemote(path);

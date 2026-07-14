@@ -2281,6 +2281,14 @@ function createForeignTile(owner: string, path: string): HTMLElement {
     void handleCopyForeign(owner, path);
   });
 
+  // Read-only open (#151): clicking the tile (but not the Copy button, which
+  // stops propagation) opens the foreign file in the editor in read-only mode.
+  tile.style.cursor = 'pointer';
+  tile.addEventListener('click', () => {
+    const query = makeQuery({ foreign: '1', owner, path });
+    window.open(`./editor.html?${query}`, '_blank');
+  });
+
   tile.appendChild(icon);
   tile.appendChild(name);
   tile.appendChild(copyBtn);
