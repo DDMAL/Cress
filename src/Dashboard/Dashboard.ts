@@ -638,6 +638,17 @@ function updateNavPath(): void {
  * Updates the back button with click event listener to go back one folder if possible
  */
 function updateBackButton() {
+  // While the All Mappings overlay is open it owns the Back button as its
+  // close control. Any rebuild here (triggered e.g. by a copy or a background
+  // click) would clone/replace the node -- dropping the closeAllMappings
+  // listener -- and, seeing folderPath at root, disable and grey it out,
+  // leaving the user stranded (worst case: logged out with no user row to
+  // expand = no escape but the Cress logo). Defer to the panel's own control.
+  if (isAllMappingsOpen()) {
+    activatePanelBackButton();
+    return;
+  }
+
   // Erase previous event listeners
   const buttonClone = backButton.cloneNode(true) as HTMLButtonElement;
   backButton.parentNode.replaceChild(buttonClone, backButton);
@@ -2015,6 +2026,17 @@ async function openAllMappings(): Promise<void> {
   // it, so nothing overwrites the active state. We keep the same node (no
   // clone/replace) to avoid dangling the dashboard's own backButton reference.
   activatePanelBackButton();
+}
+
+/**
+ * True when the All Mappings overlay is currently showing. While open, the
+ * panel borrows the dashboard's #fs-back-btn as its close control, so the
+ * normal FileSystem button logic (updateBackButton) must not reclaim, disable,
+ * or grey it out.
+ */
+function isAllMappingsOpen(): boolean {
+  const panel = document.getElementById(ALL_MAPPINGS_PANEL_ID);
+  return !!panel && panel.style.display !== 'none';
 }
 
 /**
