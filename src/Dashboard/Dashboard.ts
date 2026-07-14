@@ -1042,7 +1042,8 @@ function readTombstones(): Record<string, number> {
         changed = true;
       }
     }
-    if (changed) window.localStorage.setItem(TOMBSTONE_KEY, JSON.stringify(map));
+    if (changed)
+      window.localStorage.setItem(TOMBSTONE_KEY, JSON.stringify(map));
     return map;
   } catch {
     return {};
