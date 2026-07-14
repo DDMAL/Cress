@@ -203,6 +203,22 @@ a:hover {
   margin-left: 10px;
   transform: scale(0.8);
 }
+/* Read-only foreign view label (#151): sits in the top status row next to
+   "MEI Status", since both describe the file's state. Muted grey (#818181,
+   the same as filename / MEI Status) so it reads as status, not as a clickable
+   purple action; the inline eye icon reinforces view-only. */
+.readonly-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #818181;
+  font-weight: normal;
+  cursor: default;
+}
+.readonly-banner img {
+  width: 16px;
+  height: 16px;
+}
 /* Feedback form */
 #feedback-form-btn-container,
 #github-login-btn,
