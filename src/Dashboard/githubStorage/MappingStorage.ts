@@ -340,6 +340,19 @@ export class MappingStorage {
     }
   }
 
+  /**
+   * Rename a mapping on the remote: move old path -> new path
+   * (copy-then-delete via moveRemote, same mechanism as trash/restore).
+   * No-op when logged out or when the old path isn't on the remote.
+   * Throws ConflictError if the new path already exists with different
+   * content (never silently clobbers another file).
+   */
+  async renameRemote(from: string, to: string): Promise<void> {
+    if (this.isLoggedIn()) {
+      await this.moveRemote(from, to);
+    }
+  }
+
   /** TRASH_PREFIX-qualified path for a bare mapping path. Idempotent: never
    *  double-prefixes. */
   private trashPathFor(path: string): string {

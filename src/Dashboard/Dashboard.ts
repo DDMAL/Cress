@@ -812,6 +812,7 @@ function handleAddFile(fileName: string, rowNum: number) {
  * @param entry IEntry to rename
  */
 function renameEntry(entry: IEntry, newName: string) {
+  const oldName = entry.name; // capture BEFORE FileSystemTools mutates it
   const succeeded = FileSystemTools.renameEntry(
     entry,
     state.getParentFolder(),
@@ -821,7 +822,26 @@ function renameEntry(entry: IEntry, newName: string) {
     // Update database if entry is a file
     if (entry.type === 'file') {
       const file = entry as IFile;
-      updateDocName(file.id, newName).then(() => {
+      updateDocName(file.id, newName).then(async () => {
+        // Keep the GitHub repo in step: move old path -> new path
+        // (otherwise the next save writes the new name and the old
+        // file is orphaned in the repo; see issue on stale renames).
+        try {
+          await getMappingStorage().renameRemote(
+            nameToPath(oldName),
+            nameToPath(newName),
+          );
+          // Guard against reconcile resurrecting the old name from a stale
+          // remote listing (see tombstone helpers).
+          recordTombstone(oldName);
+        } catch (e) {
+          console.error('Remote rename failed:', e);
+          window.alert(
+            `Renamed locally, but moving the file on GitHub failed: ${
+              e instanceof Error ? e.message : e
+            }`,
+          );
+        }
         updateDashboard();
       });
     } else {
@@ -996,6 +1016,54 @@ function moveToFolder(
 }
 
 /**
+ * Reconcile tombstones: names recently removed from the remote by THIS client
+ * (rename old-path, move to trash). reconcileTreeWithRemote() is additive-only
+ * and trusts the remote listing for existence, but that listing can be stale
+ * in two ways: (a) GitHub's contents list is eventually consistent, so a name
+ * deleted moments ago can still be listed; (b) the reconcile launched at page
+ * load snapshots the remote list BEFORE a quick rename/trash lands, then walks
+ * the tree AFTER it. Either way the old name gets re-materialized as a zombie
+ * tile. Tombstones let reconcile skip names we know we just removed. TTL-bound
+ * so a genuinely re-created same-named file reappears after the window.
+ */
+const TOMBSTONE_KEY = 'cress-reconcile-tombstones';
+const TOMBSTONE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+function readTombstones(): Record<string, number> {
+  try {
+    const raw = window.localStorage.getItem(TOMBSTONE_KEY);
+    const map = raw ? (JSON.parse(raw) as Record<string, number>) : {};
+    // prune expired entries on every read
+    const now = Date.now();
+    let changed = false;
+    for (const k of Object.keys(map)) {
+      if (now - map[k] > TOMBSTONE_TTL_MS) {
+        delete map[k];
+        changed = true;
+      }
+    }
+    if (changed) window.localStorage.setItem(TOMBSTONE_KEY, JSON.stringify(map));
+    return map;
+  } catch {
+    return {};
+  }
+}
+
+function recordTombstone(name: string): void {
+  try {
+    const map = readTombstones();
+    map[name] = Date.now();
+    window.localStorage.setItem(TOMBSTONE_KEY, JSON.stringify(map));
+  } catch {
+    /* best-effort; reconcile just loses the guard */
+  }
+}
+
+function isTombstoned(name: string): boolean {
+  return name in readTombstones();
+}
+
+/**
  * Mirror a local trash move onto the GitHub remote. Called for every entry that
  * moveToFolder successfully moves. Direction is inferred from the folders:
  *   - moved INTO trash      -> trashRemote   (file -> .trash/ on GitHub)
@@ -1023,6 +1091,7 @@ function syncRemoteForMove(
   const storage = getMappingStorage();
 
   if (movedIntoTrash) {
+    recordTombstone(bareName);
     storage
       .trashRemote(remotePath)
       .catch((err) =>
@@ -2398,6 +2467,7 @@ async function reconcileTreeWithRemote(): Promise<void> {
 
     for (const name of remoteNames) {
       if (treeNames.has(name)) continue;
+      if (isTombstoned(name)) continue; // we just removed it; listing is stale
       try {
         await materializeCopyInTree(name);
       } catch (err) {
