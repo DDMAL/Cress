@@ -608,10 +608,17 @@ function updateNavPath(): void {
     navSection.innerHTML = folder.name;
 
     const targetPath = state.getFolderPath().slice(0, idx + 1);
-    navSection.addEventListener(
-      'click',
-      async () => await updateDashboard(targetPath),
-    );
+    navSection.addEventListener('click', async () => {
+      // While the All Mappings overlay is open, only "Home" is present in the
+      // folderPath breadcrumb. Clicking it must close the panel (hide the
+      // overlay + rebuild at root), not just rebuild the tree underneath a
+      // panel that keeps covering the view. closeAllMappings does both.
+      if (isAllMappingsOpen()) {
+        closeAllMappings();
+        return;
+      }
+      await updateDashboard(targetPath);
+    });
     // add drop target to move dragged element to the prospective folders
     addDropTargetListeners(
       navSection,
@@ -632,6 +639,14 @@ function updateNavPath(): void {
       navPathContainer.appendChild(seperator);
     }
   });
+
+  // If the All Mappings overlay is open, its breadcrumb segment lives outside
+  // folderPath, so this rebuild just dropped it. Re-add it so the breadcrumb
+  // stays consistent with the panel that is still covering the view (e.g.
+  // after a copy triggers updateDashboard).
+  if (isAllMappingsOpen()) {
+    appendAllMappingsCrumb();
+  }
 }
 
 /**
@@ -2002,19 +2017,7 @@ async function openAllMappings(): Promise<void> {
 
   // Extend the breadcrumb to read "Home / All Mappings" (folderPath is still
   // [root] since we didn't navigate the tree).
-  const crumb = document.getElementById('nav-path-container');
-  if (crumb && !document.getElementById('all-mappings-crumb')) {
-    const sep = document.createElement('div');
-    sep.classList.add('nav-path-seperator');
-    sep.innerHTML = ' / ';
-    sep.setAttribute('id', 'all-mappings-crumb-sep');
-    const seg = document.createElement('div');
-    seg.classList.add('nav-path-section');
-    seg.setAttribute('id', 'all-mappings-crumb');
-    seg.innerText = 'All Mappings';
-    crumb.appendChild(sep);
-    crumb.appendChild(seg);
-  }
+  appendAllMappingsCrumb();
 
   const body = document.createElement('div');
   body.classList.add('all-mappings-body');
@@ -2037,6 +2040,27 @@ async function openAllMappings(): Promise<void> {
 function isAllMappingsOpen(): boolean {
   const panel = document.getElementById(ALL_MAPPINGS_PANEL_ID);
   return !!panel && panel.style.display !== 'none';
+}
+
+/**
+ * Extend the breadcrumb to read "Home / All Mappings". The segment lives
+ * outside folderPath (the panel is isolated from the FileSystem tree), so it
+ * must be re-added whenever the breadcrumb is rebuilt while the panel is open.
+ * Idempotent: no-op if the segment is already present.
+ */
+function appendAllMappingsCrumb(): void {
+  const crumb = document.getElementById('nav-path-container');
+  if (!crumb || document.getElementById('all-mappings-crumb')) return;
+  const sep = document.createElement('div');
+  sep.classList.add('nav-path-seperator');
+  sep.innerHTML = ' / ';
+  sep.setAttribute('id', 'all-mappings-crumb-sep');
+  const seg = document.createElement('div');
+  seg.classList.add('nav-path-section');
+  seg.setAttribute('id', 'all-mappings-crumb');
+  seg.innerText = 'All Mappings';
+  crumb.appendChild(sep);
+  crumb.appendChild(seg);
 }
 
 /**
