@@ -220,6 +220,30 @@ export class MappingStorage {
     const destPath = newName ?? path;
     const normalized = rowsToCsv(rows);
 
+    // ---- Same-name check must also consult the LOCAL store. ----
+    // A doc created on the dashboard but never saved in the editor exists ONLY
+    // in PouchDB (lazy write), so backend.readFile below cannot see it -- yet
+    // saveMapping's local.set resolves the same name and silently overwrites
+    // the original. Probe local names first; identical content falls through
+    // (the copy just converges local + remote), anything else is a user
+    // decision, not ours.
+    const localNames = await this.deps.local.list();
+    if (localNames.includes(destPath)) {
+      const localContent = await this.deps.local.get(destPath);
+      const localNormalized =
+        localContent == null ? null : rowsToCsv(csvToRows(localContent));
+      if (localNormalized !== normalized) {
+        // Different content, or unreadable (can't prove identical => no
+        // silent overwrite): surface the same-name dialog like the remote
+        // case.
+        throw new ConflictError(
+          `copyForeignMapping: "${destPath}" exists locally with different content`,
+          destPath,
+        );
+      }
+      // identical local-only copy: fall through to the remote probe/save.
+    }
+
     // Explicit destination probe: shaCache is empty for files this session
     // never touched, so a bare saveMapping could not tell "identical copy"
     // apart from a real conflict.
