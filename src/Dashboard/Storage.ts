@@ -249,6 +249,7 @@ export function updateDocName(id: string, newName: string): Promise<boolean> {
         doc.name = newName;
         return db.put(doc);
       })
+      .then(() => resolve(true))
       .catch((err) => reject(err)); // db.get
   });
 }

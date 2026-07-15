@@ -152,9 +152,10 @@ const canRenameEntry = (
   parent: IFolder,
   newName: string,
 ): responseProp => {
-  // Check if newName already exists in parent
+  // Check if newName already exists in parent (any sibling other than the
+  // entry being renamed)
   const nameExists = parent.children.some(
-    (e, idx, arr) => e.name === entry.name && idx !== arr.indexOf(e),
+    (e) => e !== entry && e.name === newName,
   );
 
   const returnObj = { succeeded: false, error: '' };
