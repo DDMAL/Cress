@@ -227,19 +227,35 @@ export class CressTable {
         );
       });
 
-    // Save chain (button + 's' hotkey) is the only way a file is written back
-    // to the user's repo. In read-only foreign view (#151) it must never be
-    // wired, or an autosave-like path could push another user's file into the
-    // current user's mappings. Export stays available (read-only safe).
+    // Save chain (button + Cmd/Ctrl+S hotkey) is the only way a file is
+    // written back to the user's repo. In read-only foreign view it must
+    // never be wired, or an autosave-like path could push another user's
+    // file into the current user's mappings. Export stays available
+    // (read-only safe).
     if (!this.readOnly) {
       document.getElementById('save').addEventListener('click', async () => {
         await this.saveTable(inputHeader, body);
       });
 
       document.body.addEventListener('keydown', async (evt) => {
-        if (evt.key === 's') {
-          await this.saveTable(inputHeader, body);
+        // Only trigger save on Cmd+S (Mac) / Ctrl+S (Windows, Linux).
+        // A bare "s" keystroke used to trigger save, which caused
+        // accidental saves while typing in a cell.
+        if (!(evt.metaKey || evt.ctrlKey) || evt.key.toLowerCase() !== 's')
+          return;
+
+        // Prevent the browser's "Save page" dialog, which interrupts
+        // in-flight fetch requests and makes the save fail.
+        evt.preventDefault();
+
+        // Commit any cell that is currently being edited, so the save
+        // includes what the user sees on screen.
+        const editor = this.table.getActiveEditor();
+        if (editor && editor.isOpened()) {
+          editor.finishEditing();
         }
+
+        await this.saveTable(inputHeader, body);
       });
     }
   }
