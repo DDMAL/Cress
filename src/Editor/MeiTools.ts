@@ -44,8 +44,11 @@ export class MeiTools {
     const meiData = this.meiData.find((meiData) => meiData.row === row);
     if (meiData) {
       // Update this.meiData if it exists
-      if (mei === '') {
-        // if the mei cell is empty, remove the row from meiData
+      if (!mei) {
+        // Remove the row from meiData when the cell is cleared.
+        // Handsontable reports a cleared cell as null (not an empty
+        // string), so a falsy check is required here; otherwise the
+        // stale isValid flag keeps the whole table flagged as INVALID.
         this.meiData = this.meiData.filter((data) => data.row !== row);
         return;
       }
@@ -53,10 +56,12 @@ export class MeiTools {
       if (isValid !== undefined) meiData.isValid = isValid;
       if (errorMsg !== undefined) meiData.errorMsg = errorMsg;
     } else {
-      // Add a new entry to this.meiData if it doesn't exist
+      // Add a new entry to this.meiData if it doesn't exist,
+      // but never create an entry for an empty cell.
+      if (!mei) return;
       this.meiData.push({
         row,
-        mei: mei ?? '',
+        mei,
         isValid: isValid ?? null,
         errorMsg: errorMsg ?? null,
       });
