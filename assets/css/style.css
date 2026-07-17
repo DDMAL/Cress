@@ -609,6 +609,23 @@ a:hover {
   zoom: 0.9;
 }
 
+/* #158: hint bar shown under the mei cell editor while editing.
+   Same blue family as the editing border. */
+.mei-editor-hint {
+  box-sizing: border-box;
+  width: 100%;
+  background-color: #eaf1ff;
+  color: #2c5bcb;
+  border: 1px solid #5292f7;
+  border-top: none;
+  font-family: Montserrat, sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 3px 8px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 /* ----------------------- */
 /* Section: Image Cell
 /* ----------------------- */

@@ -153,6 +153,30 @@ export class CressTable {
       },
     });
 
+    // #158 (Option 1, chosen by Gen): while a mei cell is in edit mode,
+    // show a small hint bar attached to the bottom of the editor with the
+    // new-line shortcut. Purely additive: the hint lives inside the editor's
+    // input holder, so it appears/disappears together with the editor and
+    // never affects other columns or read-only mode.
+    this.table.addHook('afterBeginEditing', (_row, col) => {
+      const editor = this.table.getActiveEditor() as any;
+      const textarea: HTMLTextAreaElement | undefined = editor?.TEXTAREA;
+      const holder: HTMLElement | null = textarea?.parentElement ?? null;
+      if (!holder) return;
+      let hint = holder.querySelector('.mei-editor-hint') as HTMLElement | null;
+      if (this.table.colToProp(col) !== 'mei') {
+        if (hint) hint.style.display = 'none';
+        return;
+      }
+      if (!hint) {
+        hint = document.createElement('div');
+        hint.className = 'mei-editor-hint';
+        hint.textContent = 'New line: Cmd+Enter (Mac) / Alt+Enter (Windows)';
+        holder.appendChild(hint);
+      }
+      hint.style.display = 'block';
+    });
+
     this.initFileListener(id, inputHeader, body, this.defaultHeader);
     // No change tracking in read-only mode: there are no edits to track, and
     // setSavedStatus(false) would wrongly flag an untouched foreign file dirty.
