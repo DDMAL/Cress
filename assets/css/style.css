@@ -613,7 +613,7 @@ a:hover {
    Same blue family as the editing border. */
 .mei-editor-hint {
   box-sizing: border-box;
-  width: 100%;
+  width: calc(100% - 17px);
   background-color: #eaf1ff;
   color: #2c5bcb;
   border: 1px solid #5292f7;

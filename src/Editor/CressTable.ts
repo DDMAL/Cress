@@ -175,6 +175,16 @@ export class CressTable {
         holder.appendChild(hint);
       }
       hint.style.display = 'block';
+      const place = () => {
+        const holder = textarea.parentElement;
+        if (!holder) return;
+        const tr = textarea.getBoundingClientRect();
+        const hr = holder.getBoundingClientRect();
+        hint!.style.position = 'absolute';
+        hint!.style.left = `${tr.left - hr.left}px`;
+        hint!.style.top = `${tr.bottom - hr.top}px`;
+        hint!.style.width = `${tr.width}px`;
+      };
     });
 
     this.initFileListener(id, inputHeader, body, this.defaultHeader);
