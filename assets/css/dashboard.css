@@ -375,6 +375,25 @@ textarea.file-input {
   cursor: pointer;
 }
 
+/* #161: the sidebar icon SVGs are hard-coded #DFDFDF, a light grey chosen
+   for the white-background context menu (the same files are used in both
+   places, so the SVGs themselves cannot be recolored). brightness(0)
+   flattens each icon and invert(93%) lifts it to a soft near-white
+   (~#EDEDED) against the purple sidebar. The opacity 0.4 / 1
+   disabled/active mechanism above is untouched. */
+img.action-bar-item-container {
+  filter: brightness(0) invert(93%);
+}
+
+/* The trash and open icons have inherently thinner strokes than the other
+   three (different icon sources), so they read lighter at the same color.
+   A subtle white glow adds visual weight to just these two. */
+img#remove-doc,
+img#open-doc {
+  filter: brightness(0) invert(93%)
+    drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.9));
+}
+
 #upload-new-doc-button {
   width: 50%;
 }
