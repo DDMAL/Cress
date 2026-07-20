@@ -31,9 +31,21 @@ async function parseCSV(file: File): Promise<any[]> {
     Papa.parse(file, {
       header: true,
       dynamicTyping: true,
+      // Editors commonly end a file with a trailing newline; papaparse would
+      // otherwise parse it as a one-field row and report a FieldMismatch,
+      // which used to make the whole upload fail (#163).
+      skipEmptyLines: true,
       complete: (results) => {
         if (results.errors.length > 0) {
-          reject(new Error('Error parsing CSV file'));
+          // Surface where the problem is instead of a generic message.
+          // papaparse rows are 0-based and exclude the header, so +2 gives
+          // the 1-based line number in the file as the user sees it.
+          const first = results.errors[0];
+          const location =
+            typeof first.row === 'number' ? ` (line ${first.row + 2})` : '';
+          reject(
+            new Error(`Error parsing CSV file: ${first.message}${location}`),
+          );
         } else {
           resolve([results.meta.fields, results.data]);
         }
