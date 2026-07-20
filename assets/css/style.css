@@ -609,11 +609,23 @@ a:hover {
   zoom: 0.9;
 }
 
+/* Issue 2 (8px double blue line): Handsontable's editor autoResize rewrites
+   the textarea's inline width/min-width/max-width on every keystroke, leaving
+   the textarea 8px narrower than the cell. CSS !important beats non-important
+   inline styles, so pin the width to the real cell width, passed in via
+   --cress-cell-w (set in CressTable.ts afterBeginEditing). Height is
+   untouched: autoResize still grows the editor for multi-line content. */
+.handsontableInputHolder.cress-lock-width .handsontableInput {
+  width: var(--cress-cell-w) !important;
+  min-width: var(--cress-cell-w) !important;
+  max-width: var(--cress-cell-w) !important;
+}
+
 /* #158: hint bar shown under the mei cell editor while editing.
    Same blue family as the editing border. */
 .mei-editor-hint {
   box-sizing: border-box;
-  width: calc(100% - 17px);
+  width: 100%;
   background-color: #eaf1ff;
   color: #2c5bcb;
   border: 1px solid #5292f7;

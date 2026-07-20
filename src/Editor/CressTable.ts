@@ -163,6 +163,18 @@ export class CressTable {
       const textarea: HTMLTextAreaElement | undefined = editor?.TEXTAREA;
       const holder: HTMLElement | null = textarea?.parentElement ?? null;
       if (!holder) return;
+
+      // Issue 2 (8px double blue line): the editor's autoResize rewrites the
+      // textarea's inline width/min-width/max-width on every keystroke, so a
+      // one-time JS sync never sticks. Instead, pin the width via CSS
+      // `!important` (which beats non-important inline styles) and pass the
+      // real cell width through a CSS variable. Applies to every column.
+      const td: HTMLElement | undefined = editor?.TD;
+      if (td) {
+        holder.style.setProperty('--cress-cell-w', `${td.offsetWidth}px`);
+        holder.classList.add('cress-lock-width');
+      }
+
       let hint = holder.querySelector('.mei-editor-hint') as HTMLElement | null;
       if (this.table.colToProp(col) !== 'mei') {
         if (hint) hint.style.display = 'none';
@@ -175,16 +187,6 @@ export class CressTable {
         holder.appendChild(hint);
       }
       hint.style.display = 'block';
-      const place = () => {
-        const holder = textarea.parentElement;
-        if (!holder) return;
-        const tr = textarea.getBoundingClientRect();
-        const hr = holder.getBoundingClientRect();
-        hint!.style.position = 'absolute';
-        hint!.style.left = `${tr.left - hr.left}px`;
-        hint!.style.top = `${tr.bottom - hr.top}px`;
-        hint!.style.width = `${tr.width}px`;
-      };
     });
 
     this.initFileListener(id, inputHeader, body, this.defaultHeader);
