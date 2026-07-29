@@ -378,20 +378,28 @@ textarea.file-input {
 /* #161: the sidebar icon SVGs are hard-coded #DFDFDF, a light grey chosen
    for the white-background context menu (the same files are used in both
    places, so the SVGs themselves cannot be recolored). brightness(0)
-   flattens each icon and invert(93%) lifts it to a soft near-white
-   (~#EDEDED) against the purple sidebar. The opacity 0.4 / 1
-   disabled/active mechanism above is untouched. */
+   flattens each icon and invert(97%) lifts it to a near-white (~#F7F7F7)
+   against the purple sidebar. The opacity 0.4 / 1 disabled/active
+   mechanism above is untouched. */
 img.action-bar-item-container {
-  filter: brightness(0) invert(93%);
+  filter: brightness(0) invert(97%);
 }
 
 /* The trash and open icons have inherently thinner strokes than the other
    three (different icon sources), so they read lighter at the same color.
-   A subtle white glow adds visual weight to just these two. */
+   These two are taken to full white and given a doubled white glow, which
+   thickens the strokes rather than merely brightening them -- the thinness,
+   not the color, is what makes them recede. Two small-radius shadows stack
+   more cleanly than one large one, which blooms. Note the drop-shadows must
+   follow the invert: filter functions apply in order, and a white glow on a
+   not-yet-inverted (black) icon has no visible effect.
+   Per reporter feedback (#161, second round). Unifying the stroke weights
+   across the icon set is out of scope here and would be a separate issue. */
 img#remove-doc,
 img#open-doc {
-  filter: brightness(0) invert(93%)
-    drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.9));
+  filter: brightness(0) invert(100%)
+    drop-shadow(0 0 0.8px rgba(255, 255, 255, 1))
+    drop-shadow(0 0 0.8px rgba(255, 255, 255, 0.6));
 }
 
 #upload-new-doc-button {
