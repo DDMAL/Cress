@@ -624,7 +624,7 @@ a:hover {
 /* #158: hint bar shown under the mei cell editor while editing.
    Same blue family as the editing border. */
 .mei-editor-hint {
-  box-sizing: border-box;
+  box-sizing: border-box !important;
   width: 100%;
   background-color: #eaf1ff;
   color: #2c5bcb;
