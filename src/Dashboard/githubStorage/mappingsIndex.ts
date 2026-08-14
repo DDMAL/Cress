@@ -3,11 +3,11 @@
 // holding users.csv, one GitHub username per line. View-all resolves "which
 // users exist" by reading this list, then calls listForeignFiles per user.
 //
-// TEMPORARY OWNERSHIP: during testing the index lives under a personal account
-// and is curated by hand. Self-registration is deliberately avoided: it would
-// require cross-user writes to a shared repo, reintroducing the authz problem
-// the per-user-repo design removed. Long-term the index moves to the lab org
-// or is replaced by an automatic registration mechanism (see PR description).
+// OWNERSHIP: the index lives under a lab-owned service account and is curated
+// by hand. Self-registration is deliberately avoided: it would require
+// cross-user writes to a shared repo, reintroducing the authz problem the
+// per-user-repo design removed. Replacing the manual list with an automatic
+// registration mechanism remains open (see PR description).
 //
 // Deliberately NOT part of StorageBackend / ForeignReader: those are scoped to
 // mappings repos. The index is a different repo with a different lifecycle, so

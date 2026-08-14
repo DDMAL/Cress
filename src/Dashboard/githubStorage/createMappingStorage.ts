@@ -111,9 +111,10 @@ export function resetMappingStorage(): void {
   _backend = null;
 }
 
-// Central index host during testing (personal account; see mappingsIndex.ts
-// for the ownership caveat and long-term plan).
-const INDEX_OWNER = 'kyuchia';
+// Owner of the central mappings index repo (users.csv), now held by the lab
+// service account. The old personal-account path still redirects, but that
+// redirect is not permanent — keep this in sync with the repo's real owner.
+const INDEX_OWNER = 'ddmaladmin';
 
 /**
  * Usernames known to the mappings index, excluding the logged-in user (their

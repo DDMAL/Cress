@@ -24,12 +24,12 @@
 /**
  * The deployed Worker URL.
  *
- * PoC (personal account): https://cress-auth.kyuchia.workers.dev
- * When the Worker moves to the lab Cloudflare account, change this to the
- * lab subdomain (e.g. https://cress-auth.ddmal.workers.dev). Code is otherwise
- * unchanged.
+ * The Worker runs on the lab-owned Cloudflare service account. This value must
+ * match the Worker's GITHUB_REDIRECT_URI secret and the OAuth App's
+ * Authorization callback URL exactly — GitHub compares the callback as a
+ * literal string, so a trailing slash breaks it.
  */
-const WORKER_URL = 'https://cress-auth.kyuchia.workers.dev';
+const WORKER_URL = 'https://cress-auth.ddmal.workers.dev';
 
 /**
  * The origin we expect token messages to come from. We verify event.origin
