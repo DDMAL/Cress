@@ -2,17 +2,12 @@
 // App-wiring assembly point. The barrel (index.ts) only exports classes;
 // this is where they are composed into a ready-to-use MappingStorage instance.
 //
-// Importing this file from an entry (editor.ts) is what finally pulls the whole
-// githubStorage/ module into the webpack bundle + type-check. Until now nothing
-// imported it, so it was never compiled into the app.
-//
-// AUTH CONTRACT (shared with the OAuth frontend on feat/github-oauth-frontend):
+// AUTH CONTRACT (shared with the OAuth module, cress-frontend-auth.ts):
 //   localStorage 'cress_github_token'    -> bearer token (null when logged out)
 //   localStorage 'cress_github_username' -> GitHub login (repo owner)
-// We read these keys directly instead of importing getGithubToken(), so this
-// branch (feat/github-storage) does NOT depend on the OAuth branch's symbols.
-// AFTER the OAuth PR merges into main, swap getToken below for the imported
-// getGithubToken() (it reads the same key and also yields the username).
+// We read these keys directly instead of importing getGithubToken(), keeping
+// the storage layer free of any dependency on the auth module's symbols. If
+// the key names ever change, change them here and in cress-frontend-auth.ts.
 
 import { MappingStorage } from './MappingStorage';
 import { GitHubUserRepoBackend } from './GitHubUserRepoBackend';
