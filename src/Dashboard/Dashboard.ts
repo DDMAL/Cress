@@ -1844,6 +1844,9 @@ export const loadDashboard = async (): Promise<void> => {
   updateTrash(root);
   updateDashboard([root]);
   initializeDefaultContextMenu();
+  // Fire-and-forget: paint the local tree first for an instant dashboard, then
+  // top it up from GitHub in the background (stale-while-revalidate).
+  void reconcileTreeWithRemote();
 };
 
 /* ==========================================================================
@@ -2278,8 +2281,10 @@ function showCopyConflictDialog(owner: string, path: string): void {
 }
 
 /**
- * Materialize a just-copied mapping as a real FileSystem tree node so it appears
- * in "Your files" / My Mappings and opens in the editor.
+ * Materialize a mapping that exists in the user's own storage (a just-made
+ * copy, or a remote file found by reconcileTreeWithRemote) as a real
+ * FileSystem tree node so it appears in "Your files" / My Mappings and opens
+ * in the editor.
  *
  * Copying writes GitHub (source of truth) plus a name-keyed local mirror via
  * MappingStorage, but the dashboard renders UUID-keyed canonical docs from the
@@ -2341,6 +2346,68 @@ async function materializeCopyInTree(destName: string): Promise<void> {
   });
   FileSystemTools.addEntry(docEntry, root);
   updateDashboard();
+}
+
+/**
+ * Additive-only reconcile of the FileSystem tree against the user's GitHub
+ * repo, run in the background on dashboard load.
+ *
+ * The tree is local (PouchDB); saves dual-write GitHub + tree but nothing ever
+ * rebuilt the tree FROM GitHub, so a cleared IndexedDB / new device / fresh
+ * incognito session showed an empty "Your files" while the repo was intact.
+ * Here GitHub is treated as the source of truth for EXISTENCE: any remote
+ * mapping whose name appears nowhere in the tree (outside Trash / the shipped
+ * Samples folder) is materialized at root via the same path a copied mapping
+ * takes (materializeCopyInTree is idempotent for same-named root nodes).
+ *
+ * Deliberately additive-only for v1: local entries missing on the remote are
+ * left alone, because there is no dirty/unsynced marker yet -- deleting could
+ * destroy a local file that simply never synced. Deletion-side reconcile is a
+ * follow-up once such a marker exists. Names are compared against the WHOLE
+ * tree (any folder depth), because the remote is flat while the tree has
+ * folders: a mapping the user moved into a subfolder must not be re-added at
+ * root as a duplicate.
+ *
+ * Failures are swallowed with a console.warn -- if GitHub is unreachable the
+ * dashboard simply keeps showing the local tree as-is.
+ */
+async function reconcileTreeWithRemote(): Promise<void> {
+  try {
+    const remoteNames = await getMappingStorage().listRemoteMappings();
+    if (remoteNames.length === 0) return;
+
+    const root = state.getFolderPath().at(0);
+    if (!root) return;
+
+    // Every file name anywhere in the tree, excluding Trash and the top-level
+    // Samples folder (app-shipped samples are not user mappings; a user
+    // subfolder that happens to be named Samples still counts).
+    const treeNames = new Set<string>();
+    const walk = (folder: IFolder, isRoot: boolean): void => {
+      for (const entry of folder.children) {
+        if (entry.type === EntryType.Trash) continue;
+        if (entry.type === EntryType.Folder) {
+          if (isRoot && entry.name === 'Samples') continue;
+          walk(entry as IFolder, false);
+        } else {
+          treeNames.add(entry.name);
+        }
+      }
+    };
+    walk(root as IFolder, true);
+
+    for (const name of remoteNames) {
+      if (treeNames.has(name)) continue;
+      try {
+        await materializeCopyInTree(name);
+      } catch (err) {
+        console.warn(`reconcile: could not materialize "${name}":`, err);
+      }
+    }
+  } catch (err) {
+    // Never let reconcile break the dashboard; the local tree stays usable.
+    console.warn('reconcile with GitHub failed:', err);
+  }
 }
 
 /**

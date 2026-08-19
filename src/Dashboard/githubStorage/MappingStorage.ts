@@ -156,6 +156,26 @@ export class MappingStorage {
   }
 
   /**
+   * List mapping names that exist on the REMOTE only (no local-mirror merge).
+   * Used by the dashboard's tree reconcile: the FileSystem tree must be
+   * compared against GitHub as the source of truth for existence, so
+   * local-only names (mirror orphans, unsynced docs) must not leak into this
+   * list the way they do in listMappings. Returns [] when logged out or when
+   * the backend reports NotAuthenticated, so callers can no-op silently.
+   */
+  async listRemoteMappings(): Promise<string[]> {
+    if (!this.isLoggedIn()) return [];
+    let remote: StoredFileMeta[] = [];
+    try {
+      remote = await this.deps.backend.listFiles();
+    } catch (err) {
+      if (!(err instanceof NotAuthenticatedError)) throw err;
+    }
+    remote.forEach((m) => this.shaCache.set(m.path, m.sha ?? ''));
+    return remote.map((m) => m.path).sort();
+  }
+
+  /**
    * Copy another user's mapping into the current user's own storage.
    * Read foreign -> parse (csvToRows doubles as a bad-file gate) -> same-name
    * check -> saveMapping through the single write path (sha cache + local
