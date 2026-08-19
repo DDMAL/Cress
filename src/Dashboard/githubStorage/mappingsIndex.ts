@@ -3,11 +3,11 @@
 // holding users.csv, one GitHub username per line. View-all resolves "which
 // users exist" by reading this list, then calls listForeignFiles per user.
 //
-// TEMPORARY OWNERSHIP: during testing the index lives under a personal account
-// and is curated by hand. Self-registration is deliberately avoided: it would
-// require cross-user writes to a shared repo, reintroducing the authz problem
-// the per-user-repo design removed. Long-term the index moves to the lab org
-// or is replaced by an automatic registration mechanism (see PR description).
+// OWNERSHIP: the index repo is held by the lab service account (see INDEX_OWNER
+// in createMappingStorage.ts) and is curated by hand. Self-registration is
+// deliberately avoided: it would require cross-user writes to a shared repo,
+// reintroducing the authz problem the per-user-repo design removed. Replacing
+// manual curation with an automatic registration mechanism remains open.
 //
 // Deliberately NOT part of StorageBackend / ForeignReader: those are scoped to
 // mappings repos. The index is a different repo with a different lifecycle, so
@@ -18,7 +18,7 @@ import { NotAuthenticatedError } from './backend';
 export interface MappingsIndexDeps {
   fetch: typeof fetch;
   getToken: () => string | null;
-  /** Account that hosts the index repo (personal during testing). */
+  /** Account that hosts the index repo. */
   indexOwner: string;
   indexRepo?: string; // default "cress-mappings-index"
   apiBase?: string; // default "https://api.github.com"
