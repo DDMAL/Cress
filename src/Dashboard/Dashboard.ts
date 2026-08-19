@@ -1,4 +1,10 @@
-import { IEntry, IFile, IFolder, FileSystemTools } from './FileSystem';
+import {
+  IEntry,
+  IFile,
+  IFolder,
+  FileSystemTools,
+  EntryType,
+} from './FileSystem';
 import { deleteDocument, updateDocName, addDocument } from './Storage';
 import { FileSystemManager } from './FileSystem';
 import { ShiftSelectionManager, dashboardState } from './DashboardTools';
@@ -6,6 +12,10 @@ import { InitUploadArea } from './UploadArea';
 import * as contextMenuContent from './ContextMenuContent';
 import { ModalWindow, ModalWindowView } from '../utils/ModalWindow';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  getMappingStorage,
+  nameToPath,
+} from './githubStorage/createMappingStorage';
 
 const documentsContainer: HTMLDivElement = document.querySelector(
   '#fs-content-container',
@@ -362,6 +372,8 @@ function removeDocsHandler() {
     });
   }
 
+  // Remote .trash/ sync is handled centrally in moveToFolder (covers button +
+  // drag paths uniformly), so we just do the local move here.
   moveToFolder(selectedEntries, parentFolder, trashFolder);
 }
 
@@ -384,6 +396,8 @@ function putBackDocsHandler() {
       if (dateTimePattern.test(entry.name)) {
         entry.name = entry.name.replace(dateTimePattern, '');
       }
+      // Remote restore is handled centrally in moveToFolder (covers this button
+      // path AND drag-out-of-trash uniformly).
       moveToFolder([entry], parentFolder, targetFolder);
     }
   }
@@ -396,15 +410,24 @@ function putBackDocsHandler() {
  * @param parentFolder
  * @returns
  */
-function deleteFileEntry(file: IFile, parentFolder: IFolder): Promise<boolean> {
-  return new Promise((resolve, reject) => {
-    deleteDocument(file.id)
-      .then(() => {
-        FileSystemTools.removeEntry(file, parentFolder);
-        resolve(true);
-      })
-      .catch(() => reject(false));
-  });
+
+async function deleteFileEntry(
+  file: IFile,
+  parentFolder: IFolder,
+): Promise<boolean> {
+  try {
+    // LOCAL-ONLY delete. The GitHub side is append-only: the remote copy was
+    // already moved to .trash/ when the file was sent to Trash (see
+    // removeDocsHandler -> moveToFolder -> trashRemote), so permanent deletes
+    // here (Empty Trash / 30-day cleanup / Delete in Trash) must NOT touch the
+    // remote -- the .trash/ copy stays recoverable.
+    await deleteDocument(file.id);
+    FileSystemTools.removeEntry(file, parentFolder);
+    return true;
+  } catch (err) {
+    console.error('deleteFileEntry failed:', err);
+    return false;
+  }
 }
 
 /**
@@ -937,13 +960,64 @@ function moveToFolder(
       newFolder,
     );
     if (!response.succeeded) errorMessages.push(response.error);
-    else FileSystemTools.moveEntry(entry, parentFolder, newFolder);
+    else {
+      FileSystemTools.moveEntry(entry, parentFolder, newFolder);
+      // Keep the GitHub remote in step with trash moves. This is centralized
+      // here (rather than in each caller) because EVERY move -- button Put
+      // Back, drag-and-drop, Move-To menu, Send to Trash -- funnels through
+      // moveToFolder. Doing it per-handler missed the drag path entirely.
+      // Files only; best-effort & fire-and-forget (local move is source of
+      // truth for the UI, remote sync follows without blocking).
+      syncRemoteForMove(entry, parentFolder, newFolder);
+    }
   });
 
   errorMessages.filter((msg, idx, arr) => arr.indexOf(msg) === idx);
   if (errorMessages.length > 0) window.alert(errorMessages.join('\n'));
 
   updateDashboard();
+}
+
+/**
+ * Mirror a local trash move onto the GitHub remote. Called for every entry that
+ * moveToFolder successfully moves. Direction is inferred from the folders:
+ *   - moved INTO trash      -> trashRemote   (file -> .trash/ on GitHub)
+ *   - moved OUT of trash     -> restoreRemote (.trash/ -> top level)
+ *   - any other move (folder<->folder) -> no remote effect (flat remote).
+ * Only file entries map to the remote. The remote key is the file's ORIGINAL
+ * bare name, so we strip any " - <datetime>" suffix that trash-collision
+ * renaming may have appended. No-ops when logged out (inside trash/restore).
+ */
+function syncRemoteForMove(
+  entry: IEntry,
+  fromFolder: IFolder,
+  toFolder: IFolder,
+) {
+  if (entry.type !== EntryType.File) return;
+
+  const movedIntoTrash = toFolder.type === EntryType.Trash;
+  const movedOutOfTrash = fromFolder.type === EntryType.Trash;
+  if (!movedIntoTrash && !movedOutOfTrash) return;
+
+  const TRASH_SUFFIX =
+    / - \d{1,2}\/\d{1,2}\/\d{4}, \d{1,2}:\d{2}:\d{2} [APMapm]{2}$/;
+  const bareName = entry.name.replace(TRASH_SUFFIX, '');
+  const remotePath = nameToPath(bareName);
+  const storage = getMappingStorage();
+
+  if (movedIntoTrash) {
+    storage
+      .trashRemote(remotePath)
+      .catch((err) =>
+        console.error(`trashRemote failed for "${bareName}":`, err),
+      );
+  } else {
+    storage
+      .restoreRemote(remotePath)
+      .catch((err) =>
+        console.error(`restoreRemote failed for "${bareName}":`, err),
+      );
+  }
 }
 
 function trashFNConflictHandler(filename: string): string {

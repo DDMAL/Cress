@@ -1,5 +1,5 @@
 // createMappingStorage.ts
-// App-wiring assembly point for #3. The barrel (index.ts) only exports classes;
+// App-wiring assembly point. The barrel (index.ts) only exports classes;
 // this is where they are composed into a ready-to-use MappingStorage instance.
 //
 // Importing this file from an entry (editor.ts) is what finally pulls the whole

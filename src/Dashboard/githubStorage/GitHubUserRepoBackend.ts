@@ -76,7 +76,18 @@ export class GitHubUserRepoBackend implements StorageBackend {
 
   private contentsUrl(path: string): string {
     const { owner, repo } = this.deps;
-    return `${this.base}/repos/${owner}/${repo}/contents/${encodeURIComponent(withCsv(path))}`;
+    // Encode each path SEGMENT separately and rejoin with real '/'. A whole-path
+    // encodeURIComponent() would turn the '/' in a subdir path (e.g.
+    // ".trash/my-map.csv") into %2F, which the GitHub contents API treats as a
+    // literal filename char rather than a directory separator -- creating a
+    // root-level file literally named ".trash/my-map.csv" instead of a file
+    // inside the .trash dir. Per-segment encoding keeps separators intact while
+    // still escaping spaces/unicode within each segment.
+    const encoded = withCsv(path)
+      .split('/')
+      .map((seg) => encodeURIComponent(seg))
+      .join('/');
+    return `${this.base}/repos/${owner}/${repo}/contents/${encoded}`;
   }
 
   /** True if the target repo already exists for this user (GET /repos/:owner/:repo). */
