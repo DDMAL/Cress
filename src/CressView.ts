@@ -18,6 +18,10 @@ class CressView {
   /** Content of the document loaded. */
   header: string[];
   body: any[];
+  /** When true, the editor loads a foreign file in read-only mode (issue #151). */
+  readOnly: boolean;
+  /** GitHub login of the file's owner (read-only mode only). */
+  owner?: string;
   /** Module that controls state and content of Cress modal windows */
   modal: ModalWindowInterface;
   /** Spreadsheet module */
@@ -31,6 +35,8 @@ class CressView {
     this.name = cressDoc.name;
     this.header = cressDoc.header;
     this.body = cressDoc.body;
+    this.readOnly = cressDoc.readOnly ?? false;
+    this.owner = cressDoc.owner;
   }
 
   /**
@@ -47,7 +53,14 @@ class CressView {
 
         initGithubAuth();
 
-        this.table = new CressTable(this.id, this.name, this.header, this.body);
+        this.table = new CressTable(
+          this.id,
+          this.name,
+          this.header,
+          this.body,
+          this.readOnly,
+          this.owner,
+        );
         return;
       })
       .then(() => {});

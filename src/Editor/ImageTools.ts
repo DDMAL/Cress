@@ -2,9 +2,11 @@ import Handsontable from 'handsontable';
 
 export class ImageTools {
   private images: any[];
+  private readOnly: boolean;
 
-  constructor(images: any[]) {
+  constructor(images: any[], readOnly = false) {
     this.images = images;
+    this.readOnly = readOnly;
   }
 
   // Image Handler Functions
@@ -73,20 +75,30 @@ export class ImageTools {
       img.style.height = image ? `${image.height}px` : '40px';
       imgContainer.appendChild(img);
 
-      const resizeHandle = this.createResizeHandle();
-      this.makeImageResizable(img, resizeHandle, row);
-      imgContainer.appendChild(resizeHandle);
+      // Read-only foreign view (#151): show the image but no resize handle and
+      // no delete/change buttons, so the cell cannot be mutated.
+      if (!this.readOnly) {
+        const resizeHandle = this.createResizeHandle();
+        this.makeImageResizable(img, resizeHandle, row);
+        imgContainer.appendChild(resizeHandle);
+      }
 
       container.appendChild(imgContainer);
 
-      const buttons = this.createButtons(instance, row, col);
-      container.appendChild(buttons);
+      if (!this.readOnly) {
+        const buttons = this.createButtons(instance, row, col);
+        container.appendChild(buttons);
+      }
 
       td.appendChild(container);
       cellProperties.readOnly = true;
     } else if (!value) {
-      const input = this.handleImgUpload(instance, row, col);
-      td.appendChild(input);
+      // Read-only: render an empty cell instead of the upload control, so a
+      // foreign image column can never receive a new upload.
+      if (!this.readOnly) {
+        const input = this.handleImgUpload(instance, row, col);
+        td.appendChild(input);
+      }
       cellProperties.readOnly = true;
     } else {
       td.innerText = value;

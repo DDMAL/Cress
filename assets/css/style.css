@@ -203,6 +203,22 @@ a:hover {
   margin-left: 10px;
   transform: scale(0.8);
 }
+/* Read-only foreign view label (#151): sits in the top status row next to
+   "MEI Status", since both describe the file's state. Muted grey (#818181,
+   the same as filename / MEI Status) so it reads as status, not as a clickable
+   purple action; the inline eye icon reinforces view-only. */
+.readonly-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #818181;
+  font-weight: normal;
+  cursor: default;
+}
+.readonly-banner img {
+  width: 16px;
+  height: 16px;
+}
 /* Feedback form */
 #feedback-form-btn-container,
 #github-login-btn,
@@ -591,6 +607,35 @@ a:hover {
 .handsontable.table-menu-btn .changeType::before {
   content: "▼ ";
   zoom: 0.9;
+}
+
+/* Issue 2 (8px double blue line): Handsontable's editor autoResize rewrites
+   the textarea's inline width/min-width/max-width on every keystroke, leaving
+   the textarea 8px narrower than the cell. CSS !important beats non-important
+   inline styles, so pin the width to the real cell width, passed in via
+   --cress-cell-w (set in CressTable.ts afterBeginEditing). Height is
+   untouched: autoResize still grows the editor for multi-line content. */
+.handsontableInputHolder.cress-lock-width .handsontableInput {
+  width: var(--cress-cell-w) !important;
+  min-width: var(--cress-cell-w) !important;
+  max-width: var(--cress-cell-w) !important;
+}
+
+/* #158: hint bar shown under the mei cell editor while editing.
+   Same blue family as the editing border. */
+.mei-editor-hint {
+  box-sizing: border-box !important;
+  width: 100%;
+  background-color: #eaf1ff;
+  color: #2c5bcb;
+  border: 1px solid #5292f7;
+  border-top: none;
+  font-family: Montserrat, sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 3px 8px;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 /* ----------------------- */
