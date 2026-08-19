@@ -1,3 +1,10 @@
+import {
+  getMappingStorage,
+  ensureReady,
+  nameToPath,
+} from '../Dashboard/githubStorage/createMappingStorage';
+import { cressPayloadToRows } from '../Dashboard/githubStorage';
+
 import Handsontable from 'handsontable';
 import { ImageTools } from './ImageTools';
 import { MeiTools } from './MeiTools';
@@ -31,9 +38,13 @@ export class CressTable {
   private columnTools: ColumnTools;
   private defaultHeader = ['image', 'name', 'classification', 'mei'];
   private filterSidebar: FilterSidebar | null = null;
+  private savePath: string;
 
-  constructor(id: string, inputHeader: string[], body: any[]) {
+  // constructor(id: string, inputHeader: string[], body: any[]) {
+  constructor(id: string, name: string, inputHeader: string[], body: any[]) {
+    // const container = document.getElementById('hot-container');
     const container = document.getElementById('hot-container');
+    this.savePath = nameToPath(name);
 
     // Initialize Toolss
     this.imageTools = new ImageTools(this.images);
@@ -155,28 +166,49 @@ export class CressTable {
       });
 
     document.getElementById('save').addEventListener('click', async () => {
-      const result = await updateAttachment(id, [inputHeader, ...body]);
-
-      if (result) {
-        setSavedStatus(true);
-        Notification.queueNotification('Saved', 'success');
-      } else {
-        Notification.queueNotification('Save failed', 'error');
-      }
+      await this.saveTable(inputHeader, body);
     });
 
     document.body.addEventListener('keydown', async (evt) => {
       if (evt.key === 's') {
-        const result = await updateAttachment(id, [inputHeader, ...body]);
-
-        if (result) {
-          setSavedStatus(true);
-          Notification.queueNotification('Saved', 'success');
-        } else {
-          Notification.queueNotification('Save failed', 'error');
-        }
+        await this.saveTable(inputHeader, body);
       }
     });
+  }
+  private async saveTable(inputHeader: string[], body: any[]): Promise<void> {
+    try {
+      // Create the user's mappings repo on first save (no-op if it exists or
+      // logged out). The Option-2 asymmetry is hidden in the wiring layer.
+      await ensureReady();
+
+      // Cress internal [headers, ...rowObjects] -> string[][] for the CSV layer.
+      const payload = [inputHeader, ...body] as [
+        string[],
+        ...Array<Record<string, unknown>>,
+      ];
+      const rows = cressPayloadToRows(payload);
+
+      const outcome = await getMappingStorage().saveMapping(
+        this.savePath,
+        rows,
+      );
+
+      if (outcome.status === 'conflict') {
+        setSavedStatus(false);
+        Notification.queueNotification(
+          'Save conflict: the remote file changed',
+          'error',
+        );
+        return;
+      }
+
+      setSavedStatus(true);
+      Notification.queueNotification('Saved', 'success');
+    } catch (e) {
+      console.error('saveTable failed:', e);
+      setSavedStatus(false);
+      Notification.queueNotification('Save failed', 'error');
+    }
   }
 
   private initChangeListener() {
