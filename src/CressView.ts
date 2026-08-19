@@ -47,8 +47,7 @@ class CressView {
 
         initGithubAuth();
 
-        this.table = new CressTable(this.id, this.header, this.body);
-
+        this.table = new CressTable(this.id, this.name, this.header, this.body);
         return;
       })
       .then(() => {});
