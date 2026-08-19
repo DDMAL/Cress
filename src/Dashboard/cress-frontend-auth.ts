@@ -24,12 +24,16 @@
 /**
  * The deployed Worker URL.
  *
- * PoC (personal account): https://cress-auth.kyuchia.workers.dev
- * When the Worker moves to the lab Cloudflare account, change this to the
- * lab subdomain (e.g. https://cress-auth.ddmal.workers.dev). Code is otherwise
- * unchanged.
+ * Owned by the lab service account since the August 2026 migration:
+ * https://cress-auth.ddmal.workers.dev
+ *
+ * The pre-migration Worker (https://cress-auth.kyuchia.workers.dev, a personal
+ * account) is still running as a rollback path, but its origin allowlist does
+ * NOT include https://ddmal.ca. Pointing this constant back at it would make
+ * login fail silently in production: the popup reports success, the app loads,
+ * and no remote files ever appear, with a clean console.
  */
-const WORKER_URL = 'https://cress-auth.kyuchia.workers.dev';
+const WORKER_URL = 'https://cress-auth.ddmal.workers.dev';
 
 /**
  * The origin we expect token messages to come from. We verify event.origin
