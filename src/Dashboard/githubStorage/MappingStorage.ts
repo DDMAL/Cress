@@ -220,6 +220,30 @@ export class MappingStorage {
     const destPath = newName ?? path;
     const normalized = rowsToCsv(rows);
 
+    // ---- Same-name check must also consult the LOCAL store. ----
+    // A doc created on the dashboard but never saved in the editor exists ONLY
+    // in PouchDB (lazy write), so backend.readFile below cannot see it -- yet
+    // saveMapping's local.set resolves the same name and silently overwrites
+    // the original. Probe local names first; identical content falls through
+    // (the copy just converges local + remote), anything else is a user
+    // decision, not ours.
+    const localNames = await this.deps.local.list();
+    if (localNames.includes(destPath)) {
+      const localContent = await this.deps.local.get(destPath);
+      const localNormalized =
+        localContent == null ? null : rowsToCsv(csvToRows(localContent));
+      if (localNormalized !== normalized) {
+        // Different content, or unreadable (can't prove identical => no
+        // silent overwrite): surface the same-name dialog like the remote
+        // case.
+        throw new ConflictError(
+          `copyForeignMapping: "${destPath}" exists locally with different content`,
+          destPath,
+        );
+      }
+      // identical local-only copy: fall through to the remote probe/save.
+    }
+
     // Explicit destination probe: shaCache is empty for files this session
     // never touched, so a bare saveMapping could not tell "identical copy"
     // apart from a real conflict.
@@ -311,6 +335,27 @@ export class MappingStorage {
     return reader.listForeignFiles(owner);
   }
 
+  /**
+   * Read another user's mapping file as parsed rows, for read-only viewing in
+   * the editor (issue #151). Pure read: unlike copyForeignMapping it never
+   * writes to the current user's repo or local store. Thin passthrough to the
+   * ForeignReader + the same csvToRows parse gate copyForeignMapping uses.
+   * Returns null when no foreignReader is configured or the file is absent.
+   */
+  async readForeignMapping(
+    owner: string,
+    path: string,
+  ): Promise<CsvRow[] | null> {
+    const reader = this.deps.foreignReader;
+    if (!reader) return null;
+    if (!this.isLoggedIn()) {
+      throw new NotAuthenticatedError('readForeignMapping requires login');
+    }
+    const src = await reader.readForeignFile(owner, path);
+    if (!src) return null;
+    return csvToRows(src.content);
+  }
+
   async deleteMapping(path: string): Promise<void> {
     await this.deps.local.remove(path);
     await this.trashRemote(path);
@@ -337,6 +382,19 @@ export class MappingStorage {
   async restoreRemote(path: string): Promise<void> {
     if (this.isLoggedIn()) {
       await this.moveRemote(this.trashPathFor(path), path);
+    }
+  }
+
+  /**
+   * Rename a mapping on the remote: move old path -> new path
+   * (copy-then-delete via moveRemote, same mechanism as trash/restore).
+   * No-op when logged out or when the old path isn't on the remote.
+   * Throws ConflictError if the new path already exists with different
+   * content (never silently clobbers another file).
+   */
+  async renameRemote(from: string, to: string): Promise<void> {
+    if (this.isLoggedIn()) {
+      await this.moveRemote(from, to);
     }
   }
 

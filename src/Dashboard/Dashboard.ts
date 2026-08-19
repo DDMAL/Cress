@@ -608,10 +608,17 @@ function updateNavPath(): void {
     navSection.innerHTML = folder.name;
 
     const targetPath = state.getFolderPath().slice(0, idx + 1);
-    navSection.addEventListener(
-      'click',
-      async () => await updateDashboard(targetPath),
-    );
+    navSection.addEventListener('click', async () => {
+      // While the All Mappings overlay is open, only "Home" is present in the
+      // folderPath breadcrumb. Clicking it must close the panel (hide the
+      // overlay + rebuild at root), not just rebuild the tree underneath a
+      // panel that keeps covering the view. closeAllMappings does both.
+      if (isAllMappingsOpen()) {
+        closeAllMappings();
+        return;
+      }
+      await updateDashboard(targetPath);
+    });
     // add drop target to move dragged element to the prospective folders
     addDropTargetListeners(
       navSection,
@@ -632,12 +639,31 @@ function updateNavPath(): void {
       navPathContainer.appendChild(seperator);
     }
   });
+
+  // If the All Mappings overlay is open, its breadcrumb segment lives outside
+  // folderPath, so this rebuild just dropped it. Re-add it so the breadcrumb
+  // stays consistent with the panel that is still covering the view (e.g.
+  // after a copy triggers updateDashboard).
+  if (isAllMappingsOpen()) {
+    appendAllMappingsCrumb();
+  }
 }
 
 /**
  * Updates the back button with click event listener to go back one folder if possible
  */
 function updateBackButton() {
+  // While the All Mappings overlay is open it owns the Back button as its
+  // close control. Any rebuild here (triggered e.g. by a copy or a background
+  // click) would clone/replace the node -- dropping the closeAllMappings
+  // listener -- and, seeing folderPath at root, disable and grey it out,
+  // leaving the user stranded (worst case: logged out with no user row to
+  // expand = no escape but the Cress logo). Defer to the panel's own control.
+  if (isAllMappingsOpen()) {
+    activatePanelBackButton();
+    return;
+  }
+
   // Erase previous event listeners
   const buttonClone = backButton.cloneNode(true) as HTMLButtonElement;
   backButton.parentNode.replaceChild(buttonClone, backButton);
@@ -812,6 +838,7 @@ function handleAddFile(fileName: string, rowNum: number) {
  * @param entry IEntry to rename
  */
 function renameEntry(entry: IEntry, newName: string) {
+  const oldName = entry.name; // capture BEFORE FileSystemTools mutates it
   const succeeded = FileSystemTools.renameEntry(
     entry,
     state.getParentFolder(),
@@ -821,7 +848,26 @@ function renameEntry(entry: IEntry, newName: string) {
     // Update database if entry is a file
     if (entry.type === 'file') {
       const file = entry as IFile;
-      updateDocName(file.id, newName).then(() => {
+      updateDocName(file.id, newName).then(async () => {
+        // Keep the GitHub repo in step: move old path -> new path
+        // (otherwise the next save writes the new name and the old
+        // file is orphaned in the repo; see issue on stale renames).
+        try {
+          await getMappingStorage().renameRemote(
+            nameToPath(oldName),
+            nameToPath(newName),
+          );
+          // Guard against reconcile resurrecting the old name from a stale
+          // remote listing (see tombstone helpers).
+          recordTombstone(oldName);
+        } catch (e) {
+          console.error('Remote rename failed:', e);
+          window.alert(
+            `Renamed locally, but moving the file on GitHub failed: ${
+              e instanceof Error ? e.message : e
+            }`,
+          );
+        }
         updateDashboard();
       });
     } else {
@@ -996,6 +1042,55 @@ function moveToFolder(
 }
 
 /**
+ * Reconcile tombstones: names recently removed from the remote by THIS client
+ * (rename old-path, move to trash). reconcileTreeWithRemote() is additive-only
+ * and trusts the remote listing for existence, but that listing can be stale
+ * in two ways: (a) GitHub's contents list is eventually consistent, so a name
+ * deleted moments ago can still be listed; (b) the reconcile launched at page
+ * load snapshots the remote list BEFORE a quick rename/trash lands, then walks
+ * the tree AFTER it. Either way the old name gets re-materialized as a zombie
+ * tile. Tombstones let reconcile skip names we know we just removed. TTL-bound
+ * so a genuinely re-created same-named file reappears after the window.
+ */
+const TOMBSTONE_KEY = 'cress-reconcile-tombstones';
+const TOMBSTONE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+function readTombstones(): Record<string, number> {
+  try {
+    const raw = window.localStorage.getItem(TOMBSTONE_KEY);
+    const map = raw ? (JSON.parse(raw) as Record<string, number>) : {};
+    // prune expired entries on every read
+    const now = Date.now();
+    let changed = false;
+    for (const k of Object.keys(map)) {
+      if (now - map[k] > TOMBSTONE_TTL_MS) {
+        delete map[k];
+        changed = true;
+      }
+    }
+    if (changed)
+      window.localStorage.setItem(TOMBSTONE_KEY, JSON.stringify(map));
+    return map;
+  } catch {
+    return {};
+  }
+}
+
+function recordTombstone(name: string): void {
+  try {
+    const map = readTombstones();
+    map[name] = Date.now();
+    window.localStorage.setItem(TOMBSTONE_KEY, JSON.stringify(map));
+  } catch {
+    /* best-effort; reconcile just loses the guard */
+  }
+}
+
+function isTombstoned(name: string): boolean {
+  return name in readTombstones();
+}
+
+/**
  * Mirror a local trash move onto the GitHub remote. Called for every entry that
  * moveToFolder successfully moves. Direction is inferred from the folders:
  *   - moved INTO trash      -> trashRemote   (file -> .trash/ on GitHub)
@@ -1023,6 +1118,7 @@ function syncRemoteForMove(
   const storage = getMappingStorage();
 
   if (movedIntoTrash) {
+    recordTombstone(bareName);
     storage
       .trashRemote(remotePath)
       .catch((err) =>
@@ -1921,19 +2017,7 @@ async function openAllMappings(): Promise<void> {
 
   // Extend the breadcrumb to read "Home / All Mappings" (folderPath is still
   // [root] since we didn't navigate the tree).
-  const crumb = document.getElementById('nav-path-container');
-  if (crumb && !document.getElementById('all-mappings-crumb')) {
-    const sep = document.createElement('div');
-    sep.classList.add('nav-path-seperator');
-    sep.innerHTML = ' / ';
-    sep.setAttribute('id', 'all-mappings-crumb-sep');
-    const seg = document.createElement('div');
-    seg.classList.add('nav-path-section');
-    seg.setAttribute('id', 'all-mappings-crumb');
-    seg.innerText = 'All Mappings';
-    crumb.appendChild(sep);
-    crumb.appendChild(seg);
-  }
+  appendAllMappingsCrumb();
 
   const body = document.createElement('div');
   body.classList.add('all-mappings-body');
@@ -1945,6 +2029,38 @@ async function openAllMappings(): Promise<void> {
   // it, so nothing overwrites the active state. We keep the same node (no
   // clone/replace) to avoid dangling the dashboard's own backButton reference.
   activatePanelBackButton();
+}
+
+/**
+ * True when the All Mappings overlay is currently showing. While open, the
+ * panel borrows the dashboard's #fs-back-btn as its close control, so the
+ * normal FileSystem button logic (updateBackButton) must not reclaim, disable,
+ * or grey it out.
+ */
+function isAllMappingsOpen(): boolean {
+  const panel = document.getElementById(ALL_MAPPINGS_PANEL_ID);
+  return !!panel && panel.style.display !== 'none';
+}
+
+/**
+ * Extend the breadcrumb to read "Home / All Mappings". The segment lives
+ * outside folderPath (the panel is isolated from the FileSystem tree), so it
+ * must be re-added whenever the breadcrumb is rebuilt while the panel is open.
+ * Idempotent: no-op if the segment is already present.
+ */
+function appendAllMappingsCrumb(): void {
+  const crumb = document.getElementById('nav-path-container');
+  if (!crumb || document.getElementById('all-mappings-crumb')) return;
+  const sep = document.createElement('div');
+  sep.classList.add('nav-path-seperator');
+  sep.innerHTML = ' / ';
+  sep.setAttribute('id', 'all-mappings-crumb-sep');
+  const seg = document.createElement('div');
+  seg.classList.add('nav-path-section');
+  seg.setAttribute('id', 'all-mappings-crumb');
+  seg.innerText = 'All Mappings';
+  crumb.appendChild(sep);
+  crumb.appendChild(seg);
 }
 
 /**
@@ -2163,6 +2279,14 @@ function createForeignTile(owner: string, path: string): HTMLElement {
   copyBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     void handleCopyForeign(owner, path);
+  });
+
+  // Read-only open (#151): clicking the tile (but not the Copy button, which
+  // stops propagation) opens the foreign file in the editor in read-only mode.
+  tile.style.cursor = 'pointer';
+  tile.addEventListener('click', () => {
+    const query = makeQuery({ foreign: '1', owner, path });
+    window.open(`./editor.html?${query}`, '_blank');
   });
 
   tile.appendChild(icon);
@@ -2398,6 +2522,7 @@ async function reconcileTreeWithRemote(): Promise<void> {
 
     for (const name of remoteNames) {
       if (treeNames.has(name)) continue;
+      if (isTombstoned(name)) continue; // we just removed it; listing is stale
       try {
         await materializeCopyInTree(name);
       } catch (err) {

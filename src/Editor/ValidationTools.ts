@@ -86,6 +86,16 @@ export class ValidationTools {
     return new Promise((resolve) => {
       try {
         const parser = new DOMParser();
+
+        // Check if user's MEI input is well-formed XML before inserting
+        const wrappedValue = `<root>${value}</root>`;
+        const userDoc = parser.parseFromString(wrappedValue, 'text/xml');
+        const parseError = userDoc.querySelector('parsererror');
+        if (parseError) {
+          resolve([parseError.textContent || 'Malformed XML']);
+          return;
+        }
+
         const meiDoc = parser.parseFromString(meiTemplate, 'text/xml');
         const mei = meiDoc.documentElement;
 

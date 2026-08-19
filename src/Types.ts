@@ -21,6 +21,12 @@ export type CressDoc = {
   name: string;
   header: string[] | undefined;
   body: any[];
+  /** Read-only view of another user's mapping (issue #151). Disables the whole
+   *  write chain (save button, 's' hotkey, cell editing) so a foreign file can
+   *  never be written back into the current user's repo. */
+  readOnly?: boolean;
+  /** GitHub login of the file's owner, shown in the read-only banner. */
+  owner?: string;
 };
 
 /** Type definitions for Cress */
