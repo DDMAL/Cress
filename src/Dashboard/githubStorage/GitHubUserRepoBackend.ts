@@ -75,8 +75,26 @@ export class GitHubUserRepoBackend implements StorageBackend {
   }
 
   private contentsUrl(path: string): string {
-    const { owner, repo } = this.deps;
-    return `${this.base}/repos/${owner}/${repo}/contents/${encodeURIComponent(withCsv(path))}`;
+    return this.contentsUrlFor(this.deps.owner, path);
+  }
+
+  // owner-parameterized form of contentsUrl. Own-repo ops pass this.deps.owner
+  // (via contentsUrl above); cross-user reads pass another user's login. Repo
+  // name is shared (every user's mappings live in a repo of the same name).
+  private contentsUrlFor(owner: string, path: string): string {
+    const { repo } = this.deps;
+    // Encode each path SEGMENT separately and rejoin with real '/'. A whole-path
+    // encodeURIComponent() would turn the '/' in a subdir path (e.g.
+    // ".trash/my-map.csv") into %2F, which the GitHub contents API treats as a
+    // literal filename char rather than a directory separator -- creating a
+    // root-level file literally named ".trash/my-map.csv" instead of a file
+    // inside the .trash dir. Per-segment encoding keeps separators intact while
+    // still escaping spaces/unicode within each segment.
+    const encoded = withCsv(path)
+      .split('/')
+      .map((seg) => encodeURIComponent(seg))
+      .join('/');
+    return `${this.base}/repos/${owner}/${repo}/contents/${encoded}`;
   }
 
   /** True if the target repo already exists for this user (GET /repos/:owner/:repo). */
@@ -151,6 +169,38 @@ export class GitHubUserRepoBackend implements StorageBackend {
     return { content: fromBase64(json.content), sha: json.sha ?? null };
   }
 
+  /**
+   * Read a file from ANOTHER user's mappings repo (read-only, cross-user).
+   * Same shape as readFile but the owner is supplied by the caller instead of
+   * this.deps.owner. Used by the view-all / copy features: any logged-in user
+   * can read any user's PUBLIC cress-mappings repo with their own token. There
+   * is deliberately NO foreign write/delete -- "others' mappings are read-only"
+   * is enforced here by the absence of those methods, not just by GitHub's
+   * permission check at runtime.
+   */
+  async readForeignFile(
+    owner: string,
+    path: string,
+  ): Promise<ReadResult | null> {
+    const url = new URL(this.contentsUrlFor(owner, path));
+    if (this.deps.branch) url.searchParams.set('ref', this.deps.branch);
+    const res = await this.deps.fetch(url.toString(), {
+      headers: this.authHeaders(),
+    });
+
+    if (res.status === 404) return null;
+    if (!res.ok)
+      throw new Error(
+        `readForeignFile failed: ${res.status} ${await safeText(res)}`,
+      );
+
+    const json = (await res.json()) as { content?: string; sha?: string };
+    if (json.content === undefined) {
+      throw new Error(`readForeignFile: ${path} is not a file`);
+    }
+    return { content: fromBase64(json.content), sha: json.sha ?? null };
+  }
+
   async writeFile(
     path: string,
     content: string,
@@ -209,7 +259,33 @@ export class GitHubUserRepoBackend implements StorageBackend {
       .filter((e) => e.type === 'file' && e.name.endsWith(CSV_EXT))
       .map((e) => ({ path: stripCsv(e.name), sha: e.sha }));
   }
+  /**
+   * List the top-level mappings in ANOTHER user's repo (read-only, cross-user).
+   * Like listFiles but for a caller-supplied owner. Builds the directory URL
+   * directly (no trailing-segment regex) since there is no path to encode.
+   */
+  async listForeignFiles(owner: string): Promise<StoredFileMeta[]> {
+    const { repo } = this.deps;
+    const url = new URL(`${this.base}/repos/${owner}/${repo}/contents`);
+    if (this.deps.branch) url.searchParams.set('ref', this.deps.branch);
+    const res = await this.deps.fetch(url.toString(), {
+      headers: this.authHeaders(),
+    });
+    if (res.status === 404) return [];
+    if (!res.ok)
+      throw new Error(
+        `listForeignFiles failed: ${res.status} ${await safeText(res)}`,
+      );
 
+    const json = (await res.json()) as Array<{
+      name: string;
+      sha: string;
+      type: string;
+    }>;
+    return json
+      .filter((e) => e.type === 'file' && e.name.endsWith(CSV_EXT))
+      .map((e) => ({ path: stripCsv(e.name), sha: e.sha }));
+  }
   async deleteFile(path: string, sha: string): Promise<void> {
     const body: Record<string, unknown> = {
       message: `cress: delete ${withCsv(path)}`,

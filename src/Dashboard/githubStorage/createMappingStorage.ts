@@ -1,5 +1,5 @@
 // createMappingStorage.ts
-// App-wiring assembly point for #3. The barrel (index.ts) only exports classes;
+// App-wiring assembly point. The barrel (index.ts) only exports classes;
 // this is where they are composed into a ready-to-use MappingStorage instance.
 //
 // Importing this file from an entry (editor.ts) is what finally pulls the whole
@@ -17,6 +17,7 @@
 import { MappingStorage } from './MappingStorage';
 import { GitHubUserRepoBackend } from './GitHubUserRepoBackend';
 import { PouchDbLocalStore } from './PouchDbLocalStore';
+import { fetchIndexedUsers } from './mappingsIndex';
 // To route writes through a Worker instead, swap in WorkerBackend at the assembly line below.
 // import { WorkerBackend } from './WorkerBackend';
 
@@ -77,6 +78,10 @@ export function getMappingStorage(): MappingStorage {
     backend: _backend,
     local: new PouchDbLocalStore(),
     getToken,
+    // The GitHub backend doubles as the read-only foreign reader (it already
+    // implements readForeignFile/listForeignFiles). Worker wiring would omit
+    // this line: no foreignReader, no copy feature.
+    foreignReader: _backend,
   });
   return _instance;
 }
@@ -104,4 +109,27 @@ export async function ensureReady(): Promise<void> {
 export function resetMappingStorage(): void {
   _instance = null;
   _backend = null;
+}
+
+// Owner of the central mappings index repo (users.csv), held by the lab
+// service account since the August 2026 migration. The old personal-account
+// path still redirects, but that redirect is not permanent — keep this in
+// sync with the repo's real owner.
+const INDEX_OWNER = 'ddmaladmin';
+
+/**
+ * Usernames known to the mappings index, excluding the logged-in user (their
+ * own files come from listMappings, not the foreign path). Empty when logged
+ * out or when the index is unreachable, so callers can render "no foreign
+ * users" without special-casing.
+ */
+export async function listIndexedForeignUsers(): Promise<string[]> {
+  if (!getToken()) return [];
+  const users = await fetchIndexedUsers({
+    fetch: window.fetch.bind(window),
+    getToken,
+    indexOwner: INDEX_OWNER,
+  });
+  const self = getOwner();
+  return users.filter((u) => u !== self);
 }
