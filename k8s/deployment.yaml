@@ -4,7 +4,7 @@ metadata:
   name: cress
   namespace: cress
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: cress
@@ -21,10 +21,26 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
           resources:
             requests:
-              cpu: 50m
-              memory: 64Mi
+              cpu: 10m
+              memory: 32Mi
             limits:
               cpu: 200m
               memory: 128Mi
