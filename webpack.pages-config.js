@@ -21,15 +21,6 @@ module.exports = {
         use: ['ts-loader'],
         exclude: /node_modules/,
       },
-      {
-        test: /Worker\.js$/,
-        use: [
-          {
-            loader: 'worker-loader',
-            options: { publicPath: '/Cress-gh/' },
-          },
-        ],
-      },
     ],
   },
   resolve: {
