@@ -35,13 +35,13 @@
     "@types/pouchdb": "^6.4.2",
     "eslint": "^9.6.0",
     "http-server": "^14.1.1",
-    "node-polyfill-webpack-plugin": "^4.0.0",
+    "node-polyfill-webpack-plugin": "^4.1.0",
     "papaparse": "^5.4.1",
     "pouchdb-core": "^9.0.0",
-    "prettier": "^3.5.3",
-    "ts-loader": "9.5.1",
-    "typescript": "^5.5.3",
-    "webpack": "5.92.1",
+    "prettier": "^3.10.1",
+    "ts-loader": "^9.6.2",
+    "typescript": "~5.9.3",
+    "webpack": "^5.112.2",
     "webpack-cli": "5.1.4"
   }
 }
