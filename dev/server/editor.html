@@ -10,13 +10,17 @@
       href="./Cress-gh/assets/css/hierarchicalFilter.css"
     />
     <link rel="shortcut icon" type="image/x-icon" href="favicon.png" />
-    <script
-      type="text/javascript"
-      src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js"
-    ></script>
+    <!--
+      Handsontable JS is bundled from npm (see package.json). This CSS version
+      MUST match the exact "handsontable" version in package.json; when bumping
+      it, update the URL and recompute the integrity hash:
+      openssl dgst -sha384 -binary node_modules/handsontable/dist/handsontable.full.min.css | openssl base64 -A
+    -->
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css"
+      href="https://cdn.jsdelivr.net/npm/handsontable@14.6.2/dist/handsontable.full.min.css"
+      integrity="sha384-xxdHPvvQNfor84IwncNa68O1KCq69B+6SNst2T3bduEe8ROI8e6RjHU3T37xILDO"
+      crossorigin="anonymous"
     />
   </head>
 
